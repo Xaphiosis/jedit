@@ -38,6 +38,7 @@ import org.gjt.sp.jedit.textarea.JEditTextArea;
 import org.gjt.sp.jedit.textarea.TextAreaMouseHandler;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.SyntaxUtilities;
+import javax.swing.UIDefaults;
 
 
 import java.net.URL;
@@ -1932,6 +1933,21 @@ public class GUIUtilities
 	public static int defaultRowHeight()
 	{
 		return defaultTableCellSize().height;
+	} //}}}
+
+	//{{{ setButtonContentMargin() method
+	/**
+	 * Sets the content margin of a button (for Nimbus L&F).
+	 * @param button  the button to modify
+	 * @param margin  the new margin
+	 * @since jEdit 5.3
+	 */
+	public static void setButtonContentMargin(AbstractButton button, Insets margin)
+	{
+		UIDefaults defaults = new UIDefaults();
+		defaults.put("Button.contentMargins", margin);
+		defaults.put("ToggleButton.contentMargins", margin);
+		button.putClientProperty("Nimbus.Overrides", defaults);
 	} //}}}
 
 	//{{{ addSizeSaver() method
