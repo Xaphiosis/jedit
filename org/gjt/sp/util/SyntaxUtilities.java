@@ -194,7 +194,24 @@ public class SyntaxUtilities
 	{
 		return loadStyles(family,size,true);
 	}
-	
+
+	/**
+	 * Extended styles derived from the user-specified style array.
+	 */
+
+	public static class StyleExtender
+	{
+		public SyntaxStyle[] extendStyles(SyntaxStyle[] styles)
+		{
+			return styles;
+		}
+	}
+	volatile private static StyleExtender _styleExtender = new StyleExtender();
+	public static void setStyleExtender(StyleExtender ext)
+	{
+		_styleExtender = ext;
+	}
+
 	/**
 	 * Loads the syntax styles from the properties, giving them the specified
 	 * base font family and size.
@@ -224,9 +241,9 @@ public class SyntaxUtilities
 				Log.log(Log.ERROR,StandardUtilities.class,e);
 			}
 		}
-
-		return styles;
+		styles[0] = new SyntaxStyle(Color.black, null, new Font(family, 0, size));
+		return _styleExtender.extendStyles(styles);
 	} //}}}
-	
+
 	private SyntaxUtilities(){}
 }

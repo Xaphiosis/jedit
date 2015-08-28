@@ -910,6 +910,11 @@ public abstract class TextArea extends JPanel
 		return chunkCache.getLineInfo(screenLine).physicalLine;
 	} //}}}
 
+        public Chunk getChunksOfScreenLine(int screenLine)
+        {
+                return chunkCache.getLineInfo(screenLine).chunks;
+        }
+
 	//{{{ getScreenLineOfOffset() method
 	/**
 	 * Returns the screen (wrapped) line containing the specified offset.
