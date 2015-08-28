@@ -1935,21 +1935,6 @@ public class GUIUtilities
 		return defaultTableCellSize().height;
 	} //}}}
 
-	//{{{ setButtonContentMargin() method
-	/**
-	 * Sets the content margin of a button (for Nimbus L&F).
-	 * @param button  the button to modify
-	 * @param margin  the new margin
-	 * @since jEdit 5.3
-	 */
-	public static void setButtonContentMargin(AbstractButton button, Insets margin)
-	{
-		UIDefaults defaults = new UIDefaults();
-		defaults.put("Button.contentMargins", margin);
-		defaults.put("ToggleButton.contentMargins", margin);
-		button.putClientProperty("Nimbus.Overrides", defaults);
-	} //}}}
-
 	//{{{ addSizeSaver() method
 	/**
 	* Adds a SizeSaver to the specified Frame. For non-Frame's use {@link #saveGeometry(Window,String)}
