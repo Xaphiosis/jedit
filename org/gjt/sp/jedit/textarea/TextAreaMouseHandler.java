@@ -24,6 +24,7 @@ package org.gjt.sp.jedit.textarea;
 import org.gjt.sp.jedit.OperatingSystem;
 import org.gjt.sp.jedit.TextUtilities;
 import org.gjt.sp.util.StandardUtilities;
+import org.gjt.sp.jedit.Registers;
 
 import javax.swing.event.MouseInputAdapter;
 import java.awt.event.MouseEvent;
@@ -49,10 +50,18 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 	{
 		showCursor();
 
+		int btn = evt.getButton();
+		if (btn != MouseEvent.BUTTON1 && btn != MouseEvent.BUTTON2 && btn != MouseEvent.BUTTON3)
+		{
+			// Suppress presses with unknown button, to avoid
+			// problems due to horizontal scrolling.
+			return;
+		}
+
 		control = (OperatingSystem.isMacOS() && evt.isMetaDown())
 			|| (!OperatingSystem.isMacOS() && evt.isControlDown());
 
-		ctrlForRectangularSelection = true;
+		ctrlForRectangularSelection = textArea.isCtrlForRectangularSelection();
 
 		// so that Home <mouse click> Home is not the same
 		// as pressing Home twice in a row
@@ -80,10 +89,12 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 		dragStartOffset = dragStart - textArea.getLineStartOffset(
 			dragStartLine);
 
-		if(isPopupTrigger(evt) && textArea.isRightClickPopupEnabled())
+		if(isPopupTrigger(evt)
+			&& textArea.getRightClickPopup() != null)
 		{
+			if(textArea.isRightClickPopupEnabled())
 				textArea.handlePopupTrigger(evt);
-				return;
+			return;
 		}
 
 		dragged = false;
@@ -509,13 +520,40 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 	@Override
 	public void mouseReleased(MouseEvent evt)
 	{
-		if(!dragged && textArea.isQuickCopyEnabled() &&
+		int btn = evt.getButton();
+		if (btn != MouseEvent.BUTTON1 && btn != MouseEvent.BUTTON2 && btn != MouseEvent.BUTTON3)
+		{
+			// Suppress releases with unknown button, to avoid
+			// problems due to horizontal scrolling.
+			return;
+		}
+
+		// middle mouse button drag inserts selection
+		// at caret position
+		Selection sel = textArea.getSelectionAtOffset(dragStart);
+		if(dragged && sel != null)
+		{
+			Registers.setRegister('%',textArea.getSelectedText(sel));
+			if(quickCopyDrag)
+			{
+				textArea.removeFromSelection(sel);
+				Registers.paste(TextArea.focusedComponent,
+					'%',sel instanceof Selection.Rect);
+
+				TextArea.focusedComponent.requestFocus();
+			}
+		}
+		else if(!dragged && textArea.isQuickCopyEnabled() &&
 			isMiddleButton(evt.getModifiers()))
 		{
 			textArea.requestFocus();
 			TextArea.focusedComponent = textArea;
 
 			textArea.setCaretPosition(dragStart,false);
+			if(!textArea.isEditable())
+				textArea.getToolkit().beep();
+			else
+				Registers.paste(textArea,'%',control);
 		}
 		else if(maybeDragAndDrop
 			&& !textArea.isMultipleSelectionEnabled())
@@ -523,7 +561,12 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 			textArea.selectNone();
 		}
 
+		maybeDragAndDrop = false;
 		dragged = false;
+		if(!(textArea.isRectangularSelectionEnabled()
+			|| (control && ctrlForRectangularSelection)))
+			// avoid scrolling away from rectangular selection
+			textArea.scrollToCaret(false);
 	} //}}}
 
 	//{{{ isPopupTrigger() method
