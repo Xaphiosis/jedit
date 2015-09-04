@@ -27,6 +27,8 @@ to this release.
 - Fix bug #3671: autodetect text file encoding in HelpViewer
   (patch #540 - Eric Le Lay)
 
+- Fix bug #2833 Plugin jars dependencies not removed (Eric Le Lay)
+
 }}}
 {{{ UI Improvements
 

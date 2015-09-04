@@ -80,7 +80,7 @@ import org.gjt.sp.util.ThreadUtilities;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: EditBus.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: EditBus.java 24044 2015-09-03 13:34:54Z daleanson $
  *
  * @since jEdit 2.2pre6
  */
@@ -238,7 +238,7 @@ public class EditBus
 				     EBMessage msg)
 		throws Exception
 	{
-		if (emh.handler != null)
+		if (emh.handler != null && emh.comp != null)
 			emh.handler.invoke(emh.comp, msg);
 		else
 		{
