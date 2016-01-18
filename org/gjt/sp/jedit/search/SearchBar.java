@@ -36,7 +36,7 @@ import org.gjt.sp.util.Log;
 
 /**
  * Incremental search tool bar.
- * @version $Id: SearchBar.java 22223 2012-09-20 07:22:28Z shlomy $
+ * @version $Id: SearchBar.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class SearchBar extends JToolBar
 {
@@ -256,7 +256,7 @@ public class SearchBar extends JToolBar
 					// beep if beep property set
 					if(jEdit.getBooleanProperty("search.beepOnSearchAutoWrap"))
 					{
-						getToolkit().beep();
+						javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 					}
 				}
 			}

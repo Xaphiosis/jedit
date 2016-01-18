@@ -26,6 +26,7 @@ import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.datatransfer.JEditDataFlavor;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.jedit.textarea.TextArea;
+import org.gjt.sp.jedit.GUIUtilities;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -98,7 +99,7 @@ public class PasteSpecialDialog extends EnhancedDialog
 
 				JPanel buttons = new JPanel();
 				buttons.setLayout(new BoxLayout(buttons,BoxLayout.X_AXIS));
-				buttons.setBorder(new EmptyBorder(12,0,0,0));
+				buttons.setBorder(new EmptyBorder(17, 0, 0, 0));
 				buttons.add(Box.createGlue());
 
 				ok = new JButton(jEdit.getProperty("common.ok"));
@@ -123,9 +124,10 @@ public class PasteSpecialDialog extends EnhancedDialog
 						}
 				});
 				buttons.add(cancel);
-
-				buttons.add(Box.createGlue());
-				content.add(BorderLayout.SOUTH,buttons);
+				
+				GUIUtilities.makeSameSize(ok, cancel);
+				
+				content.add(BorderLayout.SOUTH, buttons);
 
 				//}}}
 

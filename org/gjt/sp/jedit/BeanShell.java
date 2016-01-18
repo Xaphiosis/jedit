@@ -58,7 +58,7 @@ import org.gjt.sp.util.TaskManager;
  * </ul>
  *
  * @author Slava Pestov
- * @version $Id: BeanShell.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: BeanShell.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class BeanShell
 {
@@ -144,7 +144,7 @@ public class BeanShell
 		Selection[] selection = textArea.getSelection();
 		if(selection.length == 0)
 		{
-			view.getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return;
 		}
 

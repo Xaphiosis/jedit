@@ -38,7 +38,7 @@ import org.gjt.sp.util.Log;
  * A dialog for choosing fonts.
  *
  * @author Slava Pestov
- * @version $Id: FontSelectorDialog.java 23904 2015-05-16 13:17:14Z ezust $
+ * @version $Id: FontSelectorDialog.java 24267 2015-12-25 01:13:52Z daleanson $
  * @since jEdit 4.4pre1
  */
 
@@ -234,22 +234,22 @@ public class FontSelectorDialog extends EnhancedDialog
 
 		JPanel buttons = new JPanel();
 		buttons.setLayout(new BoxLayout(buttons,BoxLayout.X_AXIS));
-		buttons.setBorder(new EmptyBorder(12,0,0,0));
-		buttons.add(Box.createGlue());
+		buttons.setBorder(new EmptyBorder(17, 0, 0, 0));
 
 		ok = new JButton(jEdit.getProperty("common.ok"));
 		ok.addActionListener(new ActionHandler());
 		getRootPane().setDefaultButton(ok);
-		buttons.add(ok);
-
-		buttons.add(Box.createHorizontalStrut(6));
 
 		cancel = new JButton(jEdit.getProperty("common.cancel"));
 		cancel.addActionListener(new ActionHandler());
-		buttons.add(cancel);
+		
+		GUIUtilities.makeSameSize(ok, cancel);
 
 		buttons.add(Box.createGlue());
-
+		buttons.add(ok);
+		buttons.add(Box.createHorizontalStrut(6));
+		buttons.add(cancel);
+		
 		content.add(BorderLayout.SOUTH,buttons);
 
 		pack();

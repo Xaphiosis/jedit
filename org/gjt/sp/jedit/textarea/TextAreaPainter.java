@@ -55,7 +55,7 @@ import org.gjt.sp.util.Log;
  * @see TextArea
  *
  * @author Slava Pestov
- * @version $Id: TextAreaPainter.java 23821 2015-01-04 14:31:09Z ezust $
+ * @version $Id: TextAreaPainter.java 24095 2015-09-25 21:31:41Z daleanson $
  */
 public class TextAreaPainter extends JComponent implements TabExpander
 {
@@ -155,12 +155,14 @@ public class TextAreaPainter extends JComponent implements TabExpander
 	@Override
 	public void setBounds(int x, int y, int width, int height)
 	{
+		// for some reason, the height is always off by one when the bounds have
+		// not changed at all, hence the +1 on the height check. Without the +1, 
+		// everything gets reset every time, which leads to other problems.
 		if(x == getX() && y == getY() && width == getWidth()
-			&& height == getHeight())
+			&& (height == getHeight() || height == getHeight() + 1))
 		{
 			return;
 		}
-
 		super.setBounds(x,y,width,height);
 
 		textArea.recalculateVisibleLines();
@@ -1150,14 +1152,14 @@ public class TextAreaPainter extends JComponent implements TabExpander
 			} //}}}
 
 			//{{{ Paint token backgrounds
-			ChunkCache.LineInfo lineInfo = textArea.chunkCache
-				.getLineInfo(screenLine);
+			ChunkCache.LineInfo lineInfo = textArea.chunkCache.getLineInfo(screenLine);
 
 			if(lineInfo.chunks != null)
 			{
-				float baseLine = y + getLineHeight() - (fm.getLeading()+1) - fm.getDescent();
+				float baseLine = y + getLineHeight() - (fm.getLeading() + 1) - fm.getDescent();
 				Chunk.paintChunkBackgrounds(
-					lineInfo.chunks,gfx,
+					lineInfo.chunks, 
+					gfx,
 					textArea.getHorizontalOffset(),
 					baseLine, getLineHeight());
 			} //}}}
@@ -1376,8 +1378,7 @@ public class TextAreaPainter extends JComponent implements TabExpander
 		public void paintValidLine(Graphics2D gfx, int screenLine,
 			int physicalLine, int start, int end, int y)
 		{
-			ChunkCache.LineInfo lineInfo = textArea.chunkCache
-				.getLineInfo(screenLine);
+			ChunkCache.LineInfo lineInfo = textArea.chunkCache.getLineInfo(screenLine);
 			Font defaultFont = getFont();
 			Color defaultColor = getForeground();
 
@@ -1391,9 +1392,12 @@ public class TextAreaPainter extends JComponent implements TabExpander
 
 			if(lineInfo.chunks != null)
 			{
-				x += Chunk.paintChunkList(lineInfo.chunks,
-					gfx,textArea.getHorizontalOffset(),
-					baseLine,!Debug.DISABLE_GLYPH_VECTOR);
+				x += Chunk.paintChunkList(
+					lineInfo.chunks,
+					gfx,
+					textArea.getHorizontalOffset(),
+					baseLine,
+					!Debug.DISABLE_GLYPH_VECTOR);
 			}
 
 			JEditBuffer buffer = textArea.getBuffer();

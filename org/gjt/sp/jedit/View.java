@@ -134,7 +134,7 @@ import org.gjt.sp.util.StandardUtilities;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: View.java 23878 2015-02-26 18:30:45Z ezust $
+ * @version $Id: View.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class View extends JFrame implements InputHandlerProvider
 {
@@ -777,7 +777,7 @@ public class View extends JFrame implements InputHandlerProvider
 			editPane.focusOnTextArea();
 		}
 		else
-			getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 	} //}}}
 
 	//{{{ unsplitCurrent() method
@@ -838,7 +838,7 @@ public class View extends JFrame implements InputHandlerProvider
 			editPane.focusOnTextArea();
 		}
 		else
-			getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 	} //}}}
 
 	//{{{ resplit() method
@@ -850,7 +850,7 @@ public class View extends JFrame implements InputHandlerProvider
 	public void resplit()
 	{
 		if(lastSplitConfig == null)
-			getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 		else
 			setSplitConfig(null,lastSplitConfig);
 	} //}}}

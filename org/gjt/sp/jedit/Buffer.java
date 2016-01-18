@@ -92,7 +92,7 @@ import org.gjt.sp.util.ThreadUtilities;
 
  *
  * @author Slava Pestov
- * @version $Id: Buffer.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: Buffer.java 24087 2015-09-19 20:56:09Z daleanson $
  */
 public class Buffer extends JEditBuffer
 {
@@ -443,7 +443,7 @@ public class Buffer extends JEditBuffer
 			GUIUtilities.error(view,"buffer-multiple-io",null);
 			return false;
 		}
-
+		
 		setBooleanProperty(BufferIORequest.ERROR_OCCURRED,false);
 
 		if(path == null && getFlag(NEW_FILE))
@@ -2201,8 +2201,6 @@ public class Buffer extends JEditBuffer
 						!newMode.equals(getMode()
 						.getName()))
 						setMode();
-					else
-						propertiesChanged();
 				}
 
 				updateHash();

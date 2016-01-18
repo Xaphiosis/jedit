@@ -68,7 +68,7 @@ import java.util.regex.Pattern;
  * </ul>
  *
  * @author Slava Pestov
- * @version $Id: JEditBuffer.java 24027 2015-08-25 14:21:12Z makarius $
+ * @version $Id: JEditBuffer.java 24211 2015-12-10 03:33:28Z daleanson $
  *
  * @since jEdit 4.3pre3
  */
@@ -2106,7 +2106,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 
 		if(!isEditable())
 		{
-			textArea.getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return;
 		}
 
@@ -2118,7 +2118,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 			fireBeginUndo();
 			Selection[] s = undoMgr.undo();
 			if(s == null || s.length == 0)
-				textArea.getToolkit().beep();
+				javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			else
 			{
 				textArea.setCaretPosition(s[s.length - 1].getEnd());
@@ -2148,7 +2148,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 
 		if(!isEditable())
 		{
-			Toolkit.getDefaultToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return;
 		}
 
@@ -2160,7 +2160,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 			fireBeginRedo();
 			Selection[] s = undoMgr.redo();
 			if(s == null || s.length == 0)
-				textArea.getToolkit().beep();
+				javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			else
 			{
 				textArea.setCaretPosition(s[s.length - 1].getEnd());

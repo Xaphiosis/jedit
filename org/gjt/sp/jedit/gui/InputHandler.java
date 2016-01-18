@@ -46,7 +46,7 @@ import java.awt.*;
  * to the implementations of this class to do so.
  *
  * @author Slava Pestov
- * @version $Id: InputHandler.java 21831 2012-06-18 22:54:17Z ezust $
+ * @version $Id: InputHandler.java 24211 2015-12-10 03:33:28Z daleanson $
  * @see org.gjt.sp.jedit.gui.DefaultInputHandler
  */
 public abstract class InputHandler extends AbstractInputHandler<EditAction>
@@ -400,7 +400,7 @@ public abstract class InputHandler extends AbstractInputHandler<EditAction>
 	public void invokeLastAction()
 	{
 		if(lastAction == null)
-			view.getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 		else
 			invokeAction(lastAction);
 	} //}}}

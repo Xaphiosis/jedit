@@ -40,7 +40,7 @@ import java.util.Stack;
  * Several tools that depends on JDK only.
  *
  * @author Matthieu Casanova
- * @version $Id: StandardUtilities.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: StandardUtilities.java 24072 2015-09-16 19:52:05Z kerik-sf $
  * @since 4.3pre5
  */
 public class StandardUtilities
@@ -382,15 +382,28 @@ loop:		for(int i = 0; i < str.length(); i++)
 	 * this method correctly recognizes and handles embedded numbers.
 	 * For example, it places "My file 2" before "My file 10".<p>
 	 *
-	 * @param str1 The first string
-	 * @param str2 The second string
+	 * @param str1 The first string (maybe null)
+	 * @param str2 The second string (maybe null)
 	 * @param ignoreCase If true, case will be ignored
 	 * @return negative If str1 &lt; str2, 0 if both are the same,
-	 * positive if str1 &gt; str2
+	 * positive if str1 &gt; str2 (null &lt; any non-null string, null = null)
 	 * @since jEdit 4.3pre5
 	 */
 	public static int compareStrings(String str1, String str2, boolean ignoreCase)
 	{
+		if (str1  == str2)
+		{
+			return 0;
+		}
+		else if (str1 == null)
+		{
+			return -1;
+		}
+		else if(str2 == null)
+		{
+			return 1;
+		}
+
 		char[] char1 = str1.toCharArray();
 		char[] char2 = str2.toCharArray();
 

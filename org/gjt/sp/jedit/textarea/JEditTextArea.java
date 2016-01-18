@@ -56,7 +56,7 @@ import org.gjt.sp.jedit.options.GlobalOptions;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: JEditTextArea.java 23536 2014-05-10 19:08:54Z ezust $
+ * @version $Id: JEditTextArea.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class JEditTextArea extends TextArea
 {
@@ -237,7 +237,7 @@ public class JEditTextArea extends TextArea
 				return;
 			}
 		}
-		getToolkit().beep();
+		javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 	} //}}}
 
 
@@ -294,7 +294,7 @@ public class JEditTextArea extends TextArea
 		}
 		catch(Exception e)
 		{
-			getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 		}
 	} //}}}
 

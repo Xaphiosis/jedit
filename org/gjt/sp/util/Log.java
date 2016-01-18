@@ -58,7 +58,7 @@ import static java.text.DateFormat.MEDIUM;
  * to the log, see {@link #init}.
  *
  * @author Slava Pestov
- * @version $Id: Log.java 23221 2013-09-29 20:03:32Z shlomy $
+ * @version $Id: Log.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class Log
 {
@@ -452,7 +452,7 @@ public class Log
 				
 				if (time - lastBeepTime > 1000)
 				{
-					Toolkit.getDefaultToolkit().beep();
+					javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 					lastBeepTime = System.currentTimeMillis();
 				}
 			}

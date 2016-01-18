@@ -33,7 +33,7 @@ import org.gjt.sp.util.Log;
 /**
  * Abbreviation manager.
  * @author Slava Pestov
- * @version $Id: Abbrevs.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: Abbrevs.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class Abbrevs
 {
@@ -78,7 +78,7 @@ public class Abbrevs
 		JEditTextArea textArea = view.getTextArea();
 		if(!buffer.isEditable())
 		{
-			view.getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return false;
 		}
 
@@ -90,7 +90,7 @@ public class Abbrevs
 		if(lineText.length() == 0)
 		{
 			if(add)
-				view.getToolkit().beep();
+				javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return false;
 		}
 
@@ -98,7 +98,7 @@ public class Abbrevs
 		if(pos == 0)
 		{
 			if(add)
-				view.getToolkit().beep();
+				javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return false;
 		} //}}}
 

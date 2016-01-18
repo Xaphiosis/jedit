@@ -35,7 +35,7 @@ import java.beans.PropertyChangeListener;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
@@ -47,10 +47,10 @@ import org.gjt.sp.jedit.jEdit;
 /**
  * A container for dockable windows. This class should never be used
  * directly.
- * @version $Id: FloatingWindowContainer.java 23704 2014-10-27 04:14:16Z ezust $
+ * @version $Id: FloatingWindowContainer.java 24197 2015-12-08 19:27:50Z ezust $
  * @since jEdit 4.0pre1
  */
-public class FloatingWindowContainer extends JDialog implements DockableWindowContainer,
+public class FloatingWindowContainer extends JFrame implements DockableWindowContainer,
 	PropertyChangeListener
 {
 	String dockableName = null;
@@ -58,8 +58,6 @@ public class FloatingWindowContainer extends JDialog implements DockableWindowCo
 	public FloatingWindowContainer(DockableWindowManagerImpl dockableWindowManager,
 		boolean clone)
 	{
-		super(dockableWindowManager.getView());
-
 		this.dockableWindowManager = dockableWindowManager;
 
 		dockableWindowManager.addPropertyChangeListener(this);
@@ -95,6 +93,7 @@ public class FloatingWindowContainer extends JDialog implements DockableWindowCo
 		pack();
 		Container parent = dockableWindowManager.getView();
 		GUIUtilities.loadGeometry(this, parent, dockableName);
+		GUIUtilities.addSizeSaver(this, parent, dockableName);
 		KeyListener listener = dockableWindowManager.closeListener(dockableName);
 		addKeyListener(listener);
 		getContentPane().addKeyListener(listener);
@@ -161,11 +160,8 @@ public class FloatingWindowContainer extends JDialog implements DockableWindowCo
 	@Override
 	public void dispose()
 	{
-		GUIUtilities.saveGeometry(this, dockableWindowManager.getView(), dockableName);
-		if (entry != null) {
-			entry.container = null;
-			entry.win = null;
-		}
+		entry.container = null;
+		entry.win = null;
 		super.dispose();
 	} //}}}
 

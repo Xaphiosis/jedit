@@ -95,7 +95,7 @@ import static org.gjt.sp.jedit.help.HelpHistoryModel.HistoryEntry;
  * jEdit's searchable help viewer. It uses a Swing JEditorPane to display the HTML,
  * and implements a URL history.
  * @author Slava Pestov
- * @version $Id: HelpViewer.java 23777 2014-12-16 07:06:27Z kerik-sf $
+ * @version $Id: HelpViewer.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class HelpViewer extends JFrame implements HelpViewerInterface, HelpHistoryModelListener
 {
@@ -505,7 +505,7 @@ public class HelpViewer extends JFrame implements HelpViewerInterface, HelpHisto
 				HistoryEntry entry = historyModel.back(HelpViewer.this);
 				if(entry == null)
 				{
-					getToolkit().beep();
+					javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 				}
 				else
 				{
@@ -517,7 +517,7 @@ public class HelpViewer extends JFrame implements HelpViewerInterface, HelpHisto
 				HistoryEntry entry = historyModel.forward(HelpViewer.this);
 				if(entry == null)
 				{
-					getToolkit().beep();
+					javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 				}
 				else
 				{

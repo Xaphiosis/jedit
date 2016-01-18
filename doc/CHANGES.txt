@@ -2,13 +2,70 @@ jEdit 5.3 version history
        (changes since jEdit 5.2.0)
 :encoding=UTF-8:
 
-{{{ Version 5.3pre1
+{{{ Version 5.3.1
+
+Thanks to Eric Le Lay, Jesse Pavel, and Dale Anson for contributing to this
+release.
+
+{{{ Bug Fixes
+
+- Fix bug #3944: Select All checkbox disabled.
+
+- Fix bug #3983: filename completion prefered longest filename when no
+  match with exact length was found. Prefer the first one (Eric Le Lay)
+
+- Fix bug #3913: beanshell do-while loop bug (Patch #572 Jesse Pavel)
+
+- Fix Java_File_Save macro: accept text after class name (Eric Le Lay)
+
+- Fix bug #3936, better choice for text area corner colors (Dale Anson)
+
+- Fix bug #3717, gutter lines not aligning with text area lines (Dale Anson)
+
+- Fix bug #3937, issue with non-capturing groups in regex search and replace
+  (Dale Anson)
+
+- Fix bug #3924, changes to mode files are not detected when ~/.jedit/modes
+  is a symlink. (Dale Anson)
+
+- Fix bug #3920, cannot change alpha value of a color in the syntax highlighting
+  settings. (Dale Anson)
+
+- Fix bug #3943, issues with move lines up and down macros. (Dale Anson)
+
+- Fix bug #3923, documentation bug about where auto-saved files are saved.
+  (Dale Anson)
+
+- Fix bug #3916, null pointer exception in ChunkCache. (Dale Anson)
+
+}}}
+{{{ UI Improvements
+
+- UI clean up, button spacing, borders, etc. (Dale Anson)
+
+
+}}}
+{{{ Miscellaneous
+
+}}}
+{{{ API Changes
+
+
+}}}
+{{{ Editing
+
+
+}}}
+
+}}}
+
+{{{ Version 5.3.0
 
 Thanks to Björn "Vampire" Kautler, Alan Ezust, Makarius, Jakub Holý,
 Mark Corbin, Matt Galligan, Kevin Hunter Kesling, Darien Brown,
 Matthieu Casanova, Sergey Mashkov, Dale Anson, Kevin Leblanc,
-Marcelo Vanzin, Jordan Miner, yaraba, and Eric Le Lay for contributing
-to this release.
+Marcelo Vanzin, Jordan Miner, yaraba, Marc M. Adkins, and Eric Le Lay for
+contributing to this release.
 
 {{{ Bug Fixes
 
@@ -27,10 +84,26 @@ to this release.
 - Fix bug #3671: autodetect text file encoding in HelpViewer
   (patch #540 - Eric Le Lay)
 
+- Fix bug #3881, non-capturing lookahead in regex search didn't work.
+  (Dale Anson)
+
+- Fix bug #3184: File browser completion dives into wrong directory
+  (Eric Le Lay)
+
 - Fix bug #2833 Plugin jars dependencies not removed (Eric Le Lay)
+
+- Fix bug #3911, text area was scrolling to the left when saving. (Dale Anson)
+
+- Fix bug #3599 Key typing in Install panel. Search Field gets focus on show
+  and when one types '/' or a letter in the list. (Eric Le Lay)
+
+- Fix bug #2877 "Hide installed" checkbox in Install panel. Don't re-install
+  unloaded plugins (Eric Le Lay)
 
 }}}
 {{{ UI Improvements
+
+- Handling of NUMPAD keys cleanup (Patch #567 - Makarius)
 
 - Scalable GUI for tip-of-the-day (Makarius)
 
@@ -48,8 +121,6 @@ to this release.
 
 - Proper button margins for Nimbus L&F (Patch #538 - Makarius)
 
-- Floating dockables as JDialog (Patch #537 - Makarius)
-
 - CompletionPopup should accept TAB for completion selection
   (Patch # 525 - Jakub Holý)
 
@@ -57,17 +128,29 @@ to this release.
 
 - Font properties were not applied after change in Appearances settings
   (Bug #3919 - Dale Anson)
-  
+
 - Allow columns to be rearranged in FSB (Feature request 489, 40, and old
   tracker 1442812 - Dale Anson)
-  
+
 - Align gutter numbers with lines when using additional vertical line spacing.
   (Bug #3717 - Dale Anson)
-  
+
 - Added option to hide open files from recent file list (FR #481 - Dale Anson)
 
 - UI adjustment to allow adding new mode files by point and click.
   (FR # 471 - Dale Anson)
+
+- No error message when PluginManager doesn't find a file to be removed and
+  show files to be removed in alphabetical order (end of Bug #3530 - Eric
+  Le Lay)
+
+- Plugin Manager Manage Panel sortable on all columns and all directions
+  (Eric Le Lay)
+
+- Replaced all Toolkit.beep() calls with
+  javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);, which
+  allows look and feels to provide their own implementation of error signals.
+  (Dale Anson)
 
 }}}
 {{{ Miscellaneous
@@ -92,8 +175,13 @@ to this release.
 - close-all sends BufferClosing events on EditBus for each buffer closed.
   This is useful to plugins that record closed files. (patch #550, Eric Le Lay)
 
+- org.gjt.sp.util.StandardUtilities#compareStrings accepts null Strings
+  (Eric Le Lay)
+
 }}}
 {{{ Editing
+
+- Updates to Clojure mode (Marc M. Adkins, patch #565)
 
 - More conventional color scheme for diffs and changesets
   (Patch #560 - Makarius)
@@ -116,12 +204,16 @@ to this release.
 
 - Updated Go mode (Feature request 496, ahlearn). This also fixes bug #3921.
 
-- Allow editing, but not saving, of read only files. 
-  (Feature request #422 - Dale Anson)   
-  
-- Added Markdown mode from Peter Lynch (FR 495 - Dale Anson)  
+- Allow editing, but not saving, of read only files.
+  (Feature request #422 - Dale Anson)
+
+- Added Markdown mode from Peter Lynch (FR 495 - Dale Anson)
+
+- Better mode selection for files that match multiple modes, also fixes/applies
+  patch #571. (Dale Anson)
 
 }}}
+
 }}}
 
 jEdit buffer local properties:

@@ -34,7 +34,7 @@ import org.gjt.sp.jedit.*;
 /**
  * Controller (manager of models) for HistoryTextArea.
  * @author Slava Pestov
- * @version $Id: HistoryText.java 21831 2012-06-18 22:54:17Z ezust $
+ * @version $Id: HistoryText.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class HistoryText
 {
@@ -152,7 +152,7 @@ public class HistoryText
 			}
 		}
 
-		text.getToolkit().beep();
+		javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 	} //}}}
 
 	//{{{ doForwardSearch() method
@@ -188,7 +188,7 @@ public class HistoryText
 			}
 		}
 
-		text.getToolkit().beep();
+		javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 	} //}}}
 
 	//{{{ historyPrevious() method
@@ -198,7 +198,7 @@ public class HistoryText
 			return;
 
 		if(index == historyModel.getSize() - 1)
-			text.getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 		else if(index == -1)
 		{
 			current = getText();
@@ -221,7 +221,7 @@ public class HistoryText
 			return;
 
 		if(index == -1)
-			text.getToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 		else if(index == 0)
 			setText(current);
 		else

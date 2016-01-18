@@ -72,7 +72,7 @@ import org.gjt.sp.util.StandardUtilities;
 /** A container for dockable windows. This class should never be used
  * directly.
  * @author Slava Pestov
- * @version $Id: PanelWindowContainer.java 23717 2014-11-02 19:42:53Z ezust $
+ * @version $Id: PanelWindowContainer.java 24211 2015-12-10 03:33:28Z daleanson $
  * @since jEdit 4.0pre1
  */
 public class PanelWindowContainer implements DockableWindowContainer, DockingArea
@@ -227,7 +227,7 @@ public class PanelWindowContainer implements DockableWindowContainer, DockingAre
 	{
 		if(dockables.isEmpty())
 		{
-			Toolkit.getDefaultToolkit().beep();
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return;
 		}
 

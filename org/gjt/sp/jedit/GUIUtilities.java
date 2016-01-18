@@ -97,7 +97,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </ul>
  *
  * @author Slava Pestov
- * @version $Id: GUIUtilities.java 24022 2015-08-14 18:45:58Z makarius $
+ * @version $Id: GUIUtilities.java 24271 2015-12-26 15:35:15Z daleanson $
  */
 public class GUIUtilities
 {
@@ -1179,7 +1179,7 @@ public class GUIUtilities
 
 	//{{{ menuAcceleratorFont() method
 	/**
-	 * Menu accelerator font according to L&F defaults, with workarounds.
+	 * Menu accelerator font according to L&amp;F defaults, with workarounds.
 	 */
 	public static Font menuAcceleratorFont()
 	{
@@ -1902,6 +1902,35 @@ public class GUIUtilities
 		defaults.put("ToggleButton.contentMargins", margin);
 		button.putClientProperty("Nimbus.Overrides", defaults);
 	} //}}}
+	
+	//{{{
+	/**
+ 	 * Makes components the same size by finding the largest width and height of the
+ 	 * given components then setting all components to that width and height. This is
+ 	 * especially useful for making JButtons the same size.
+ 	 * @param components The components to make the same size.
+ 	 */
+	public static void makeSameSize(Component... components) 
+	{
+		if (components == null)
+			return;
+		int width = 0;
+		int height = 0;
+		for (Component component : components) 
+		{
+			if (component == null)
+				continue;
+			width = Math.max(width, component.getPreferredSize().width);
+			height = Math.max(height, component.getPreferredSize().height);
+		}
+		Dimension d = new Dimension(width, height);
+		for (Component component : components) 
+		{
+			if (component == null)
+				continue;
+			component.setPreferredSize(d);	
+		}
+	} //}}}
 
 	//{{{ defaultTableDimension() method
 	/**
@@ -2260,7 +2289,7 @@ public class GUIUtilities
 	 * For non-Frame's use {@link GUIUtilities#saveGeometry(Window,String)}
 	 *
 	 * @author Björn Kautler
-	 * @version $Id: GUIUtilities.java 24022 2015-08-14 18:45:58Z makarius $
+	 * @version $Id: GUIUtilities.java 24271 2015-12-26 15:35:15Z daleanson $
 	 * @since jEdit 4.3pre6
 	 * @see GUIUtilities#saveGeometry(Window,Container,String)
 	 */
