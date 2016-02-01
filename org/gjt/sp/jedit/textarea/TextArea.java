@@ -910,6 +910,11 @@ public abstract class TextArea extends JPanel
 		return chunkCache.getLineInfo(screenLine).physicalLine;
 	} //}}}
 
+        public Chunk getChunksOfScreenLine(int screenLine)
+        {
+                return chunkCache.getLineInfo(screenLine).chunks;
+        }
+
 	//{{{ getScreenLineOfOffset() method
 	/**
 	 * Returns the screen (wrapped) line containing the specified offset.
@@ -1618,8 +1623,8 @@ public abstract class TextArea extends JPanel
 		}
 
 		// Scan backwards, trying to find a bracket
-		String openBrackets = "([{";
-		String closeBrackets = ")]}";
+		String openBrackets = "([{«‹⟨⌈⌊⦇⟦⦃";
+		String closeBrackets = ")]}»›⟩⌉⌋⦈⟧⦄'";
 		int count = 1;
 		char openBracket = '\0';
 		char closeBracket = '\0';
