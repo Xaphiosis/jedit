@@ -34,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.lang.ref.SoftReference;
 
+import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.jedit.Debug;
 import org.gjt.sp.jedit.IPropertyManager;
 //}}}
@@ -241,9 +242,9 @@ public class Chunk extends Token
 				 * doesn't match any installed fonts. The following
 				 * check skips fonts that don't exist.
 				 */
-				Font f = new Font(family, Font.PLAIN, 12);
-				if (!"dialog".equalsIgnoreCase(f.getFamily()) ||
-					"dialog".equalsIgnoreCase(family))
+				Font f = jEdit.getFontProperty("view.fontSubstList." + i);
+				if (f != null && (!"dialog".equalsIgnoreCase(f.getFamily()) ||
+									"dialog".equalsIgnoreCase(family)))
 					userFonts.add(f);
 				i++;
 			}
@@ -254,6 +255,30 @@ public class Chunk extends Token
 		// Clear cache, not to hold reference to old fonts which
 		// might become unused after properties changed.
 		glyphCache = null;
+	} //}}}
+
+	//{{{ deriveSubstFont() method
+	/**
+	 * Derives a font to match the main font for purposes of
+	 * font substitution.
+	 * Preserves any transformations from main font.
+	 * For system-fallback fonts, derives size and style from main font.
+	 *
+	 * @param mainFont Font to derive from
+	 * @param candidateFont Font to transform
+	 */
+	public static Font deriveSubstFont(Font mainFont, Font candidateFont)
+	{
+		// adopt subst font family and size, but preserve any transformations
+		// i.e. if font is squashed/sheared, subst font glyphs should be squashed
+		Font substFont = candidateFont.deriveFont(mainFont.getTransform());
+
+		// scale up system fonts (point size 1) to size of main font
+		if (substFont.getSize() == 1)
+			substFont = substFont.deriveFont(mainFont.getStyle(),
+				mainFont.getSize());
+
+		return substFont;
 	} //}}}
 
 	//{{{ Package private members
@@ -514,6 +539,14 @@ public class Chunk extends Token
 	//}}}
 
 	//{{{ getFontSubstList() method
+	/**
+	 * Obtain a list of preferred fallback fonts as specified by the user
+	 * (see Text Area in Global Options), as well as a list of all fonts
+	 * specified in the system.
+	 * Note that preferred fonts are returned with sizes as specified by the
+	 * user, but system fonts all have a point size of 1. These should be
+	 * scaled up once the main font is known (see layoutGlyphs()).
+	 */
 	private static Font[] getFontSubstList()
 	{
 		if (fontSubstList == null)
@@ -663,8 +696,10 @@ public class Chunk extends Token
 			int charCount = Character.charCount(nextChar);
 			assert !mainFont.canDisplay(nextChar);
 			Font substFont = getSubstFont(nextChar);
+
 			if (substFont != null)
 			{
+				substFont = deriveSubstFont(mainFont, substFont);
 				subst.addRange(substFont, charCount);
 			}
 			else
@@ -758,10 +793,9 @@ public class Chunk extends Token
 			{
 				return;
 			}
-			Font font = (rangeFont == null) ?
-				mainFont :
-				rangeFont.deriveFont(mainFont.getStyle(),
-					mainFont.getSize());
+
+			Font font = (rangeFont == null) ? mainFont : rangeFont;
+
 			GlyphVector gv = layoutGlyphVector(font, frc,
 				text, rangeStart, rangeStart + rangeLength);
 			glyphs.add(gv);
