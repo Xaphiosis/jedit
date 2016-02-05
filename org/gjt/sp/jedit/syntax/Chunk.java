@@ -257,6 +257,31 @@ public class Chunk extends Token
 		glyphCache = null;
 	} //}}}
 
+	//{{{ getSubstFont() method
+	/**
+	 * Returns the first font which can display a character from
+	 * configured substitution candidates, or null if there is no
+	 * such font.
+	 */
+	public static Font getSubstFont(int codepoint)
+	{
+		// Workaround for a problem reported in SF.net patch #3480246
+		// > If font substitution with system fonts is enabled,
+		// > I get for inserted control characters strange mathematical
+		// > symbols from a non-unicode font in my system.
+		if (Character.isISOControl(codepoint))
+			return null;
+
+		for (Font candidate: getFontSubstList())
+		{
+			if (candidate.canDisplay(codepoint))
+			{
+				return candidate;
+			}
+		}
+		return null;
+	} //}}}
+
 	//{{{ deriveSubstFont() method
 	/**
 	 * Derives a font to match the main font for purposes of
@@ -280,6 +305,20 @@ public class Chunk extends Token
 
 		return substFont;
 	} //}}}
+
+	//{{{ usedFontSubstitution() method
+	/**
+	 * Returns true if font substitution was used in the layout of this chunk.
+	 * If substitution was not used, the chunk may be assumed to be composed
+	 * of one glyph using a single font.
+	 */
+	public boolean usedFontSubstitution()
+	{
+		return (fontSubstEnabled && glyphs != null &&
+				(glyphs.length > 1 ||
+				(glyphs.length == 1 && glyphs[0].getFont() != style.getFont())));
+	}
+	//}}}
 
 	//{{{ Package private members
 
@@ -574,31 +613,6 @@ public class Chunk extends Token
 			}
 		}
 		return fontSubstList;
-	} //}}}
-
-	//{{{ getSubstFont() method
-	/**
-	 * Returns the first font which can display a character from
-	 * configured substitution candidates, or null if there is no
-	 * such font.
-	 */
-	private static Font getSubstFont(int codepoint)
-	{
-		// Workaround for a problem reported in SF.net patch #3480246
-		// > If font substitution with system fonts is enabled,
-		// > I get for inserted control characters strange mathematical
-		// > symbols from a non-unicode font in my system.
-		if (Character.isISOControl(codepoint))
-			return null;
-
-		for (Font candidate: getFontSubstList())
-		{
-			if (candidate.canDisplay(codepoint))
-			{
-				return candidate;
-			}
-		}
-		return null;
 	} //}}}
 
 	//{{{ drawGlyphs() method
