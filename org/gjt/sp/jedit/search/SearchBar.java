@@ -32,11 +32,12 @@ import org.gjt.sp.jedit.syntax.SyntaxStyle;
 import org.gjt.sp.jedit.gui.*;
 import org.gjt.sp.jedit.textarea.*;
 import org.gjt.sp.util.Log;
+import org.gjt.sp.util.SyntaxUtilities;
 //}}}
 
 /**
  * Incremental search tool bar.
- * @version $Id: SearchBar.java 24211 2015-12-10 03:33:28Z daleanson $
+ * @version $Id: SearchBar.java 24411 2016-06-19 11:02:53Z kerik-sf $
  */
 public class SearchBar extends JToolBar
 {
@@ -58,7 +59,7 @@ public class SearchBar extends JToolBar
 		add(find = new HistoryTextField("find"));
 		find.setSelectAllOnFocus(true);
 
-		SyntaxStyle style = GUIUtilities.parseStyle(jEdit.getProperty("view.style.invalid"), "Dialog", 12);
+		SyntaxStyle style = SyntaxUtilities.parseStyle(jEdit.getProperty("view.style.invalid"), "Dialog", 12, true);
 		errorBackground = style.getBackgroundColor();
 		errorForeground = style.getForegroundColor();
 		defaultBackground = find.getBackground();

@@ -3,7 +3,7 @@
 	 xmlns:mod="antlib:de.masters_of_disaster.ant.tasks"
 	 xmlns:contrib="antlib:net.sf.antcontrib"
 	 xmlns:launch4j="antlib:net.sf.launch4j.ant"
-	 xmlns:jarbundler="antlib:net.sourceforge.jarbundler"
+	 xmlns:jarbundler="antlib:com.ultramixer.jarbundler"
 	 xmlns:fop="antlib:org.apache.fop.tools.anttasks"
 	 xmlns:ivy="antlib:org.apache.ivy.ant">
 	<description>
@@ -15,12 +15,12 @@
 
 	<!-- Target Java Versions -->
 	<property name="target.java.version"
-		  value="1.7"/>
+		  value="1.8"/>
 	<property name="mac.target.java.version"
-		  value="1.7+"/>
+		  value="1.8+"/>
 	<!-- based on http://packages.slackverse.org/?v=1&p=92 -->
 	<property name="slackware.target.java.version"
-		  value="1_7_0"/>
+		  value="1_8_0"/>
 
 	<!-- Various Paths -->
 	<property name="config.lib.dir"
@@ -62,7 +62,7 @@
 	<property name="config.build.deprecation"
 		  value="true"/>
 	<property name="config.build.compilerarg"
-		  value="-Xlint:unchecked"/>
+		  value="-Xlint:unchecked -Xlint:finally -Xlint:fallthrough -Xmaxwarns 1000"/>
 
 	<target name="init"
 		unless="init.done">
@@ -385,6 +385,7 @@
 				<include name="org/gjt/sp/jedit/actions.dtd"/>
 				<include name="org/gjt/sp/jedit/jedit.props"/>
 				<include name="modes/*"/>
+				<include name="org/gjt/sp/util/GenericGUIUtilities.java"/>
 				<include name="org/gjt/sp/util/Log*.java"/>
 				<include name="org/gjt/sp/util/IntegerArray.java"/>
 				<include name="org/gjt/sp/util/IOUtilities.java"/>
@@ -963,6 +964,8 @@
 		       debuglevel="${config.build.debuglevel}"
 		       nowarn="${config.build.nowarn}"
 		       deprecation="${config.build.deprecation}"
+		       source="${target.java.version}"
+		       target="${target.java.version}"
 		       compiler="modern"
 		       encoding="UTF-8"
 		       includeAntRuntime="false">
@@ -1169,7 +1172,7 @@
 		</dependset>
 		<javac srcdir="${basedir}"
 		       destdir="${classes.dir}/jarbundler"
-		       includes="net/**"
+		       includes="com/**"
 		       debug="true"
 		       debuglevel="${config.build.debuglevel}"
 		       nowarn="${config.build.nowarn}"
@@ -1194,9 +1197,9 @@
 			</condition>
 		</fail>
 		<taskdef name="create"
-			 classname="net.sourceforge.jarbundler.JarBundler"
+			 classname="com.ultramixer.jarbundler.JarBundler"
 			 classpath="${dist.dir}/classes/jarbundler"
-			 uri="antlib:net.sourceforge.jarbundler">
+			 uri="antlib:com.ultramixer.jarbundler">
 		</taskdef>
 		<tstamp>
 			<format property="current.year"
@@ -1213,7 +1216,6 @@
 				   developmentregion="English"
 				   extraclasspath="/System/Library/Java"
 				   icon="icons/icon.icns"
-				   infostring="jEdit ${jedit.version}, Copyright &#169; 1998-${current.year} Contributors"
 				   copyright="Copyright &#169; 1998-${current.year} Contributors"
 				   jvmversion="${mac.target.java.version}"
 				   shortname="jEdit"
@@ -1222,7 +1224,9 @@
 				   version="${jedit.version}"
 				   antialiasedgraphics="true"
 				   antialiasedtext="true"
-				   screenmenu="true">
+				   screenmenu="true"
+				   lsapplicationcategorytype="public.app-category.developer-tools"
+				   highresolutioncapable="true">
 			<javafileset dir="${dist.dir}"
 				     includes="doc/**
 					       jars/**

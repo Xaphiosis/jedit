@@ -35,6 +35,7 @@ import java.util.*;
 import org.gjt.sp.jedit.gui.DockableWindowManager;
 import org.gjt.sp.jedit.io.*;
 import org.gjt.sp.jedit.*;
+import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.ThreadUtilities;
 //}}}
@@ -42,8 +43,9 @@ import org.gjt.sp.util.ThreadUtilities;
 /**
  * VFS browser tree view.
  * @author Slava Pestov
- * @version $Id: BrowserView.java 24250 2015-12-22 23:35:47Z daleanson $
+ * @version $Id: BrowserView.java 24428 2016-06-23 02:49:29Z daleanson $
  */
+@SuppressWarnings({"unchecked"})	// TODO: need to check on ParentDirectoryList and make it generic
 class BrowserView extends JPanel
 {
 	//{{{ BrowserView constructor
@@ -381,7 +383,7 @@ class BrowserView extends JPanel
 				});
 			}
 		});
-		GUIUtilities.showPopupMenu(popup,comp,point.x,point.y);
+		GenericGUIUtilities.showPopupMenu(popup,comp,point.x,point.y);
 	} //}}}
 
 	//}}}
@@ -453,7 +455,7 @@ class BrowserView extends JPanel
 				if(obj instanceof VFSFile)
 				{
 					VFSFile dirEntry = (VFSFile)obj;
-					if(GUIUtilities.isPopupTrigger(evt))
+					if(GenericGUIUtilities.isPopupTrigger(evt))
 					{
 						if(popup != null && popup.isVisible())
 						{
@@ -476,7 +478,7 @@ class BrowserView extends JPanel
 		public void mouseReleased(MouseEvent evt)
 		{
 			if(evt.getClickCount() % 2 != 0 &&
-				!GUIUtilities.isMiddleButton(evt.getModifiers()))
+				!GenericGUIUtilities.isMiddleButton(evt.getModifiers()))
 				return;
 
 			int row = parentDirectories.locationToIndex(evt.getPoint());
@@ -487,7 +489,7 @@ class BrowserView extends JPanel
 				if(obj instanceof VFSFile)
 				{
 					VFSFile dirEntry = (VFSFile)obj;
-					if(!GUIUtilities.isPopupTrigger(evt))
+					if(!GenericGUIUtilities.isPopupTrigger(evt))
 					{
 						browser.setDirectory(dirEntry.getPath());
 						if(browser.getMode() == VFSBrowser.BROWSER)
@@ -560,7 +562,7 @@ class BrowserView extends JPanel
 					? VFSBrowser.M_OPEN_NEW_VIEW
 					: VFSBrowser.M_OPEN,true);
 			}
-			else if(GUIUtilities.isMiddleButton(evt.getModifiers()))
+			else if(GenericGUIUtilities.isMiddleButton(evt.getModifiers()))
 			{
 				if(evt.isShiftDown())
 					table.getSelectionModel().addSelectionInterval(row,row);
@@ -598,7 +600,7 @@ class BrowserView extends JPanel
 				}
 			}
 
-			if(GUIUtilities.isMiddleButton(evt.getModifiers()))
+			if(GenericGUIUtilities.isMiddleButton(evt.getModifiers()))
 			{
 				if(row == -1)
 					return;
@@ -607,7 +609,7 @@ class BrowserView extends JPanel
 				else
 					table.getSelectionModel().setSelectionInterval(row,row);
 			}
-			else if(GUIUtilities.isPopupTrigger(evt))
+			else if(GenericGUIUtilities.isPopupTrigger(evt))
 			{
 				if(popup != null && popup.isVisible())
 				{
@@ -631,7 +633,7 @@ class BrowserView extends JPanel
 		@Override
 		public void mouseReleased(MouseEvent evt)
 		{
-			if(!GUIUtilities.isPopupTrigger(evt)
+			if(!GenericGUIUtilities.isPopupTrigger(evt)
 				&& table.getSelectedRow() != -1)
 			{
 				browser.filesSelected();

@@ -25,16 +25,15 @@ package org.gjt.sp.jedit.gui;
 //{{{ Imports
 import javax.swing.*;
 import javax.swing.text.*;
-import javax.swing.event.MouseInputAdapter;
-import java.awt.*;
 import java.awt.event.*;
 import org.gjt.sp.jedit.*;
+import org.gjt.sp.util.GenericGUIUtilities;
 //}}}
 
 /**
  * Controller (manager of models) for HistoryTextArea.
  * @author Slava Pestov
- * @version $Id: HistoryText.java 24211 2015-12-10 03:33:28Z daleanson $
+ * @version $Id: HistoryText.java 24411 2016-06-19 11:02:53Z kerik-sf $
  */
 public class HistoryText
 {
@@ -322,7 +321,7 @@ public class HistoryText
 			}
 		}
 
-		GUIUtilities.showPopupMenu(popup,text,x,y,false);
+		GenericGUIUtilities.showPopupMenu(popup,text,x,y,false);
 	} //}}}
 
 	//{{{ showPopupMenu() method

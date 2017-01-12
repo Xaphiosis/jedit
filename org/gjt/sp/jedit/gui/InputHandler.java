@@ -30,6 +30,7 @@ import org.gjt.sp.jedit.textarea.JEditTextArea;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.buffer.JEditBuffer;
 import org.gjt.sp.jedit.input.AbstractInputHandler;
+import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.StandardUtilities;
 
@@ -46,7 +47,7 @@ import java.awt.*;
  * to the implementations of this class to do so.
  *
  * @author Slava Pestov
- * @version $Id: InputHandler.java 24211 2015-12-10 03:33:28Z daleanson $
+ * @version $Id: InputHandler.java 24411 2016-06-19 11:02:53Z kerik-sf $
  * @see org.gjt.sp.jedit.gui.DefaultInputHandler
  */
 public abstract class InputHandler extends AbstractInputHandler<EditAction>
@@ -349,7 +350,7 @@ public abstract class InputHandler extends AbstractInputHandler<EditAction>
 				if(label == null)
 					label = action.getName();
 				else
-					label = GUIUtilities.prettifyMenuLabel(label);
+					label = GenericGUIUtilities.prettifyMenuLabel(label);
 
 				Object[] pp = { label, _repeatCount };
 

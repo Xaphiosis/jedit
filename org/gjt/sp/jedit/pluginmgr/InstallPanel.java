@@ -29,6 +29,7 @@ import org.gjt.sp.jedit.browser.VFSBrowser;
 import org.gjt.sp.jedit.gui.RolloverButton;
 import org.gjt.sp.jedit.io.VFS;
 import org.gjt.sp.jedit.io.VFSManager;
+import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.StandardUtilities;
 import org.gjt.sp.util.StringList;
@@ -62,7 +63,7 @@ import java.util.List;
 //}}}
 
 /**
- * @version $Id: InstallPanel.java 24126 2015-10-29 16:42:52Z ezust $
+ * @version $Id: InstallPanel.java 24541 2016-09-14 09:58:29Z makarius $
  */
 class InstallPanel extends JPanel implements EBComponent
 {
@@ -100,7 +101,7 @@ class InstallPanel extends JPanel implements EBComponent
 		table = new JTable(pluginModel = new PluginTableModel());
 		table.setShowGrid(false);
 		table.setIntercellSpacing(new Dimension(0,0));
-		table.setRowHeight(GUIUtilities.defaultRowHeight() + 2);
+		table.setRowHeight(GenericGUIUtilities.defaultRowHeight() + 2);
 		table.setPreferredScrollableViewportSize(new Dimension(500,200));
 		table.setDefaultRenderer(Object.class, new TextRenderer(
 			(DefaultTableCellRenderer)table.getDefaultRenderer(Object.class)));
@@ -973,28 +974,25 @@ class InstallPanel extends JPanel implements EBComponent
 			{
 				Entry entry = (Entry) pluginModel.filteredEntries
 					.get(table.getSelectedRow());
-				String pattern = "<b>{0}</b>: {1}<br><b>{2}</b>: {3}<br>{4}<br><br><b>{5}</b>:<br>{6}";
+				String pattern = "<b>{0}</b>: {1}<br><b>{2}</b>: {3}<br><br>{4}";
 				List<String> params = new ArrayList<String>();
 				params.add(jEdit.getProperty("install-plugins.info.author", "Author"));
 				params.add(entry.author);
 				params.add(jEdit.getProperty("install-plugins.info.released", "Released"));
 				params.add(entry.date);
 				params.add(entry.description);
-				if (entry.dependencies == null || entry.dependencies.isEmpty())
+				if (entry.dependencies != null && !entry.dependencies.isEmpty())
 				{
-					pattern = "<b>{0}</b>: {1}<br><b>{2}</b>: {3} {4}";
-				}
-				else
-				{
+					pattern += "<br><br><b>{5}</b>:<br>{6}";
 					params.add(jEdit.getProperty("install-plugins.info.depends", "Depends on"));
 					StringList sl = StringList.split(entry.dependencies, "\n");
 					params.add(sl.join(", "));
-					// params.add(entry.dependencies.replaceAll("\n", ", "));
 				}
 				text = MessageFormat.format(pattern, params.toArray());
 			}
 			setText(text);
 			setCaretPosition(0);
+			putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
 		}
 	} //}}}
 

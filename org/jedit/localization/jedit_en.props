@@ -111,6 +111,7 @@ save-a-copy-as.label=Save a Cop$y As...
 save-a-copy-as.tooltip=Does not change the current buffer's path
 save-all.label=Save A$ll...
 print.label=$Print...
+print-preview.label=Print Pre$view...
 page-setup.label=Pa$ge Setup...
 # Print selection not yet implemented
 #print-selection.label=Prin$t Selection...
@@ -584,8 +585,175 @@ print.headerText=jEdit - {0}
 print.footerText={0} :: page {1}
 
 print-error.title=Print Error
-print-error.message=An error occurred while trying to print:\n\
-	{0}
+print-error.message=An error occurred while trying to print:\n{0}
+
+print.dialog.title=Print
+print.dialog.pageSetupTitle=Page Setup
+print.dialog.Advanced=Advanced
+print.dialog.All_pages=All pages
+print.dialog.All_sheets=All sheets
+print.dialog.At=At
+print.dialog.Automatic-Feeder=Automatic Feeder
+print.dialog.Bottom=Bottom
+print.dialog.Cassette=Cassette
+print.dialog.Collate=Collate
+print.dialog.Color=Color
+print.dialog.Copies=Copies
+print.dialog.Current_page=Current page
+print.dialog.Draft=Draft
+print.dialog.Event_sheets=Even shoets
+print.dialog.Finishing=Finishing
+print.dialog.Form-Source=Form Source
+print.dialog.General=General
+print.dialog.High=High
+print.dialog.Ink=Ink
+print.dialog.Job=Job
+print.dialog.Job_Details=Job Details
+print.dialog.Large-Format=Large Format
+print.dialog.Layout=Layout
+print.dialog.Left=Left
+print.dialog.Low=Low
+print.dialog.Manual-Envelope=Manual Envelope
+print.dialog.Margins=Margins
+print.dialog.Medium=Medium
+print.dialog.Monochrome=Monochrome
+print.dialog.Normal=Normal
+print.dialog.Now=Now
+print.dialog.Odd_sheets=Odd sheets
+print.dialog.On_Hold=On Hold
+print.dialog.Only_print=Only print
+print.dialog.Orientation=Orientation
+print.dialog.Output_tray=Output tray
+print.dialog.Page_Setup=Page Setup
+print.dialog.Page_ordering=Page ordering
+print.dialog.Pages=Pages
+print.dialog.Pages_per_side=Pages per side
+print.dialog.Paper=Paper
+print.dialog.Paper_size=Paper size
+print.dialog.Paper_source=Paper source
+print.dialog.Print_Document=Print Document
+print.dialog.Priority=Priority
+print.dialog.Quality=Quality
+print.dialog.Range=Range
+print.dialog.Reverse=Reverse
+print.dialog.Right=Right
+print.dialog.Selection=Selection
+print.dialog.Small-Format=Small Format
+print.dialog.Top=Top
+print.dialog.Tractor-Feeder=Tractor Feeder
+print.dialog.Two-sided=Two-sided
+print.dialog.Urgent=Urgent
+print.dialog.a=Engineering A
+print.dialog.accepting-jobs=Accepting jobs
+print.dialog.auto-select=Automatically Select
+print.dialog.b=Engineering B
+print.dialog.c=Engineering C
+print.dialog.d=Engineering D
+print.dialog.e=Engineering E
+print.dialog.envelope=Envelope
+print.dialog.executive=Executive
+print.dialog.folio=Folio
+print.dialog.invite-envelope=Invitation Envelope
+print.dialog.invoice=Invoice
+print.dialog.iso-2a0=2A0 (ISO/DIN & JIS)
+print.dialog.iso-4a0=4A0 (ISO/DIN & JIS)
+print.dialog.iso-a0=A0 (ISO/DIN & JIS)
+print.dialog.iso-a1=A1 (ISO/DIN & JIS)
+print.dialog.iso-a2=A2 (ISO/DIN & JIS)
+print.dialog.iso-a3=A3 (ISO/DIN & JIS)
+print.dialog.iso-a4=A4 (ISO/DIN & JIS)
+print.dialog.iso-a5=A5 (ISO/DIN & JIS)
+print.dialog.iso-a6=A6 (ISO/DIN & JIS)
+print.dialog.iso-a7=A7 (ISO/DIN & JIS)
+print.dialog.iso-a8=A8 (ISO/DIN & JIS)
+print.dialog.iso-a9=A9 (ISO/DIN & JIS)
+print.dialog.iso-a10=A10 (ISO/DIN & JIS)
+print.dialog.iso-b0=B0 (ISO/DIN)
+print.dialog.iso-b1=B1 (ISO/DIN)
+print.dialog.iso-b2=B2 (ISO/DIN)
+print.dialog.iso-b3=B3 (ISO/DIN)
+print.dialog.iso-b4=B4 (ISO/DIN)
+print.dialog.iso-b5=B5 (ISO/DIN)
+print.dialog.iso-b6=B6 (ISO/DIN)
+print.dialog.iso-b7=B7 (ISO/DIN)
+print.dialog.iso-b8=B8 (ISO/DIN)
+print.dialog.iso-b9=B9 (ISO/DIN)
+print.dialog.iso-b10=B10 (ISO/DIN)
+print.dialog.iso-c0=C0 (ISO/DIN)
+print.dialog.iso-c1=C1 (ISO/DIN)
+print.dialog.iso-c2=C2 (ISO/DIN)
+print.dialog.iso-c3=C3 (ISO/DIN)
+print.dialog.iso-c4=C4 (ISO/DIN)
+print.dialog.iso-c5=C5 (ISO/DIN)
+print.dialog.iso-c6=C6 (ISO/DIN)
+print.dialog.iso-c7=C7 (ISO/DIN)
+print.dialog.iso-c8=C8 (ISO/DIN)
+print.dialog.iso-c9=C9 (ISO/DIN)
+print.dialog.iso-c10=C10 (ISO/DIN)
+print.dialog.iso-designated-long=ISO Designated Long
+print.dialog.italian-envelope=Italy Envelope
+print.dialog.italy-envelope=Italy Envelope
+print.dialog.japanese-postcard=Postcard (JIS)
+print.dialog.jis-b0=B0 (JIS)
+print.dialog.jis-b1=B1 (JIS)
+print.dialog.jis-b2=B2 (JIS)
+print.dialog.jis-b3=B3 (JIS)
+print.dialog.jis-b4=B4 (JIS)
+print.dialog.jis-b5=B5 (JIS)
+print.dialog.jis-b6=B6 (JIS)
+print.dialog.jis-b7=B7 (JIS)
+print.dialog.jis-b8=B8 (JIS)
+print.dialog.jis-b9=B9 (JIS)
+print.dialog.jis-b10=B10 (JIS)
+print.dialog.landscape=Landscape
+print.dialog.main=Main
+print.dialog.manual=Manual
+print.dialog.middle=Middle
+print.dialog.monarch-envelope=Monarch Envelope
+print.dialog.na-5x7=5\" x 7\" Paper
+print.dialog.na-6x9-envelope=6x9 Envelope
+print.dialog.na-7x9-envelope=6x7 Envelope
+print.dialog.na-8x10=8\" x 10\" Paper
+print.dialog.na-9x11-envelope=9x11 Envelope
+print.dialog.na-9x12-envelope=9x12 Envelope
+print.dialog.na-10x13-envelope=10x15 Envelope
+print.dialog.na-10x14-envelope=10x15 Envelope
+print.dialog.na-10x15-envelope=10x15 Envelope
+print.dialog.na-legal=Legal
+print.dialog.na-letter=Letter
+print.dialog.na-number-9-envelope=No. 9 Envelope
+print.dialog.na-number-10-envelope=No. 10 Envelope
+print.dialog.na-number-11-envelope=No. 11 Envelope
+print.dialog.na-number-12-envelope=No. 12 Envelope
+print.dialog.na-number-14-envelope=No. 14 Envelope
+print.dialog.not-accepting-jobs=Not accepting jobs
+print.dialog.one-sided=One sided
+print.dialog.oufuko-postcard=Double Postcard (JIS)
+print.dialog.personal-envelope=Personal Envelope
+print.dialog.portrait=Portrait
+print.dialog.quarto=Quarto
+print.dialog.reverse-landscape=Reverse Landscape
+print.dialog.reverse-portrait=Reverse Portrait
+print.dialog.side=Side
+print.dialog.tabloid=Tabloid
+print.dialog.top=Top
+print.dialog.two-sided-long-edge=Two Sided, Long Edge
+print.dialog.two-sided-short-edge=Two Sided, Short Edge
+print.dialog.error.Invalid_left_margin=Invalid left margin.
+print.dialog.error.Invalid_top_margin=Invalid top margin.
+print.dialog.error.Invalid_left_andor_right_margin=Invalid left and/or right margin.
+print.dialog.error.Invalid_top_andor_bottom_margin=Invalid top and/or bottom margin.
+print.dialog.preview=Preview
+
+print.toggle-show-page-breaks.label=Toggle Page Break Marker
+
+printpreview.dialog.title=Print Preview
+printpreview.dialog.nextPage=Next Page
+printpreview.dialog.prevPage=Previous Page
+printpreview.dialog.zoomin=Zoom In
+printpreview.dialog.zoomout=Zoom Out
+
+
 #}}}
 
 #{{{ Various dialog boxes
@@ -1027,6 +1195,14 @@ close.discard=Discard Selected
 close.discard.mnemonic=d
 #}}}
 
+#{{{ Close all confirm dialog
+closeothers.title=Close All Other Buffers
+closeothers.message=Are you sure you want to close all other buffers?
+closeall.title=Close All Buffers
+closeall.message=Are you sure you want to close all buffers?
+#}}}
+
+
 #{{{ Files changed on disk dialog
 files-changed.title=Files Changed on Disk
 files-changed.caption=The following files were changed on disk by another program:
@@ -1249,6 +1425,7 @@ options.general.recentFiles=Recent files to remember:
 options.general.hypersearch.maxWarningResults=Max Hypersearch Results:
 options.general.sortRecent=Sort recent file list
 options.general.hideOpen=Hide open files from recent file list
+options.general.closeAllConfirm="Close All" asks for confirmation
 options.general.saveCaret=Save caret positions in recent file list
 options.general.persistentMarkers=Save marker positions
 options.general.resetUndo=Reset undo history on save
@@ -1379,7 +1556,13 @@ options.editing.deleteMode.dialog.title=Confirm Mode Delete
 options.editing.deleteMode.dialog.message=Are you sure you want to delete this mode? It cannot be undone.
 options.editing.deleteMode.dialog.message1=Unable to delete mode file
 options.editing.deleteMode.dialog.message2=for mode
-
+options.editing.modes.selectModes=Select the modes that should be shown in modes dialogs:
+options.editing.modes.available=Available mode(s)
+options.editing.modes.selected=Selected modes(s)
+options.editing.modes.available.tooltip=<html>Modes in this column will <b>not</b> be shown as choices in modes comboboxes. Drag them to the right column to show them. </html>
+options.editing.modes.selected.tooltip=<html>Modes in this column will be shown as choices in modes comboboxes of jEdit's GUI. Drag them to the left column to hide them.</html>
+options.editing.modes.deleteSelected=Delete Selected
+options.editing.modes.Delete_these_modes?=Delete these modes?
 #}}}
 
 #{{{ Encodings pane
@@ -1478,10 +1661,11 @@ options.print.lineNumbers=Print line numbers
 options.print.color=Color printing
 options.print.tabSize=Tab width when printing:
 options.print.workarounds=Workarounds for Java bugs
-options.print.glyphVector=Print spacing workaround (increases spool file size)
+options.print.glyphVector=Print spacing workaround (recommended, but increases spool file size)
 options.print.force13=Use old printing API (enable this if jEdit hangs when \
 	printing)
 options.print.folds=Print folded regions
+options.print.useSystemDialog=Use system print dialog
 #}}}
 
 #{{{ Proxy pane
@@ -1626,6 +1810,7 @@ options.textarea.lineHighlight=Highlight current line:
 options.textarea.structureHighlight=Highlight matching elements:
 options.textarea.eolMarkers=End of line markers:
 options.textarea.wrapGuide=Wrap guide:
+options.textarea.pageBreaks=Page breaks:
 options.textarea.electricBorders=Electric (auto scroll) borders
 options.textarea.stdNextPrevWord=Go to next/previous word commands eat whitespace
 options.textarea.antiAlias=Anti Aliased smooth text
@@ -2166,7 +2351,7 @@ macro.rs.GoToColumn.label=Column (between 1 and {0}):
 #}}}
 
 # Go To Offset
-macro.rs.GoToOffset.label=Offset (between 0 and {0}): 
+macro.rs.GoToOffset.label=Offset (between 0 and {0}):
 
 #{{{ Key Words to Uppercase
 macro.rs.KeywordsToUpperCase.ConvertedKeywords.message=Converted Keywords to Upper Case

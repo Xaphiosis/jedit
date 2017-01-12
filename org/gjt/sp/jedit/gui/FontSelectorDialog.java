@@ -31,6 +31,7 @@ import javax.swing.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.gjt.sp.jedit.*;
+import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.Log;
 
 
@@ -38,7 +39,7 @@ import org.gjt.sp.util.Log;
  * A dialog for choosing fonts.
  *
  * @author Slava Pestov
- * @version $Id: FontSelectorDialog.java 24267 2015-12-25 01:13:52Z daleanson $
+ * @version $Id: FontSelectorDialog.java 24428 2016-06-23 02:49:29Z daleanson $
  * @since jEdit 4.4pre1
  */
 
@@ -119,11 +120,11 @@ public class FontSelectorDialog extends EnhancedDialog
 	private FontSelector fontSelector;
 	private boolean isOK;
 	private JTextField familyField;
-	private JList familyList;
+	private JList<String> familyList;
 	private JTextField sizeField;
-	private JList sizeList;
+	private JList<String> sizeList;
 	private JTextField styleField;
-	private JList styleList;
+	private JList<String> styleList;
 	private JLabel preview;
 	private JButton ok;
 	private JButton cancel;
@@ -165,14 +166,14 @@ public class FontSelectorDialog extends EnhancedDialog
 		JPanel familyPanel = createTextFieldAndListPanel(
 			"font-selector.family",
 			familyField = new JTextField(),
-			familyList = new JList(fonts));
+			familyList = new JList<String>(fonts));
 		listPanel.add(familyPanel);
 
 		String[] sizes = { "9", "10", "12", "14", "16", "18", "24", "30", "36", "42" };
 		JPanel sizePanel = createTextFieldAndListPanel(
 			"font-selector.size",
 			sizeField = new JTextField(),
-			sizeList = new JList(sizes));
+			sizeList = new JList<String>(sizes));
 		listPanel.add(sizePanel);
 
 		String[] styles = {
@@ -185,7 +186,7 @@ public class FontSelectorDialog extends EnhancedDialog
 		JPanel stylePanel = createTextFieldAndListPanel(
 			"font-selector.style",
 			styleField = new JTextField(),
-			styleList = new JList(styles));
+			styleList = new JList<String>(styles));
 		styleField.setEditable(false);
 		listPanel.add(stylePanel);
 
@@ -243,7 +244,7 @@ public class FontSelectorDialog extends EnhancedDialog
 		cancel = new JButton(jEdit.getProperty("common.cancel"));
 		cancel.addActionListener(new ActionHandler());
 		
-		GUIUtilities.makeSameSize(ok, cancel);
+		GenericGUIUtilities.makeSameSize(ok, cancel);
 
 		buttons.add(Box.createGlue());
 		buttons.add(ok);
@@ -265,8 +266,9 @@ public class FontSelectorDialog extends EnhancedDialog
 			.getAvailableFontFamilyNames();
 		List<String> nameVector = new ArrayList<String>(nameArray.length);
 
-		for(int i = 0, j; i < nameArray.length; i++)
+		for(int i = 0; i < nameArray.length; i++)
 		{
+			int j;
 			for(j = 0; j < HIDEFONTS.length; j++)
 			{
 				if(nameArray[i].contains(HIDEFONTS[j]))

@@ -73,6 +73,7 @@ import org.gjt.sp.jedit.visitors.SaveCaretInfoVisitor;
 import org.gjt.sp.jedit.bufferset.BufferSetManager;
 import org.gjt.sp.jedit.bufferset.BufferSet;
 import org.gjt.sp.util.AwtRunnableQueue;
+import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.StandardUtilities;
 import org.gjt.sp.util.TaskManager;
@@ -84,7 +85,7 @@ import org.gjt.sp.util.SyntaxUtilities;
 /**
  * The main class of the jEdit text editor.
  * @author Slava Pestov
- * @version $Id: jEdit.java 24115 2015-10-22 17:19:50Z vampire0 $
+ * @version $Id: jEdit.java 24469 2016-07-31 01:55:18Z ezust $
  */
 public class jEdit
 {
@@ -1486,11 +1487,34 @@ public class jEdit
 
 	//{{{ getModes() method
 	/**
-	 * Returns an array of installed edit modes.
+	 * @return an array of installed edit modes that have been selected in the
+	 * global options. The modes in this array will be sorted by mode name.
 	 */
 	public static Mode[] getModes()
 	{
-		return ModeProvider.instance.getModes();
+		Mode[] modes = ModeProvider.instance.getModes();
+		Set<Mode> selected = new HashSet<Mode>();
+		for (Mode mode : modes) {
+			if (!jEdit.getBooleanProperty("mode.opt-out." + mode.getName(), false))
+			{
+				selected.add(mode);
+			}
+		}
+		modes = selected.toArray(new Mode[selected.size()]);
+		Arrays.sort( modes, new StandardUtilities.StringCompare<Mode>( true ) );
+		return modes;
+	} //}}}
+
+	//{{{ getAllModes() method
+	/**
+	 * Returns an array of all installed edit modes. The modes in this array 
+	 * will be sorted by mode name.
+	 */
+	public static Mode[] getAllModes()
+	{
+		Mode[] modes = ModeProvider.instance.getModes();
+		Arrays.sort( modes, new StandardUtilities.StringCompare<Mode>( true ) );
+		return modes;
 	} //}}}
 
 	//}}}
@@ -2458,7 +2482,20 @@ public class jEdit
 					if(buffer.isDirty())
 						notifyFileChanged = true;
 					else
+					{
 						buffer.load(view,true);
+						// File can be changed into link on disk or vice versa, so update
+						// file-path,buffer key value pair in bufferHash
+						final Buffer b = buffer;
+						Runnable runnable = new Runnable()
+						{
+							public void run()
+							{
+								updateBufferHash(b);
+							}
+						};
+						AwtRunnableQueue.INSTANCE.runAfterIoTasks(runnable);
+					}
 				}
 				else	// no automatic reload even if general setting is true
 					autoReload = false;
@@ -2608,7 +2645,7 @@ public class jEdit
 				setBooleanProperty("firstTime",false);
 			}
 			else
-				GUIUtilities.requestFocus(newView,newView.getTextArea());
+				GenericGUIUtilities.requestFocus(newView,newView.getTextArea());
 
 			return newView;
 		}
@@ -3221,6 +3258,35 @@ public class jEdit
 	public static View getActiveViewInternal()
 	{
 		return activeView;
+	} //}}}
+
+		//{{{ updateBufferHash() method
+	/**
+	 * @since jEdit 5.3pre1
+	 */
+	static void updateBufferHash(Buffer buffer)
+	{
+		// Remove path,buffer key,value pair from bufferHash. We use iterator over values
+		// to find our buffer i.s.o. removing it with bufferHash.remove(oldPath), because
+		// path can be changed (e.g. file changed on disk into link.
+		for (Iterator<Buffer> iterator = bufferHash.values().iterator(); iterator.hasNext();)
+		{
+			Buffer b = (Buffer) iterator.next();
+			// Since values() is a Collection connected to bufferHash, removing buffer from the
+			// values() collection also removes it from bufferHash
+			if(buffer == b)
+				iterator.remove();
+        }		
+		
+		String path = buffer.getSymlinkPath();
+		if((VFSManager.getVFSForPath(path).getCapabilities()
+			& VFS.CASE_INSENSITIVE_CAP) != 0)
+		{
+			path = path.toLowerCase();
+		}
+
+		bufferHash.put(path,buffer);
+
 	} //}}}
 
 	//}}}

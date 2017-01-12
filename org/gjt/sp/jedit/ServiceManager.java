@@ -94,7 +94,7 @@ import org.gjt.sp.jedit.buffer.FoldHandler;
  *
  * @since jEdit 4.2pre1
  * @author Slava Pestov
- * @version $Id: ServiceManager.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: ServiceManager.java 24427 2016-06-22 22:29:03Z daleanson $
  */
 public class ServiceManager
 {
@@ -282,6 +282,7 @@ public class ServiceManager
      * @return the service instance
      * @since jEdit 4.4pre1
      */
+    @SuppressWarnings({"unchecked"}) 
 	public static <E> E getService(Class<E> clazz, String name)
 	{
 		return (E) getService(clazz.getName(), name);

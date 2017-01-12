@@ -31,6 +31,7 @@ import org.gjt.sp.jedit.gui.GrabKeyDialog;
 import org.gjt.sp.jedit.gui.GrabKeyDialog.KeyBinding;
 import org.jedit.keymap.Keymap;
 import org.jedit.keymap.KeymapManager;
+import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.StandardUtilities;
 import javax.swing.*;
@@ -49,7 +50,7 @@ import java.util.List;
 /**
  * Key binding editor.
  * @author Slava Pestov
- * @version $Id: ShortcutsOptionPane.java 23920 2015-05-22 08:03:45Z ezust $
+ * @version $Id: ShortcutsOptionPane.java 24411 2016-06-19 11:02:53Z kerik-sf $
  */
 @SuppressWarnings("serial")
 public class ShortcutsOptionPane extends AbstractOptionPane
@@ -153,7 +154,7 @@ public class ShortcutsOptionPane extends AbstractOptionPane
 
 		keyTable = new JTable(filteredModel);
 		filteredModel.setTable(keyTable);
-		keyTable.setRowHeight(GUIUtilities.defaultRowHeight());
+		keyTable.setRowHeight(GenericGUIUtilities.defaultRowHeight());
 		keyTable.getTableHeader().setReorderingAllowed(false);
 		keyTable.getTableHeader().addMouseListener(new HeaderMouseHandler());
 		keyTable.addMouseListener(new TableMouseHandler());
@@ -305,7 +306,7 @@ public class ShortcutsOptionPane extends AbstractOptionPane
 			if (label == null)
 				continue;
 
-			label = GUIUtilities.prettifyMenuLabel(label);
+			label = GenericGUIUtilities.prettifyMenuLabel(label);
 			addBindings(actionSet, name, label, bindings);
 		}
 
@@ -384,7 +385,7 @@ public class ShortcutsOptionPane extends AbstractOptionPane
 			if(col != 0 && row != -1)
 			{
 				 GrabKeyDialog gkd = new GrabKeyDialog(
-					GUIUtilities.getParentDialog(
+					GenericGUIUtilities.getParentDialog(
 					ShortcutsOptionPane.this),
 					filteredModel.getDelegated().getBindingAt(filteredModel.getTrueRow(row), col - 1),
 					allBindings,null);

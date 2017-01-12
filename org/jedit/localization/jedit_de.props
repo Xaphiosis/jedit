@@ -73,6 +73,7 @@ common.clearAll=Alle löschen
 common.selectAll=Alle wählen
 common.selectNone=Nichts wählen
 common.loading=Lade...
+common.reset=Zurücksetzen
 
 #lineSep.unix=Unix (\\n).
 #lineSep.windows=DOS/Windows (\\r\\n).
@@ -875,8 +876,8 @@ search.beanshell-replace-btn=Rückgabewert eines BeanShell-Schnipsels
 search.settings=Einstellungen:
 search.keep=Dialog nicht schließen
 search.keep.mnemonic=b
-search.word=Ganzes Wort (q)
-search.word.bar=Ganzes Wort
+search.word=Ganzes Wort
+search.word.bar=Ganzes Wort  
 search.word.mnemonic=t
 search.case=Groß-/Klein ignorieren
 search.case.mnemonic=i
@@ -1055,6 +1056,13 @@ close.save=Gewählte speichern
 close.save.mnemonic=s
 close.discard=Gewählte verwerfen
 close.discard.mnemonic=v
+#}}}
+
+#{{{ Close all confirm dialog
+closeothers.title=Alle anderen Dateien schließen
+closeothers.message=Wirklich alle anderen Dateien schließen?
+closeall.title=Alle Dateien schließen
+closeall.message=Wirklich alle Dateien schließen?
 #}}}
 
 #{{{ Files changed on disk dialog
@@ -1277,6 +1285,7 @@ options.general.recentFiles=Länge der Liste letzter Dateien:
 options.general.hypersearch.maxWarningResults=Maximale Anzahl Suchergebnisse für Hypersuche:
 options.general.sortRecent=Liste der letzten Dateien sortieren
 options.general.hideOpen=Liste der letzten Dateien zeigt keine offenen Dateien
+options.general.closeAllConfirm=Bestätigung vor "Alle (Dateien) schließen"
 options.general.saveCaret=Cursor-Position merken in zuletzt verwendeten Dateien
 options.general.persistentMarkers=Lesezeichen merken
 options.general.resetUndo=Liste der rückgängig zu machenden Aktionen beim Speichern löschen
@@ -1397,10 +1406,21 @@ options.editing.addMode.dialog.firstLineGlob="glob"-Muster für erste Zeile der 
 options.editing.addMode.dialog.warning.title=Bearbeitungsmodus ersetzen
 options.editing.addMode.dialog.warning.message=Dieser Bearbeitungsmodus existiert bereits. Soll er ersetzt werden?
 options.editing.addMode.dialog.warning.message1=Definitionsdatei für Bearbeitungsmodus konnte nicht kopiert werden
+options.editing.addMode.dialog.Mode_name_may_not_be_empty.=Name für Bearbeitungsmodus darf nicht leer sein.
+options.editing.addMode.dialog.Mode_file_may_not_be_empty.=Datei für Bearbeitungsmodus darf nicht leer sein.
+options.editing.addMode.dialog.Either_file_name_glob_or_first_line_glob_or_both_must_be_filled_in.=Mindestens ein "glob"-Muster (für Dateiname oder für erste Zeile der Datei) muss angegeben sein
+options.editing.addMode.dialog.errorTitle=Fehler
 options.editing.deleteMode.dialog.title=Bearbeitungsmodus löschen
 options.editing.deleteMode.dialog.message=Soll dieser Bearbeitungsmodus wirklich gelöscht werden? Dies kann nicht rückgängig gemacht werden.
 options.editing.deleteMode.dialog.message1=Definitionsdatei für Bearbeitungsmodus konnte nicht gelöscht werden
 options.editing.deleteMode.dialog.message2=für Bearbeitungsmodus
+options.editing.modes.selectModes=Bearbeitungsmodi wählen, die in entsprechenden Dialogen zur Auswahl stehen sollen:
+options.editing.modes.available=Verfügbare Bearbeitungsmodi
+options.editing.modes.selected=Gewählte Bearbeitungsmodi
+options.editing.modes.available.tooltip=<html>Bearbeitungsmodi in dieser Spalte stehen in entsprechenden Auswahlfeldern <b>nicht</b> zur Verfügung. Zum Ändern in die rechte Spalte ziehen. </html>
+options.editing.modes.selected.tooltip=<html>Bearbeitungsmodi in dieser Spalte stehen in entsprechenden Auswahlfeldern zur Verfügung. Zum Ändern in die linke Spalte ziehen.</html>
+options.editing.modes.deleteSelected=Gewählte löschen
+options.editing.modes.Delete_these_modes?=Diese Bearbeitungsmodi löschen?
 #}}}
 
 #{{{ Encodings pane
@@ -1715,7 +1735,7 @@ options.browser.colors.remove=Entfernen
 options.browser.general.label=Allgemein
 options.browser.general.defaultPath=Standardpfad:
 options.browser.general.defaultPath.favorites=Favoriten
-options.browser.general.defaultPath.home=jEdit-Programmverzeichnis
+options.browser.general.defaultPath.home=Benutzerverzeichnis (User Home)
 options.browser.general.defaultPath.last=Zuletzt verwendetes Verzeichnis
 options.browser.general.defaultPath.buffer=Verzeichnis der aktiven Datei
 options.browser.general.defaultPath.working=Arbeitsverzeichnis des jEdit-Prozesses
@@ -1868,7 +1888,7 @@ vfs.browser.browse.label=Browse
 vfs.browser.close.label=Schließen
 vfs.browser.copy-path.label=Pfadname kopieren
 vfs.browser.delete.label=Löschen...
-vfs.browser.home.label=User-Home-Verzeichnis
+vfs.browser.home.label=Benutzerverzeichnis (User Home)
 vfs.browser.properties.label=Eigenschaften
 vfs.browser.properties.title=Datei-/Verzeichnis-Eigenschaften
 vfs.browser.insert.label=Einfügen
@@ -2472,6 +2492,7 @@ macros.folder.Editing.label=Bearbeiten
 Editing/Duplicate_Lines_Above.label=Dupliziere Zeilen nach oben
 Editing/Duplicate_Lines_Below.label=Dupliziere Zeilen nach unten
 Editing/Go_to_Column.label=Gehe zu Spalte
+Editing/Go_to_Offset.label=Gehe zu Offset
 Editing/Greedy_Backspace.label=Gefräßig Löschen nach links
 Editing/Greedy_Delete.label=Gefräßig Löschen
 Editing/Greedy_Left.label=Gefräßig nach Links
@@ -2572,6 +2593,9 @@ Misc/HyperSearch_Results_to_Buffer.label=Hypersuche-Ergebnisse - Zeilen-Export i
 Misc/Make_Bug_Report.label=jEdit-Info für Bug-Report
 Misc/Run_Script.label=Starte als Skript
 Misc/Show_Threads.label=Liste der Threads
+Misc/Generate_Encodings_List.label=Liste der Zeichenkodierungen
+Misc/Generate_Modes_List.label=Liste der Bearbeitungsmodi
+Misc/Insert_Plugins_List.label=Liste der (gestarteten) Plugins
 #}}}
 
 #{{{ Properties
@@ -2596,6 +2620,7 @@ Text/Insert_Tag.label=XML-Tag einfügen
 Text/Line_Filter.label=Zeilenfilter
 Text/Next_Char.label=Auswahl bis Zeichen (eingeben)
 Text/Reverse_Lines.label=Zeilenreihenfolge umkehren
+Text/Reverse_Selection.label=Zeichenreihenfolge in Auswahl umkehren
 Text/Single_Space_Buffer.label=Zeilenabstand doppelt => einfach
 #}}}
 

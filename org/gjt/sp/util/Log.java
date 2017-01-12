@@ -23,7 +23,6 @@
 package org.gjt.sp.util;
 
 //{{{ Imports
-import java.awt.Toolkit;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -58,7 +57,7 @@ import static java.text.DateFormat.MEDIUM;
  * to the log, see {@link #init}.
  *
  * @author Slava Pestov
- * @version $Id: Log.java 24211 2015-12-10 03:33:28Z daleanson $
+ * @version $Id: Log.java 24428 2016-06-23 02:49:29Z daleanson $
  */
 public class Log
 {
@@ -120,13 +119,10 @@ public class Log
 	 */
 	public static void init(boolean stdio, int level)
 	{
-		if(stdio)
+		if(stdio && System.out == realOut && System.err == realErr)
 		{
-			if(System.out == realOut && System.err == realErr)
-			{
-				System.setOut(createPrintStream(NOTICE,null));
-				System.setErr(createPrintStream(ERROR,null));
-			}
+			System.setOut(createPrintStream(NOTICE,null));
+			System.setErr(createPrintStream(ERROR,null));
 		}
 
 		Log.level = level;
@@ -177,9 +173,9 @@ public class Log
 
 				stream.flush();
 			}
-			catch(Exception e)
+			catch(Exception e)		// NOPMD
 			{
-				// do nothing, who cares
+				// do nothing, who cares -- well, PMD will call you on it.
 			}
 		}
 
@@ -252,7 +248,7 @@ public class Log
 	 * Returns the list model for viewing the log contents.
 	 * @since jEdit 4.2pre1
 	 */
-	public static ListModel getLogListModel()
+	public static ListModel<String> getLogListModel()
 	{
 		return listModel;
 	} //}}}
@@ -482,7 +478,7 @@ public class Log
 	//}}}
 
 	//{{{ LogListModel class
-	static class LogListModel implements ListModel
+	static class LogListModel implements ListModel<String>
 	{
 		final List<ListDataListener> listeners = new ArrayList<ListDataListener>();
 
@@ -620,7 +616,7 @@ public class Log
 					orig.write(data, 0, data.length);
 					out = orig;
 				}
-				catch (IOException ioe)
+				catch (IOException ioe)		// NOPMD
 				{
 					// don't do anything?
 				}

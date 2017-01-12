@@ -40,7 +40,6 @@ import org.gjt.sp.jedit.io.*;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.IOUtilities;
 
-import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.jedit.buffer.JEditBuffer;
 import org.gjt.sp.util.StringList;
 //}}}
@@ -57,7 +56,7 @@ import org.gjt.sp.util.StringList;
  * <li>{@link #constructPath(String,String)}</li>
  * </ul>
  *
- * @version $Id: MiscUtilities.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: MiscUtilities.java 24464 2016-07-19 14:47:33Z ezust $
  */
 public class MiscUtilities
 {
@@ -617,7 +616,7 @@ public class MiscUtilities
 
 		If a URI is supplied, use desktop browser.
 
-		@param path: path or URI of thing to open/browse
+		@param path or URI of thing to open/browse
 		@author Alan Ezust
 		@since jEdit 5.0
 	*/

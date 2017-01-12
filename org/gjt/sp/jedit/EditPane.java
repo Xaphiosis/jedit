@@ -90,7 +90,7 @@ import org.gjt.sp.util.ThreadUtilities;
  * @see View#getEditPanes()
  *
  * @author Slava Pestov
- * @version $Id: EditPane.java 24211 2015-12-10 03:33:28Z daleanson $
+ * @version $Id: EditPane.java 24411 2016-06-19 11:02:53Z kerik-sf $
  */
 public class EditPane extends JPanel implements BufferSetListener
 {
@@ -1046,9 +1046,9 @@ public class EditPane extends JPanel implements BufferSetListener
 		SyntaxStyle[] foldLineStyle = new SyntaxStyle[4];
 		for(int i = 0; i <= 3; i++)
 		{
-			foldLineStyle[i] = GUIUtilities.parseStyle(
+			foldLineStyle[i] = SyntaxUtilities.parseStyle(
 				jEdit.getProperty("view.style.foldLine." + i),
-				defaultFont,defaultFontSize);
+				defaultFont,defaultFontSize, true);
 		}
 		painter.setFoldLineStyle(foldLineStyle);
 	} //}}}

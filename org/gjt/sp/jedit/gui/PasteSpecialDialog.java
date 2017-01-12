@@ -26,7 +26,7 @@ import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.datatransfer.JEditDataFlavor;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.jedit.textarea.TextArea;
-import org.gjt.sp.jedit.GUIUtilities;
+import org.gjt.sp.util.GenericGUIUtilities;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -47,10 +47,7 @@ public class PasteSpecialDialog extends EnhancedDialog
 				JEditDataFlavor.jEditRichTextDataFlavor, JEditDataFlavor.html};
 
 		private final TextArea textArea;
-		private final JButton ok;
-
-		private final JButton cancel;
-		private JList flavorList;
+		private JList<DataFlavor> flavorList;
 
 		public PasteSpecialDialog(View view, TextArea textArea)
 		{
@@ -63,7 +60,7 @@ public class PasteSpecialDialog extends EnhancedDialog
 				Transferable transferable = register.getTransferable();
 				DataFlavor[] flavors = transferable.getTransferDataFlavors();
 				List<DataFlavor> flavorList = Arrays.asList(flavors);
-				Vector<DataFlavor> supportedFlavors = new Vector<DataFlavor>(this.flavors.length);
+				List<DataFlavor> supportedFlavors = new ArrayList<DataFlavor>(this.flavors.length);
 				for (DataFlavor flavor : this.flavors)
 				{
 						if (flavorList.contains(flavor))
@@ -71,7 +68,7 @@ public class PasteSpecialDialog extends EnhancedDialog
 								supportedFlavors.add(flavor);
 						}
 				}
-				this.flavorList = new JList(supportedFlavors);
+				this.flavorList = new JList<DataFlavor>(supportedFlavors.toArray(new DataFlavor[supportedFlavors.size()]));
 				this.flavorList.setCellRenderer(new DefaultListCellRenderer()
 				{
 						@Override
@@ -102,7 +99,7 @@ public class PasteSpecialDialog extends EnhancedDialog
 				buttons.setBorder(new EmptyBorder(17, 0, 0, 0));
 				buttons.add(Box.createGlue());
 
-				ok = new JButton(jEdit.getProperty("common.ok"));
+				JButton ok = new JButton(jEdit.getProperty("common.ok"));
 				ok.addActionListener(new ActionListener()
 				{
 						public void actionPerformed(ActionEvent e)
@@ -115,7 +112,7 @@ public class PasteSpecialDialog extends EnhancedDialog
 
 				buttons.add(Box.createHorizontalStrut(6));
 
-				cancel = new JButton(jEdit.getProperty("common.cancel"));
+				JButton cancel = new JButton(jEdit.getProperty("common.cancel"));
 				cancel.addActionListener(new ActionListener()
 				{
 						public void actionPerformed(ActionEvent e)
@@ -125,7 +122,7 @@ public class PasteSpecialDialog extends EnhancedDialog
 				});
 				buttons.add(cancel);
 				
-				GUIUtilities.makeSameSize(ok, cancel);
+				GenericGUIUtilities.makeSameSize(ok, cancel);
 				
 				content.add(BorderLayout.SOUTH, buttons);
 

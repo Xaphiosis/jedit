@@ -23,7 +23,6 @@
 package org.gjt.sp.jedit.gui;
 
 //{{{ Imports
-import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 import javax.swing.*;
@@ -31,13 +30,14 @@ import java.awt.event.*;
 import java.awt.*;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.util.EnhancedTreeCellRenderer;
+import org.gjt.sp.util.GenericGUIUtilities;
 //}}}
 
 /**
  * Files changed on disk dialog.
  *
  * @author Slava Pestov
- * @version $Id: FilesChangedDialog.java 24263 2015-12-24 20:04:10Z daleanson $
+ * @version $Id: FilesChangedDialog.java 24411 2016-06-19 11:02:53Z kerik-sf $
  */
 public class FilesChangedDialog extends EnhancedDialog
 {
@@ -181,7 +181,7 @@ public class FilesChangedDialog extends EnhancedDialog
 				changedDirty
 			}));
 
-		GUIUtilities.requestFocus(this,bufferTree);
+		GenericGUIUtilities.requestFocus(this,bufferTree);
 
 		updateEnabled();
 

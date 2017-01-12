@@ -57,6 +57,7 @@ import org.gjt.sp.jedit.input.TextAreaInputHandler;
 import org.gjt.sp.jedit.syntax.Chunk;
 import org.gjt.sp.jedit.syntax.DefaultTokenHandler;
 import org.gjt.sp.jedit.syntax.Token;
+import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.StandardUtilities;
 import org.gjt.sp.util.ThreadUtilities;
@@ -71,7 +72,7 @@ import org.gjt.sp.util.ThreadUtilities;
  *
  * @author Slava Pestov
  * @author kpouer (rafactoring into standalone text area)
- * @version $Id: TextArea.java 24282 2016-01-01 20:04:42Z daleanson $
+ * @version $Id: TextArea.java 24491 2016-08-09 22:16:29Z daleanson $
  */
 public abstract class TextArea extends JPanel
 {
@@ -108,11 +109,11 @@ public abstract class TextArea extends JPanel
 		// some plugins add stuff in a "right-hand" gutter
 		RequestFocusLayerUI reqFocus = new RequestFocusLayerUI();
 		verticalBox = new Box(BoxLayout.X_AXIS);
-		verticalBox.add(new JLayer(
+		verticalBox.add(new JLayer<JComponent>(
 			vertical = new JScrollBar(Adjustable.VERTICAL), reqFocus));
 		vertical.setRequestFocusEnabled(false);
 		add(ScrollLayout.RIGHT,verticalBox);
-		add(ScrollLayout.BOTTOM, new JLayer(
+		add(ScrollLayout.BOTTOM, new JLayer<JComponent>(
 			horizontal = new JScrollBar(Adjustable.HORIZONTAL), reqFocus));
 		horizontal.setRequestFocusEnabled(false);
 
@@ -235,7 +236,7 @@ public abstract class TextArea extends JPanel
 		builder.append(",screenLastLine=").append(screenLastLine);
 		builder.append(",visibleLines=").append(visibleLines);
 		builder.append(",firstPhysicalLine=").append(getFirstPhysicalLine());
-		builder.append(",physLastLine=").append(physLastLine).append("]");
+		builder.append(",physLastLine=").append(physLastLine).append(']');
 		return builder.toString();
 	} //}}}
 
@@ -564,7 +565,11 @@ public abstract class TextArea extends JPanel
 	 */
 	public final int getFirstPhysicalLine()
 	{
-		return displayManager.firstLine.getPhysicalLine();
+		if (displayManager != null && displayManager.firstLine != null)
+		{
+			return displayManager.firstLine.getPhysicalLine();
+		}
+		return 0;
 	} //}}}
 
 	//{{{ setFirstPhysicalLine() methods
@@ -575,7 +580,9 @@ public abstract class TextArea extends JPanel
 	 */
 	public void setFirstPhysicalLine(int physFirstLine)
 	{
-		setFirstPhysicalLine(physFirstLine,0);
+		if (physFirstLine < 0)
+			physFirstLine = 0;
+		setFirstPhysicalLine(physFirstLine, 0);
 	}
 
 	/**
@@ -1618,8 +1625,8 @@ public abstract class TextArea extends JPanel
 		}
 
 		// Scan backwards, trying to find a bracket
-		String openBrackets = "([{";
-		String closeBrackets = ")]}";
+		String openBrackets = "([{«‹⟨⌈⌊⦇⟦⦃";
+		String closeBrackets = ")]}»›⟩⌉⌋⦈⟧⦄";
 		int count = 1;
 		char openBracket = '\0';
 		char closeBracket = '\0';
@@ -2112,7 +2119,8 @@ forward_scan:	do
 	 * method can be passed as a parameter to such methods as
 	 * {@link JEditBuffer#getLineText(int)}.
 	 *
-	 * @return Non-null, non-zero sized array of line indexes.
+	 * @return Non-null, non-zero sized array of line indexes. If no lines are
+	 * actually selected, return the caret line in the array.
 	 * @since jEdit 3.2pre1
 	 */
 	public int[] getSelectedLines()
@@ -4851,7 +4859,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 	{
 		if(buffer == null)
 			return;
-
+		
 		if(buffer.getBooleanProperty("elasticTabstops"))
 		{
 			//call this only if it was previously off
@@ -4859,7 +4867,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 			{
 				turnOnElasticTabstops();
 			}
-			if(buffer.getColumnBlock()!=null)
+			if(buffer.getColumnBlock() != null)
 			{
 				buffer.getColumnBlock().setTabSizeDirtyStatus(true, true);
 			}
@@ -4891,7 +4899,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		softWrap = "soft".equals(wrap) && !"limited".equals(largeFileMode) && !"nohighlight".equals(largeFileMode);
 		boolean oldWrapToWidth = wrapToWidth;
 		int oldWrapMargin = wrapMargin;
-		setMaxLineLength(buffer.getIntegerProperty("maxLineLen",0));
+		setMaxLineLength(buffer.getIntegerProperty("maxLineLen", 0));
 
 		boolean wrapSettingsChanged = !(wrap.equals(oldWrap)
 			&& oldWrapToWidth == wrapToWidth
@@ -4906,14 +4914,6 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		chunkCache.reset();
 		gutter.repaint();
 		painter.repaint();
-		SwingUtilities.invokeLater(new Runnable()
-		{
-			public void run()
-			{
-				scrollToCaret(false);
-			}
-		});
-		
 	} //}}}
 
 	//{{{ addActionSet() method
@@ -5014,25 +5014,15 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 	//{{{ updateMaxHorizontalScrollWidth() method
 	void updateMaxHorizontalScrollWidth()
 	{
-		int max = chunkCache.getMaxHorizontalScrollWidth();
-
-		if(max != maxHorizontalScrollWidth)
-		{
-			maxHorizontalScrollWidth = max;
-			horizontal.setValues(Math.max(0,
-				Math.min(maxHorizontalScrollWidth + charWidth
-				- painter.getWidth(),
-				-horizontalOffset)),
-				painter.getWidth(),
-				0,maxHorizontalScrollWidth
-				+ charWidth);
-			horizontal.setUnitIncrement(10);
-			horizontal.setBlockIncrement(painter.getWidth());
-		}
-		else if (horizontal.getValue() != -horizontalOffset)
-		{
-			horizontal.setValue(-horizontalOffset);
-		}
+		maxHorizontalScrollWidth = chunkCache.getMaxHorizontalScrollWidth();
+		horizontal.setValues(
+			Math.max(0, Math.min(maxHorizontalScrollWidth + charWidth - painter.getWidth(),	-horizontalOffset)),
+			painter.getWidth(),
+			0,
+			maxHorizontalScrollWidth + charWidth
+		);	
+		horizontal.setUnitIncrement(10);
+		horizontal.setBlockIncrement(painter.getWidth());
 	} //}}}
 
 	//{{{ recalculateVisibleLines() method
@@ -5759,8 +5749,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 			case '{': case '}':
 			case '[': case ']':
 			case '(': case ')':
-				text = buffer.getLineText(match.startLine - 1)
-					.trim() + ' ' + text;
+				text = buffer.getLineText(match.startLine - 1).trim() + ' ' + text;
 				break;
 			}
 		}
@@ -6271,7 +6260,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 
 		if(getSelectionCount() == 0 || multi)
 			moveCaretPosition(dragStart,false);
-		showPopupMenu(popup,this,x,y,false);
+		GenericGUIUtilities.showPopupMenu(popup,this,x,y,false);
 	} //}}}
 
 	//{{{ createPopupMenu() method
@@ -6300,7 +6289,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 			{
 				// Open the context menu below the caret
 				int charHeight = getPainter().getLineHeight();
-				showPopupMenu(popup,
+				GenericGUIUtilities.showPopupMenu(popup,
 					painter,caretPos.x,caretPos.y + charHeight,true);
 			}
 		}
@@ -6318,65 +6307,16 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 	 * otherwise it will originate from the component itself. This affects
 	 * positioning in the case where the popup does not fit onscreen.
 	 *
+	 * FIXME: move parts of GUIUtilities compatible with standalone TextArea in a separate
+	 * class, to prevent such copies
+	 *
 	 * @since jEdit 4.1pre1
+	 * @deprecated use {@link GenericGUIUtilities#showPopupMenu(JPopupMenu, Component, int, int, boolean)}
 	 */
 	public static void showPopupMenu(JPopupMenu popup, Component comp,
 		int x, int y, boolean point)
 	{
-		int offsetX = 0;
-		int offsetY = 0;
-
-		int extraOffset = point ? 1 : 0;
-
-		Component win = comp;
-		while(!(win instanceof Window || win == null))
-		{
-			offsetX += win.getX();
-			offsetY += win.getY();
-			win = win.getParent();
-		}
-
-		if(win != null)
-		{
-			Dimension size = popup.getPreferredSize();
-
-			Rectangle screenSize = GraphicsEnvironment
-				.getLocalGraphicsEnvironment().getMaximumWindowBounds();
-
-			if(x + offsetX + size.width + win.getX() > screenSize.width
-				&& x + offsetX + win.getX() >= size.width)
-			{
-				//System.err.println("x overflow");
-				if(point)
-					x -= size.width + extraOffset;
-				else
-					x = win.getWidth() - size.width - offsetX + extraOffset;
-			}
-			else
-			{
-				x += extraOffset;
-			}
-
-			//System.err.println("y=" + y + ",offsetY=" + offsetY
-			//	+ ",size.height=" + size.height
-			//	+ ",win.height=" + win.getHeight());
-			if(y + offsetY + size.height + win.getY() > screenSize.height
-				&& y + offsetY + win.getY() >= size.height)
-			{
-				if(point)
-					y = win.getHeight() - size.height - offsetY + extraOffset;
-				else
-					y = -size.height - 1;
-			}
-			else
-			{
-				y += extraOffset;
-			}
-
-			popup.show(comp,x,y);
-		}
-		else
-			popup.show(comp,x + extraOffset,y + extraOffset);
+		GenericGUIUtilities.showPopupMenu(popup, comp, x, y, point);
 
 	} //}}}
 

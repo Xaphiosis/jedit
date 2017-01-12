@@ -139,7 +139,7 @@ import org.gjt.sp.util.Log;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: ActionSet.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: ActionSet.java 24427 2016-06-22 22:29:03Z daleanson $
  * @since jEdit 4.0pre1
  */
 public class ActionSet extends JEditActionSet<EditAction> implements Comparable
@@ -190,7 +190,7 @@ public class ActionSet extends JEditActionSet<EditAction> implements Comparable
 	 * @since jEdit 4.0pre1
 	 */
 	@Override
-	public void addAction(EditAction action)
+	public void addAction(EditAction action)	// NOPMD
 	{
 		super.addAction(action);
 	} //}}}
@@ -210,7 +210,7 @@ public class ActionSet extends JEditActionSet<EditAction> implements Comparable
 	 * @since jEdit 4.0pre1
 	 */
 	@Override
-	public EditAction[] getActions()
+	public EditAction[] getActions()	// NOPMD
 	{
 		return super.getActions();
 	} //}}}
@@ -270,10 +270,8 @@ public class ActionSet extends JEditActionSet<EditAction> implements Comparable
 	public String[] getCacheableActionNames()
 	{
 		LinkedList<String> retVal = new LinkedList<String>();
-		Enumeration e = actions.elements();
-		while(e.hasMoreElements())
+		for (Object obj : actions.values())
 		{
-			Object obj = e.nextElement();
 			if(obj == placeholder)
 			{
 				// ??? this should only be called with

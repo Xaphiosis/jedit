@@ -56,8 +56,8 @@ public class GeneralOptionPane extends AbstractOptionPane
 
 	//{{{ Private members
 
-	private JComboBox checkModStatus;
-	private JComboBox checkModStatusUpon;
+	private JComboBox<String> checkModStatus;
+	private JComboBox<String> checkModStatusUpon;
 	private JSpinner recentFiles;
 	private JSpinner hypersearchResultsWarning;
 	private JCheckBox saveCaret;
@@ -70,7 +70,9 @@ public class GeneralOptionPane extends AbstractOptionPane
 	private JCheckBox restoreSplits;
 
 	private JCheckBox useDefaultLocale;
-	private JComboBox lang;
+	private JComboBox<String> lang;
+	
+	private JCheckBox closeAllConfirm;
 	//}}}
 
 	//{{{ GeneralOptionPane constructor
@@ -91,7 +93,7 @@ public class GeneralOptionPane extends AbstractOptionPane
 				jEdit.getProperty("options.general.checkModStatus.reload"),
 				jEdit.getProperty("options.general.checkModStatus.silentReload")
 		};
-		checkModStatus = new JComboBox(modCheckOptions);
+		checkModStatus = new JComboBox<String>(modCheckOptions);
 		if(jEdit.getBooleanProperty("autoReload"))
 		{
 			if (jEdit.getBooleanProperty("autoReloadDialog"))
@@ -118,7 +120,7 @@ public class GeneralOptionPane extends AbstractOptionPane
 				jEdit.getProperty("options.general.checkModStatusUpon.visitBuffer"),
 				jEdit.getProperty("options.general.checkModStatusUpon.all")
 		};
-		checkModStatusUpon = new JComboBox(modCheckUponOptions);
+		checkModStatusUpon = new JComboBox<String>(modCheckUponOptions);
 
 		checkModStatusUpon.setSelectedIndex(jEdit.getIntegerProperty("checkFileStatus"));
 		addComponent(jEdit.getProperty("options.general.checkModStatusUpon"),
@@ -144,6 +146,12 @@ public class GeneralOptionPane extends AbstractOptionPane
 				"options.general.hideOpen"));
 		hideOpen.setSelected(jEdit.getBooleanProperty("hideOpen", true));
 		addComponent(hideOpen);
+		
+		/* Close all confirmation */
+		closeAllConfirm = new JCheckBox(jEdit.getProperty(
+				"options.general.closeAllConfirm"));
+		closeAllConfirm.setSelected(jEdit.getBooleanProperty("closeAllConfirm", false));
+		addComponent(closeAllConfirm);
 
 		/* Save caret positions */
 		saveCaret = new JCheckBox(jEdit.getProperty(
@@ -216,7 +224,7 @@ public class GeneralOptionPane extends AbstractOptionPane
 				lang.setEnabled(!useDefaultLocale.isSelected());
 			}
 		});
-		lang = new JComboBox(languages);
+		lang = new JComboBox<String>(languages);
 		lang.setEnabled(!useDefaultLocale.isSelected());
 		lang.setSelectedItem(language);
 
@@ -254,6 +262,7 @@ public class GeneralOptionPane extends AbstractOptionPane
 		jEdit.setIntegerProperty("recentFiles", (Integer) recentFiles.getModel().getValue());
 		jEdit.setBooleanProperty("sortRecent",sortRecent.isSelected());
 		jEdit.setBooleanProperty("hideOpen", hideOpen.isSelected());
+		jEdit.setBooleanProperty("closeAllConfirm", closeAllConfirm.isSelected());
 		jEdit.setBooleanProperty("saveCaret",saveCaret.isSelected());
 		jEdit.setBooleanProperty("persistentMarkers",
 				persistentMarkers.isSelected());

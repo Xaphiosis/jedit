@@ -28,8 +28,8 @@ import java.awt.event.*;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
-import org.gjt.sp.jedit.GUIUtilities;
 import org.gjt.sp.jedit.OperatingSystem;
+import org.gjt.sp.util.GenericGUIUtilities;
 //}}}
 
 /** A button that, when clicked, shows a color chooser.
@@ -37,7 +37,7 @@ import org.gjt.sp.jedit.OperatingSystem;
  * You can get and set the currently selected color using
  * {@link #getSelectedColor()} and {@link #setSelectedColor(Color)}.
  * @author Slava Pestov
- * @version $Id: ColorWellButton.java 24258 2015-12-24 18:24:32Z daleanson $
+ * @version $Id: ColorWellButton.java 24411 2016-06-19 11:02:53Z kerik-sf $
  */
 public class ColorWellButton extends JButton
 {
@@ -108,7 +108,7 @@ public class ColorWellButton extends JButton
 	{
 		public void actionPerformed(ActionEvent evt)
 		{
-			JDialog parent = GUIUtilities.getParentDialog(ColorWellButton.this);
+			JDialog parent = GenericGUIUtilities.getParentDialog(ColorWellButton.this);
 			Color c = null;
 			if (parent != null)
 			{

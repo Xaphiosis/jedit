@@ -25,8 +25,6 @@ package org.gjt.sp.jedit.gui;
 //{{{ Imports
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import javax.annotation.Nullable;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -39,7 +37,7 @@ import org.gjt.sp.util.ThreadUtilities;
 //}}}
 
 /** Activity Log Viewer
- * @version $Id: LogViewer.java 23426 2014-02-28 10:39:28Z kpouer $
+ * @version $Id: LogViewer.java 24429 2016-06-23 03:08:58Z daleanson $
  */
 public class LogViewer extends JPanel implements DefaultFocusComponent
 {
@@ -47,6 +45,7 @@ public class LogViewer extends JPanel implements DefaultFocusComponent
 	private final ColorizerCellRenderer cellRenderer;
 
 	//{{{ LogViewer constructor
+	@SuppressWarnings({"unchecked"})	// The FilteredListModel needs work
 	public LogViewer()
 	{
 		super(new BorderLayout());
@@ -190,7 +189,7 @@ public class LogViewer extends JPanel implements DefaultFocusComponent
 
 	//{{{ Private members
 	private ListHandler listHandler;
-	private final FilteredListModel<ListModel> listModel;
+	private final FilteredListModel<ListModel<String>> listModel;
 	private final JList list;
 	private final JButton copy;
 	private final JCheckBox tail;
@@ -245,6 +244,7 @@ public class LogViewer extends JPanel implements DefaultFocusComponent
 	//}}}
 
 	//{{{ ActionHandler class
+	@SuppressWarnings({"deprecation"})	// see note below
 	private class ActionHandler implements ActionListener
 	{
 		@Override
@@ -263,6 +263,8 @@ public class LogViewer extends JPanel implements DefaultFocusComponent
 			else if(src == copy)
 			{
 				StringBuilder buf = new StringBuilder();
+				// TODO: list.getSelectedValues is deprecated. Need to finish the
+				// conversion to generics for this class at some point.
 				Object[] selected = list.getSelectedValues();
 				if(selected != null && selected.length != 0)
 				{
@@ -309,6 +311,7 @@ public class LogViewer extends JPanel implements DefaultFocusComponent
 	} //}}}
 
 	//{{{ LogList class
+	@SuppressWarnings({"unchecked"})	// The FilteredListModel needs work
 	private class LogList extends JList
 	{
 		LogList(ListModel model)
@@ -429,9 +432,9 @@ public class LogViewer extends JPanel implements DefaultFocusComponent
 	} //}}}
 
 	//{{{ MyFilteredListModel
-	private static class MyFilteredListModel extends FilteredListModel<ListModel>
+	private static class MyFilteredListModel extends FilteredListModel<ListModel<String>>
 	{
-		MyFilteredListModel(ListModel model)
+		MyFilteredListModel(ListModel<String> model)
 		{
 			super(model);
 		}

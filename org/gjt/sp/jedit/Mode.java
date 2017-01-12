@@ -44,7 +44,7 @@ import org.gjt.sp.util.StandardUtilities;
  * One instance of this class is created for each supported edit mode.
  *
  * @author Slava Pestov
- * @version $Id: Mode.java 23980 2015-08-10 13:44:17Z daleanson $
+ * @version $Id: Mode.java 24428 2016-06-23 02:49:29Z daleanson $
  */
 public class Mode
 {
@@ -218,6 +218,7 @@ public class Mode
 	 * Should only be called by <code>XModeHandler</code>.
 	 * @since jEdit 4.0pre3
 	 */
+	@SuppressWarnings({"unchecked"}) 
 	public void setProperties(Map props)
 	{
 		if(props == null)

@@ -104,7 +104,7 @@ import org.gjt.sp.util.ThreadUtilities;
  * @see VFSManager#getVFSForProtocol(String)
  *
  * @author Slava Pestov
- * @author $Id: VFS.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @author $Id: VFS.java 24415 2016-06-19 11:07:55Z kerik-sf $
  */
 public abstract class VFS
 {
@@ -205,7 +205,7 @@ public abstract class VFS
 	public static final String EA_MODIFIED = "modified";
 	//}}}
 
-	public static int IOBUFSIZE = 32678;
+	public static final int IOBUFSIZE = 32678;
 
 	//{{{ VFS constructors
 	/**

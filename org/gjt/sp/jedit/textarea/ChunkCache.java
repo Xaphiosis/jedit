@@ -42,7 +42,7 @@ import org.gjt.sp.util.Log;
  * The array is resized when the TextArea geometry changes  
  *
  * @author Slava Pestov
- * @version $Id: ChunkCache.java 24095 2015-09-25 21:31:41Z daleanson $
+ * @version $Id: ChunkCache.java 24373 2016-05-05 03:02:43Z daleanson $
  */
 class ChunkCache
 {
@@ -58,14 +58,14 @@ class ChunkCache
 	//{{{ getMaxHorizontalScrollWidth() method
 	/**
 	 * Returns the max line width of the textarea.
-	 * It will check all lines the first invalid line.
+	 * It will check all lines in the line info array.
 	 *
 	 * @return the max line width
 	 */
 	int getMaxHorizontalScrollWidth()
 	{
 		int max = 0;
-		for(int i = 0; i < firstInvalidLine; i++)
+		for(int i = 0; i < lineInfo.length; i++)
 		{
 			LineInfo info = lineInfo[i];
 			if(info.width > max)

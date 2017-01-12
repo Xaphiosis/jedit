@@ -43,7 +43,7 @@ import org.gjt.sp.util.ThreadUtilities;
 //}}}
 
 /**
- * @version $Id: PluginManager.java 24251 2015-12-23 00:49:59Z daleanson $
+ * @version $Id: PluginManager.java 24426 2016-06-22 20:26:02Z daleanson $
  */
 public class PluginManager extends JFrame
 {
@@ -368,10 +368,13 @@ public class PluginManager extends JFrame
 	//{{{ Inner classes
 
 	//{{{ ActionHandler class
+	@SuppressWarnings("deprecation")
 	class ActionHandler implements ActionListener
 	{
 		public void actionPerformed(ActionEvent evt)
 		{
+			// TODO: update this, use CombinedOptins instead of GlobalOptions
+			// and PluginOptions
 			Object source = evt.getSource();
 			if(source == done)
 				ok();

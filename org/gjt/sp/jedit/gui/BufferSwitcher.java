@@ -45,9 +45,9 @@ import org.gjt.sp.util.ThreadUtilities;
 //}}}
 
 /** BufferSwitcher class
-   @version $Id: BufferSwitcher.java 23809 2014-12-24 00:44:32Z daleanson $
+   @version $Id: BufferSwitcher.java 24427 2016-06-22 22:29:03Z daleanson $
 */
-public class BufferSwitcher extends JComboBox
+public class BufferSwitcher extends JComboBox<Buffer>
 {
 	// private members
 	private final EditPane editPane;
@@ -122,7 +122,7 @@ public class BufferSwitcher extends JComboBox
 							}
 					});
 				}
-				setModel(new DefaultComboBoxModel(buffers));
+				setModel(new DefaultComboBoxModel<Buffer>(buffers));
 				setSelectedItem(editPane.getBuffer());
 				setToolTipText(editPane.getBuffer().getPath(true));
 				addDnD();
@@ -236,7 +236,7 @@ public class BufferSwitcher extends JComboBox
 		@Override
 		public DataFlavor[] getTransferDataFlavors()
 		{
-			return supportedDataFlavor;
+			return Arrays.copyOf(supportedDataFlavor, supportedDataFlavor.length);
 		}
 
 		@Override

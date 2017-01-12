@@ -40,7 +40,7 @@ import org.gjt.sp.util.*;
 /**
  * A buffer load request.
  * @author Slava Pestov
- * @version $Id: BufferLoadRequest.java 23224 2013-09-30 20:51:42Z shlomy $
+ * @version $Id: BufferLoadRequest.java 24414 2016-06-19 11:07:43Z kerik-sf $
  */
 public class BufferLoadRequest extends BufferIORequest
 {
@@ -124,18 +124,7 @@ public class BufferLoadRequest extends BufferIORequest
 		}
 		finally
 		{
-			try
-			{
-				vfs._endVFSSession(session,view);
-			}
-			catch(Exception e)
-			{
-				Log.log(Log.ERROR,this,e);
-				String[] pp = { e.toString() };
-				VFSManager.error(view,path,"ioerror.read-error",pp);
-
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
+			endSessionQuietly();
 		}
 	} //}}}
 

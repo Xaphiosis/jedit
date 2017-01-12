@@ -33,7 +33,7 @@ import java.awt.*;
  * Enter is pressed) and cancel() (called when Escape is pressed, or window
  * is closed).
  * @author Slava Pestov
- * @version $Id: EnhancedDialog.java 23917 2015-05-20 09:28:48Z kpouer $
+ * @version $Id: EnhancedDialog.java 24466 2016-07-26 01:00:17Z ezust $
  */
 public abstract class EnhancedDialog extends JDialog
 {
@@ -177,8 +177,9 @@ public abstract class EnhancedDialog extends JDialog
 
 		private boolean isCloseBufferShortcut(KeyEvent evt)
 		{
-			String[] s = GUIUtilities.getShortcutLabel("close-buffer", false).split(" or ");
-
+			String shortcut = GUIUtilities.getShortcutLabel("close-buffer", false);
+			if (shortcut == null) return false;
+			String[] s = shortcut.split(" or ");
 			if(s.length == 1)
 			{ // w/o alternative shortcut
 				if(s[0].contains(" "))  //primary shortcut is a multiple-key shortcut

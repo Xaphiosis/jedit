@@ -26,11 +26,8 @@ package org.gjt.sp.jedit.gui;
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
-import java.awt.font.FontRenderContext;
-import java.awt.geom.Rectangle2D;
 import org.gjt.sp.jedit.jEdit;
-import org.gjt.sp.jedit.GUIUtilities;
-import org.gjt.sp.jedit.OperatingSystem;
+import org.gjt.sp.util.GenericGUIUtilities;
 //}}}
 
 
@@ -70,7 +67,7 @@ public class ColorChooserDialog extends JDialog
             {
                 public void actionPerformed( ActionEvent ae ) 
                 {
-                    ColorChooserDialog.this.hide();
+                    ColorChooserDialog.this.setVisible(false);
                     ColorChooserDialog.this.dispose();
                 }
             }
@@ -82,7 +79,7 @@ public class ColorChooserDialog extends JDialog
             {
                 public void actionPerformed( ActionEvent ae ) 
                 {
-                    ColorChooserDialog.this.hide();
+                    ColorChooserDialog.this.setVisible(false);
                     ColorChooserDialog.this.dispose();
                 }
             }
@@ -97,7 +94,7 @@ public class ColorChooserDialog extends JDialog
                 }
             }
         );
-		GUIUtilities.makeSameSize(ok, cancel, reset);
+        GenericGUIUtilities.makeSameSize(ok, cancel, reset);
 
         buttonPanel.add(Box.createGlue());
         buttonPanel.add(ok);

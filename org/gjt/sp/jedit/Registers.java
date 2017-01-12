@@ -26,7 +26,6 @@ package org.gjt.sp.jedit;
 //{{{ Imports
 import java.awt.datatransfer.*;
 import java.awt.Toolkit;
-import java.awt.datatransfer.DataFlavor;
 import java.io.*;
 
 import org.gjt.sp.jedit.buffer.JEditBuffer;
@@ -62,7 +61,7 @@ import org.gjt.sp.util.Log;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: Registers.java 24211 2015-12-10 03:33:28Z daleanson $
+ * @version $Id: Registers.java 24429 2016-06-23 03:08:58Z daleanson $
  */
 public class Registers
 {
@@ -693,7 +692,10 @@ public class Registers
 		/**
 		 * Converts to a string.
 		 */
-		@Deprecated
+		//@Deprecated
+		// undeprecating this since the two concrete classes defined in Registers
+		// use it and several other classes depend on it.
+		// TODO: finish the work to actually deprecate this.
 		String toString();
 
 		/**
@@ -731,7 +733,7 @@ public class Registers
 		public void setValue(String value)
 		{
 			Transferable selection = new StringSelection(value);
-			clipboard.setContents(selection,null);
+			clipboard.setContents(selection, null);
 		}
 
 		/**
@@ -749,7 +751,7 @@ public class Registers
 						This is to debug clipboard problems.
 
 						Apparently, jEdit is unable to copy text from clipbard into the current
-						text buffer if the clipboard was filles using the command
+						text buffer if the clipboard was filled using the command
 							echo test | xselection CLIPBOARD -
 						under Linux. However, it seems that Java does not offer any
 						data flavor for this clipboard content (under J2RE 1.5.0_06-b05)
@@ -759,9 +761,7 @@ public class Registers
 					debugListDataFlavors(clipboard.getContents(this));
 				}
 
-				String selection = (String)clipboard
-					.getContents(this).getTransferData(
-					DataFlavor.stringFlavor);
+				String selection = (String)clipboard.getContents(this).getTransferData(DataFlavor.stringFlavor);
 
 				return stripEOLChars(selection);
 			}

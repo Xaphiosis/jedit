@@ -158,6 +158,9 @@
 <MODE NAME="doxygen"		FILE="doxygen.xml"
         FILE_NAME_GLOB="doxyfile*" />
 
+<MODE NAME="drawj2d"		FILE="drawj2d.xml"
+	FILE_NAME_GLOB="*.hcl" />
+
 <MODE NAME="dsssl"		FILE="dsssl.xml"
         FILE_NAME_GLOB="*.dsl" />
 
@@ -275,6 +278,9 @@
 <MODE NAME="java"		FILE="java.xml"
         FILE_NAME_GLOB="*.java" />
 
+<MODE NAME="java module-info"		FILE="java-module-info.xml"
+        FILE_NAME_GLOB="module-info.java" />
+
 <MODE NAME="javafx"		FILE="javafx.xml"
         FILE_NAME_GLOB="*.fx" />
 
@@ -334,6 +340,8 @@
 
 <MODE NAME="macroscheduler"		FILE="macroscheduler.xml"
         FILE_NAME_GLOB="*.scp" />
+        
+<MODE NAME="m4" FILE="m4.xml" FILE_NAME_GLOB="*.m4" />
 
 <MODE NAME="mail"		FILE="mail.xml" />
 
@@ -348,6 +356,8 @@
 
 <MODE NAME="maven"		FILE="maven.xml"
         FILE_NAME_GLOB="pom.xml"/>
+
+<MODE NAME="mavscript"		FILE="mavscript.xml" />
 
 <MODE NAME="metapost"
          FILE="mpost.xml"
@@ -462,6 +472,9 @@
 
 <MODE NAME="properties"		FILE="props.xml"
         FILE_NAME_GLOB="*{properties,props}" />
+
+<MODE NAME="protobuf"		FILE="proto.xml"
+        FILE_NAME_GLOB="*.proto" />
 
 <MODE NAME="psp"		FILE="psp.xml"
         FILE_NAME_GLOB="*.psp" />
@@ -599,6 +612,9 @@
 
 <MODE NAME="swig"		FILE="swig.xml"
         FILE_NAME_GLOB="*.{i,swg}" />
+
+<MODE NAME="swift" FILE="swift.xml"
+        FILE_NAME_GLOB="*.swift"/>
 
 <MODE NAME="tcl"		FILE="tcl.xml"
         FILE_NAME_GLOB="*.{tcl,tsh}" />
