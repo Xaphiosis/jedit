@@ -723,7 +723,7 @@ public class Gutter extends JComponent implements SwingConstants
 
 		FontMetrics textAreaFm = textArea.getPainter().getFontMetrics();
 		int lineHeight = textArea.getPainter().getLineHeight();
-		int baseline = textAreaFm.getAscent() + textAreaFm.getLeading();
+		int baseline = lineHeight - (textAreaFm.getLeading()+1) - textAreaFm.getDescent();
 		
 		ChunkCache.LineInfo info = textArea.chunkCache.getLineInfo(line);
 		int physicalLine = info.physicalLine;
