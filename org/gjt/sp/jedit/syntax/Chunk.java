@@ -259,9 +259,9 @@ public class Chunk extends Token
 	//{{{ Package private members
 
 	//{{{ Instance variables
-	SyntaxStyle style;
+	public SyntaxStyle style;
 	// set up after init()
-	float width;
+	public float width;
 	//}}}
 
 	//{{{ Chunk constructor
@@ -509,7 +509,7 @@ public class Chunk extends Token
 	// this is either style.getBackgroundColor() or
 	// styles[defaultID].getBackgroundColor()
 	private Color background;
-	private String str;
+	public String str;
 	private GlyphVector[] glyphs;
 	//}}}
 
