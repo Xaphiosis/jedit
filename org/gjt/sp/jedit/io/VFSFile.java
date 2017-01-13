@@ -81,14 +81,7 @@ public class VFSFile implements Serializable
 			}
 			else if(matchAgainst.regionMatches(true,0,str,0,strLen))
 			{
-				// not found yet or not exact length yet and has exact length
-				if(iPotentialMatch == -1
-						|| (potentialMatchGTStr
-							&& (matchAgainst.length() == strLen)))
-				{
-					iPotentialMatch = i;
-					potentialMatchGTStr = matchAgainst.length() > strLen;
-				}
+				return i;
 			}
 		}
 
