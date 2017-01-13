@@ -187,7 +187,23 @@ public class SyntaxUtilities
 	{
 		return parseStyle(str, family, size, color, Color.black);
 	} //}}}
-	
+
+	/**
+	 * Extended styles derived from the user-specified style array.
+	 */
+	public static class StyleExtender
+	{
+		public SyntaxStyle[] extendStyles(SyntaxStyle[] styles)
+		{
+			return styles;
+		}
+	}
+	volatile private static StyleExtender _styleExtender = new StyleExtender();
+	public static void setStyleExtender(StyleExtender ext)
+	{
+		_styleExtender = ext;
+	}
+
 	//{{{ loadStyles() methods
 	/**
 	 * Loads the syntax styles from the properties, giving them the specified
@@ -231,7 +247,11 @@ public class SyntaxUtilities
 			}
 		}
 
-		return styles;
+		styles[0] =
+			new SyntaxStyle(org.gjt.sp.jedit.jEdit.getColorProperty("view.fgColor", Color.BLACK),
+				null, new Font(family, 0, size));
+		return _styleExtender.extendStyles(styles);
+
 	} //}}}
 	
 	private SyntaxUtilities(){}
