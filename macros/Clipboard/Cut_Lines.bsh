@@ -6,7 +6,7 @@
 * Copyright (C) 2003 Ollie Rutherfurd <oliver@jedit.org>
 * Copyright (c) 2008 encorejane@users.sourceforge.net
 *
-* $Id: Cut_Lines.bsh 23971 2015-08-08 19:37:35Z daleanson $
+* $Id: Cut_Lines.bsh 24764 2017-10-15 12:20:28Z ezust $
 */
 
 cutLines(){
@@ -19,6 +19,9 @@ cutLines(){
 	}
 	start = textArea.getLineStartOffset(selections[0]);
 	stop = textArea.getLineEndOffset(selections[selections.length-1]);
+
+	if (stop > textArea.getBufferLength()) stop = textArea.getBufferLength();
+
 	textArea.setSelection(new Selection.Range(start,stop));
 	Registers.cut(textArea,'$');
 }

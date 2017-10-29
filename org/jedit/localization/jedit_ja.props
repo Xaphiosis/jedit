@@ -1481,7 +1481,6 @@ options.save-back.twoStageSave.tooltip=ステージ 1: 古いファイルをリ�
 options.save-back.confirmSaveAll="すべて保存"コマンドは確認ダイアログを表示
 options.save-back.autosaveUntitled=無題バッファを自動保存
 options.save-back.suppressNotSavedConfirmUntitled=無題バッファはダーティーとしてマークしない。
-options.save-back.suppressNotSavedConfirmUntitled.tooltip=これをチェックすると新規バッファが作られるとき常に無題バッファが排除されることになります。(これは仕様です!)
 options.save-back.useMD5forDirtyCalculation=内容が変わっていなければダーティーとしてマークしない。
 options.save-back.useMD5forDirtyCalculation.tooltip=読み込み時のバッファの長さとMD5ハッシュで比較し、バッファがダーティーかどうか判別。
 options.save-back.saveAsUsesFSB="名前を付けて保存" のデフォルトはファイルシステムブラウザのディレクトリ
@@ -1957,10 +1956,6 @@ plugin-manager.status.error=エラー
 
 plugin-manager.list-download-connect=plugins.jedit.org に接続中
 plugin-manager.list-download=プラグインリストを plugins.jedit.org からダウンロード中
-plugin-manager.list-download.mirror-autoselect-error.title=ミラー選択エラー
-plugin-manager.list-download.mirror-autoselect-error.message=ミラーの自動選択エラー:\n\
-	{0}\n\
-	別のミラーを選ぶと動作するかもしれません。
 plugin-manager.list-download.need-password.title=HTTPプロキシはパスワードが必要です
 plugin-manager.list-download.need-password.message=HTTPプロキシはパスワードが必要です。\n\
   有効なユーザ名とパスワードを "ダウンロード オプション" で設定して下さい。

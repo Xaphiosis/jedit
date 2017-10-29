@@ -40,7 +40,7 @@ import org.gjt.sp.jedit.*;
 /**
  * Plugin list downloaded from server.
  * @since jEdit 3.2pre2
- * @version $Id: PluginList.java 24084 2015-09-17 18:44:47Z kerik-sf $
+ * @version $Id: PluginList.java 24766 2017-10-19 00:12:44Z daleanson $
  */
 class PluginList
 {
@@ -78,6 +78,7 @@ class PluginList
 			return;
 		gzipURL = jEdit.getProperty("plugin-manager.export-url");
 		gzipURL += "?mirror=" + mirror;
+		gzipURL += "&new_url_scheme";
 		String path = null;
 		if (jEdit.getSettingsDirectory() == null)
 		{
@@ -343,7 +344,7 @@ class PluginList
 							String versionKey = "plugin." + cacheEntry.pluginClass + ".version";
 							installedVersion = cacheEntry.cachedProperties.getProperty(versionKey);
 							Log.log(Log.DEBUG, PluginList.class, "found installed but not loaded "+ jar + " version=" + installedVersion);
-							installedPath = path; 
+							installedPath = path;
 							return installedVersion;
 						}
 					}
@@ -470,13 +471,13 @@ class PluginList
 			for (Dependency dep : deps)
 				dep.satisfy(roster, installDirectory, downloadSource);
 		}
-		
-		public String depsToString() 
+
+		public String depsToString()
 		{
 			StringBuilder sb = new StringBuilder();
-			for (Dependency dep : deps) 
+			for (Dependency dep : deps)
 			{
-				if ("plugin".equals(dep.what) && dep.pluginName != null) 
+				if ("plugin".equals(dep.what) && dep.pluginName != null)
 				{
 					sb.append(dep.pluginName).append('\n');
 				}
@@ -532,8 +533,9 @@ class PluginList
 			}
 			else if(what.equals("jdk"))
 			{
-				String javaVersion = System.getProperty("java.version").substring(0,3);
-
+				String javaVersion = System.getProperty("java.version");
+				// openjdk 9 returns just "9", not 1.X.X like previous versions
+				javaVersion = javaVersion.length() >= 3 ? javaVersion.substring(0, 3) : javaVersion;
 				if((from == null || StandardUtilities.compareStrings(
 					javaVersion,from,false) >= 0)
 					&&
@@ -611,24 +613,10 @@ class PluginList
 
 	private static String buildMirror(String id)
 	{
-		if (id != null && !id.equals(MirrorList.Mirror.NONE))
-		{
-			return id;
-		}
-		try
-		{
-			return getAutoSelectedMirror();
-		}
-		catch (Exception e)
-		{
-			GUIUtilities.error(jEdit.getActiveView()
-				, "plugin-manager.list-download.mirror-autoselect-error"
-				, new Object[]{e});
-			Log.log(Log.DEBUG, PluginList.class, "Getting auto-selected mirror: error", e);
-		}
-		return null;
+		return ((id != null) && !id.equals(MirrorList.Mirror.NONE)) ? id : "default";
 	}
 
+	// TODO: this isn't used, should it be?
 	private static String getAutoSelectedMirror()
 		throws java.io.IOException
 	{

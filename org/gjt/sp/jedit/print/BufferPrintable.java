@@ -41,10 +41,10 @@ import org.gjt.sp.util.*;
 
 @Deprecated
 /**
- * @version $Id: BufferPrintable.java 24562 2016-10-12 00:31:47Z daleanson $
+ * @version $Id: BufferPrintable.java 24592 2017-01-20 02:34:44Z vampire0 $
  * @deprecated
  * Replaced by BufferPrinter1_7. All the workarounds for java 1.3 and 1.4 don't
- * matter any more since jEdit requires java 1.7 at minimum.
+ * matter any more since jEdit requires java 1.8 at minimum.
  * Leaving this in place rather than removing it since it might be needed by the
  * stand-alone text area.
  */
@@ -291,12 +291,12 @@ print_loop:	for(;;)
 			if (!jEdit.getBooleanProperty("print.folds",true) &&
 				!view.getTextArea().getDisplayManager().isLineVisible(currentPhysicalLine))
 			{
-				
+
 				Log.log(Log.DEBUG,this,"Skipping invisible line");
 				currentPhysicalLine++;
 				continue;
 			}
-				
+
 			lineList.clear();
 
 			tokenHandler.init(styles,frc,e,lineList,

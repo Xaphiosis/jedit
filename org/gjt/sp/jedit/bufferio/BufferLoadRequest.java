@@ -40,10 +40,12 @@ import org.gjt.sp.util.*;
 /**
  * A buffer load request.
  * @author Slava Pestov
- * @version $Id: BufferLoadRequest.java 24414 2016-06-19 11:07:43Z kerik-sf $
+ * @version $Id: BufferLoadRequest.java 24705 2017-06-12 20:48:59Z ezust $
  */
 public class BufferLoadRequest extends BufferIORequest
 {
+	private boolean untitled;
+	
 	//{{{ BufferLoadRequest constructor
 	/**
 	 * Creates a new buffer I/O request.
@@ -52,11 +54,13 @@ public class BufferLoadRequest extends BufferIORequest
 	 * @param session The VFS session
 	 * @param vfs The VFS
 	 * @param path The path
+	 * @param untitled is the buffer untitled
 	 */
 	public BufferLoadRequest(View view, Buffer buffer,
-		Object session, VFS vfs, String path)
+		Object session, VFS vfs, String path, boolean untitled)
 	{
 		super(view,buffer,session,vfs,path);
+		this.untitled = untitled;
 	} //}}}
 
 	//{{{ run() method
@@ -75,7 +79,7 @@ public class BufferLoadRequest extends BufferIORequest
 			path = vfs._canonPath(session,path,view);
 
 			readContents();
-			buffer.setNewFile(false);
+			buffer.setNewFile(untitled);
 
 			if (jEdit.getBooleanProperty("persistentMarkers") &&
 			    (vfs.isMarkersFileSupported()))

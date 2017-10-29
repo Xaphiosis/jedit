@@ -60,10 +60,8 @@ class BufferPrintable1_7 implements Printable
 
 	private View view;
 	private Buffer buffer;
-	private boolean selection;
-	private int[] selectedLines;
 	private boolean reverse;
-	private int printRangeType = PrinterDialog.ALL;
+	private PrintRangeType printRangeType = PrintRangeType.ALL;
 	private Font font;
 	private SyntaxStyle[] styles;
 	private boolean header;
@@ -72,6 +70,7 @@ class BufferPrintable1_7 implements Printable
 
 	private HashMap<Integer, Range> pages = null;
 	private int currentPhysicalLine;
+	private int[] printingLineNumbers = null;
 
 	private LineMetrics lm;
 	private final List<Chunk> lineList;
@@ -86,12 +85,24 @@ class BufferPrintable1_7 implements Printable
 		this.view = view;
 		this.buffer = buffer;
 		firstCall = true;		// pages and page ranges are calculated only once
+		reverse = attributes.containsKey(Reverse.class);
+		if (attributes.containsKey(PrintRangeType.class))
+		{
+			printRangeType = (PrintRangeType)attributes.get(PrintRangeType.class);	
+		}
+		
+		// the buffer might have a buffer property for the line numbers, if so, then
+		// the buffer is a temporary buffer representing selected text and the line
+		// numbers correspond with the selected lines.
+		printingLineNumbers = (int[])buffer.getProperty("printingLineNumbers");
 		
 		header = jEdit.getBooleanProperty("print.header");
 		footer = jEdit.getBooleanProperty("print.footer");
 		lineNumbers = jEdit.getBooleanProperty("print.lineNumbers");
 		font = jEdit.getFontProperty("print.font");
 		boolean color = Chromaticity.COLOR.equals(attributes.get(Chromaticity.class));
+		//Log.log(Log.DEBUG, this, "color is " + color);
+		//Log.log(Log.DEBUG, this, "chromaticity is " + attributes.get(Chromaticity.class));
 
 		styles = org.gjt.sp.util.SyntaxUtilities.loadStyles(jEdit.getProperty("print.font"), jEdit.getIntegerProperty("print.fontsize", 10), color);
 		styles[Token.NULL] = new SyntaxStyle(textColor, null, font);
@@ -119,36 +130,6 @@ class BufferPrintable1_7 implements Printable
 		}
 	}
 	
-	/**
- 	 * Set the line numbers that are selected in the text area.	
- 	 * @param lines An array of lines that are selected in the text area.	
- 	 */
-	public void setSelectedLines(int[] lines)
-	{
-		selectedLines = Arrays.copyOf(lines, lines.length);	
-		Arrays.sort(selectedLines);
-	}
-	
-	/**
- 	 * Set to <code>true</code> to print the pages in reverse order, that is, print
- 	 * the last page first and the first page last.
- 	 * @param b Whether to print in reverse or not.
- 	 */
-	public void setReverse(boolean b)
-	{
-		reverse = b;	
-	}
-	
-	/**
- 	 * Set the print range type.
- 	 * @param printRangeType One of PrinterDialog.ALL, RANGE, CURRENT_PAGE, or SELECTION.
- 	 */
-	public void setPrintRangeType(int printRangeType)
-	{
-		this.printRangeType = printRangeType;
-		selection = PrinterDialog.SELECTION == printRangeType;
-	}
-	
 	// useful to avoid having to recalculate the page ranges if they are already known
 	public void setPages(HashMap<Integer, Range> pages)
 	{
@@ -171,26 +152,8 @@ class BufferPrintable1_7 implements Printable
 			firstCall = false;
 		}
 		
-		// figure out the current page if that is what is requested. I'm using
-		// the page that contains the caret as the current page.
-		// QUESTION: use the text area first physical line instead?
-		if (printRangeType == PrinterDialog.CURRENT_PAGE)
-		{
-			int caretLine = view.getTextArea().getCaretLine();
-			for (Integer i : pages.keySet())
-			{
-				Range range = pages.get(i);
-				if (range.contains(caretLine))
-				{
-					pageIndex = i;
-					break;
-				}
-			}
-		}
-		
-		
 		// adjust the page index for reverse printing
-		if (reverse && printRangeType != PrinterDialog.CURRENT_PAGE)
+		if (reverse && !PrintRangeType.CURRENT_PAGE.equals(printRangeType))
 		{
 			pageIndex = pages.size() - 1 - pageIndex;
 			//Log.log(Log.DEBUG, this, "Reverse is on, changing page index to " + pageIndex);
@@ -198,7 +161,8 @@ class BufferPrintable1_7 implements Printable
 		
 		// go ahead and print the page
 		Range range = pages.get(pageIndex);
-		if ( (range == null || !inRange(pageIndex)) && printRangeType != PrinterDialog.CURRENT_PAGE  )
+		//Log.log(Log.DEBUG, this, "range = " + range);
+		if ( (range == null || !inRange(pageIndex)) && !PrintRangeType.CURRENT_PAGE.equals(printRangeType)  )
 		{
 			//Log.log(Log.DEBUG, this, "Returning NO_SUCH_PAGE for page " + pageIndex);
 			return NO_SUCH_PAGE;	
@@ -345,7 +309,7 @@ class BufferPrintable1_7 implements Printable
 				// last page
 				Range range = new Range(startLine, currentPhysicalLine);
 				pages.put(new Integer(pageCount), range);
-				Log.log(Log.DEBUG, this, "calculatePages, page " + pageCount + " has " + range);
+				//Log.log(Log.DEBUG, this, "calculatePages, page " + pageCount + " has " + range);
 				break;
 			}
 			
@@ -366,7 +330,7 @@ class BufferPrintable1_7 implements Printable
 			{
 				Range range = new Range(startLine, Math.max(0, currentPhysicalLine - 1));
 				pages.put(new Integer(pageCount), range);
-				Log.log(Log.DEBUG, this, "calculatePages, page " + pageCount + " has " + range);
+				//Log.log(Log.DEBUG, this, "calculatePages, page " + pageCount + " has " + range);
 				++ pageCount;
 				startLine = currentPhysicalLine;
 				y = 0.0;
@@ -387,6 +351,7 @@ class BufferPrintable1_7 implements Printable
 	private boolean inRange(int pageNumber)
 	{
 		PageRanges ranges = (PageRanges)attributes.get(PageRanges.class);
+		//Log.log(Log.DEBUG, this, "inRange, ranges = " + ranges);
 		boolean answer = false;
 		if (ranges == null)
 		{
@@ -396,6 +361,7 @@ class BufferPrintable1_7 implements Printable
 		{
 			answer = ranges.contains(pageNumber);	
 		}
+		//Log.log(Log.DEBUG, this, "inRange(" + pageNumber + ") returning " + answer);
 		return answer;
 	}
 	
@@ -414,7 +380,12 @@ class BufferPrintable1_7 implements Printable
 			gfx.setRenderingHint(KEY_TEXT_ANTIALIASING, view.getTextArea().getPainter().getAntiAlias().renderHint());
 			boolean useFractionalFontMetrics = jEdit.getBooleanProperty("view.fracFontMetrics");
 			gfx.setRenderingHint(KEY_FRACTIONALMETRICS, (useFractionalFontMetrics ? VALUE_FRACTIONALMETRICS_ON : VALUE_FRACTIONALMETRICS_OFF));
-			gfx.setTransform(new AffineTransform(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f));
+			
+			// TODO: why did I need this next line? Leaving it in causes the print preview 
+			// to show the page with the wrong top and bottom margins, leaving it out doesn't seem
+			// to cause any problems
+			//gfx.setTransform(new AffineTransform(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f));
+			
 			for(int i = 0; i < styles.length; i++)
 			{
 				SyntaxStyle s = styles[i];
@@ -482,9 +453,11 @@ class BufferPrintable1_7 implements Printable
 		double y = 0.0;
 		Range range = pages.get(pageIndex);
 		//Log.log(Log.DEBUG, this, "printing range for page " + pageIndex + ": " + range);
+		int start = printingLineNumbers == null ? range.getStart() : 0;
+		int end = printingLineNumbers == null ? range.getEnd() : printingLineNumbers.length - 1;
 		
 		// print each line
-		for (currentPhysicalLine = range.getStart(); currentPhysicalLine <= range.getEnd(); currentPhysicalLine++)
+		for (currentPhysicalLine = start; currentPhysicalLine <= end; currentPhysicalLine++)
 		{
 			if(currentPhysicalLine == buffer.getLineCount())
 			{
@@ -498,14 +471,6 @@ class BufferPrintable1_7 implements Printable
 				continue;
 			}
 			
-			// print only selected lines if printing selection
-			if (selection && Arrays.binarySearch(selectedLines, currentPhysicalLine) < 0)
-			{
-				//Log.log(Log.DEBUG, this, "Skipping non-selected line: " + currentPhysicalLine); 
-				continue;
-			}
-				
-			
 			// fill the line list
 			lineList.clear();
 			tokenHandler.init(styles, frc, tabExpander, lineList, (float)(pageWidth - lineNumberWidth), -1);
@@ -515,7 +480,12 @@ class BufferPrintable1_7 implements Printable
 			{
 				gfx.setFont(font);
 				gfx.setColor(lineNumberColor);
-				gfx.drawString(String.valueOf(currentPhysicalLine + 1), (float)pageX, (float)(pageY + y + lineHeight));
+				int lineNo = currentPhysicalLine + 1;
+				if (printingLineNumbers != null && currentPhysicalLine < printingLineNumbers.length) 
+				{
+					lineNo = printingLineNumbers[currentPhysicalLine] + 1;	
+				}
+				gfx.drawString(String.valueOf(lineNo), (float)pageX, (float)(pageY + y + lineHeight));
 			}
 
 			if (lineList.isEmpty())
@@ -537,7 +507,7 @@ class BufferPrintable1_7 implements Printable
 				}
 			}
 			
-			if (currentPhysicalLine == range.getEnd())
+			if (currentPhysicalLine == end)
 			{
 				//Log.log(Log.DEBUG,this,"Finished page");
 				break;

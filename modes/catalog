@@ -49,6 +49,9 @@
 <MODE NAME="assembly-ags"	FILE="assembly-ags.xml"
         FILE_NAME_GLOB="*.aea" />
 
+<MODE NAME="assembly-arm32" FILE="assembly-arm32.xml"
+        FILE_NAME_GLOB="*.s"/>
+
 <MODE NAME="assembly-m68k"	FILE="assembly-m68k.xml" />
 
 <MODE NAME="assembly-macro32"	FILE="assembly-macro32.xml"
@@ -205,6 +208,9 @@
 <MODE NAME="gettext"		FILE="gettext.xml"
         FILE_NAME_GLOB="*.{po,pot}" />
 
+<MODE NAME="gherkin"		FILE="gherkin.xml"
+        FILE_NAME_GLOB="*.{feature}" />
+
 <MODE NAME="gnuplot"		FILE="gnuplot.xml"
         FILE_NAME_GLOB="*.{dem,plt}" />
 
@@ -340,7 +346,7 @@
 
 <MODE NAME="macroscheduler"		FILE="macroscheduler.xml"
         FILE_NAME_GLOB="*.scp" />
-        
+
 <MODE NAME="m4" FILE="m4.xml" FILE_NAME_GLOB="*.m4" />
 
 <MODE NAME="mail"		FILE="mail.xml" />

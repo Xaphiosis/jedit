@@ -1605,7 +1605,8 @@ options.gutter.foldStyleNames.Circle=Circle
 #{{{ Large files pane
 options.large-files.label=Large files
 options.editing.largefilemode.title=Large file mode
-options.editing.largefilemode=What should I do about very big files:
+options.editing.largefilemode=What should I do about very big files (> {0} chars, or line length > {1}):
+options.editing.largefilemode.tooltip=<html>Values can be changed via jEdit properties: <tt>largeBufferSize</tt> and <tt>longLineLimit</tt></html>
 options.editing.largefilemode.option.ask=<html><b>Ask</b> what to do when opening a large file</html>
 options.editing.largefilemode.option.full=<html><b>Keep Full syntax</b> : jEdit's syntax highlight will work as usual, jEdit \
                                                	may become<br/><b>very slow, this is not recommended</b></html>
@@ -1683,10 +1684,12 @@ options.firewall.socks.port=SOCKS proxy port:
 
 #{{{ Save & Backup pane
 options.save-back.label=Saving & Backup
-
 options.save-back.autosave=Autosave frequency (secs):
+options.save-back.autosave.tooltip=to disable, set to 0
 options.save-back.backups=Max number of backups:
-options.save-back.backupDirectory=Backup directory:
+options.save-back.backups.tooltip=to disable, set to 0
+options.save-back.backupDirectory=Backup, Autosave directory:
+options.save-back.backupDirectory.tooltip=If blank, use buffer directory. $VARIABLE/prefixes allowed.
 options.save-back.backupPrefix=Backup filename prefix:
 options.save-back.backupSuffix=Backup filename suffix:
 options.save-back.backupEverySave=Backup on every save
@@ -1694,9 +1697,10 @@ options.save-back.twoStageSave=Two-stage save (safer but resets file permissions
 options.save-back.twoStageSave.tooltip=Stage 1: Create a temporary file and save to it. Stage 2: Rename the temporary file to the real name.
 options.save-back.confirmSaveAll="Save All Buffers" asks for confirmation
 options.save-back.autosaveUntitled=Autosave untitled buffers
-options.save-back.suppressNotSavedConfirmUntitled=Never mark Untitled buffers dirty.
-options.save-back.suppressNotSavedConfirmUntitled.tooltip=Checking this means untitled buffers get wiped out whenever a new one is created (it's a feature!)
-options.save-back.useMD5forDirtyCalculation=Never mark buffers dirty if contents are unchanged.
+options.save-back.autosaveUntitled.tooltip=Untitled buffers are saved and restored across jEdit sessions.
+options.save-back.suppressNotSavedConfirmUntitled=Close dirty Untitled buffers without confirmation
+options.save-back.suppressNotSavedConfirmUntitled.tooltip=
+options.save-back.useMD5forDirtyCalculation=Never mark buffers dirty if contents are unchanged
 options.save-back.useMD5forDirtyCalculation.tooltip=Compare with length and MD5 hash of  buffer at load time, to decide if an edited buffer is still dirty.
 options.save-back.saveAsUsesFSB="Save As" defaults to File System Browser directory
 #}}}
@@ -1712,10 +1716,11 @@ options.shortcuts.duplicatekeymap.dialog.title=keymap name
 options.shortcuts.resetkeymap.label=reset
 options.shortcuts.resetkeymap.dialog.label=Reset the keymap
 options.shortcuts.resetkeymap.dialog.title=reset keymap
-options.shortcuts.keymap.label=Choose keymap:
+options.shortcuts.keymap.label=Keymap:
+options.shortcuts.keymap.tooltip=A named set of customized keyboard shortcuts
 options.shortcuts.label=Shortcuts
-options.shortcuts.select.label=Edit Shortcuts:
-options.shortcuts.select.tooltip=You can select globals, macros, or plugin shortcuts
+options.shortcuts.select.label=Action Set:
+options.shortcuts.select.tooltip=You can select built-ins, macros, or plugin shortcuts
 options.shortcuts.name=Command
 options.shortcuts.actionset=Action set
 options.shortcuts.shortcut1=Primary shortcut
@@ -2176,10 +2181,6 @@ plugin-manager.status.error=Error
 
 plugin-manager.list-download-connect=Connecting to plugins.jedit.org
 plugin-manager.list-download=Downloading plugin list from plugins.jedit.org
-plugin-manager.list-download.mirror-autoselect-error.title=Error selecting mirror
-plugin-manager.list-download.mirror-autoselect-error.message=Error auto-selecting mirror:\n\
-	{0}\n\
-	Choosing a specific mirror may work.
 plugin-manager.list-download.need-password.title=HTTP Proxy needs password
 plugin-manager.list-download.need-password.message=HTTP Proxy needs password.\n\
 Please configure a valid username/password in "Download Options".

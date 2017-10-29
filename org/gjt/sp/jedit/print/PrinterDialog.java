@@ -47,9 +47,8 @@ import org.gjt.sp.jedit.gui.NumericTextField;
 import org.gjt.sp.jedit.gui.VariableGridLayout;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.GenericGUIUtilities;
+import org.gjt.sp.util.Log;
 
-
-// import org.gjt.sp.util.Log;
 // Technical guide on the Java printing system:
 // https://docs.oracle.com/javase/7/docs/technotes/guides/jps/spec/JPSTOC.fm.html
 public class PrinterDialog extends JDialog implements ListSelectionListener
@@ -75,24 +74,14 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
     private boolean canceled = false;
     private Map<String, String> messageMap;
     private PageSetupPanel pageSetupPanel;
-    public static int ALL = 0;
-    public static int ODD = 1;
-    public static int EVEN = 2;
-    public static int RANGE = 3;
-    public static int CURRENT_PAGE = 4;
-    public static int SELECTION = 5;
-    public static int onlyPrintPages = ALL;
-    private int printRangeType = ALL;
+    public static int onlyPrintPages = PrintRangeType.ALL.getValue();
     private DocFlavor DOC_FLAVOR = DocFlavor.SERVICE_FORMATTED.PRINTABLE;
-    private boolean reversePrinting = false;
 
 
     public PrinterDialog( View owner, PrintRequestAttributeSet attributes, boolean pageSetupOnly )
     {
         super( owner, Dialog.ModalityType.APPLICATION_MODAL );
         try
-
-
         {
             view = owner;
             this.pageSetupOnly = pageSetupOnly;
@@ -116,10 +105,10 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
 
 
             this.attributes.remove( Destination.class );
-            Attribute[] attrs = attributes.toArray();
+            
 
             // for debugging
-            /*
+            /* Attribute[] attrs = attributes.toArray();
              * for ( Attribute a : attrs )
              * {
              * Log.log( Log.DEBUG, this, "+++++ before: " + a.getName() + " = " + a );
@@ -169,6 +158,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             setContentPane( contents );
 
             // auto-select the default printer
+            /*
             PrintService defaultPrintService = PrintServiceLookup.lookupDefaultPrintService();
             if ( defaultPrintService != null )
             {
@@ -178,6 +168,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             {
                 printers.setSelectedIndex( 0 );
             }
+            */
 
 
             // loads some default values if needed
@@ -222,7 +213,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
                     AttributeSet panelAttributes = panel.getAttributes();
                     if (panelAttributes != null)
                     {
-                        PrinterDialog.this.attributes.addAll( attributes );
+                        PrinterDialog.this.attributes.addAll( panelAttributes );
                     }
                 }
 
@@ -273,7 +264,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
                     AttributeSet panelAttributes = panel.getAttributes();
                     if (panelAttributes != null)
                     {
-                        PrinterDialog.this.attributes.addAll( attributes );
+                        PrinterDialog.this.attributes.addAll( panelAttributes );
                     }
                 }
 
@@ -382,27 +373,6 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
     }
 
 
-    /**
-     * @return <code>true</code> if the pages should be printed in reverse order,
-     * that is, the last page is printed first and the first page is printed last.
-     */
-    public boolean getReverse()
-    {
-        return reversePrinting;
-    }
-
-
-    /**
-     * @returns One of ALL, RANGE, CURRENT, or SELECTION, depending on whether the
-     * user has elected to print all pages, a range of pages, just the current page
-     * or just the selected text.
-     */
-    public int getPrintRangeType()
-    {
-        return printRangeType;
-    }
-
-
     private PrintService[] getPrintServices()
     {
         PrintService[] printServices = PrintServiceLookup.lookupPrintServices( DOC_FLAVOR, null );
@@ -457,7 +427,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
     // setting in the Page Setup tab.
     private PageRanges mergeRanges( PageRanges pr ) throws PrintException
     {
-        if ( pr == null || onlyPrintPages == ALL )
+        if ( pr == null || onlyPrintPages == PrintRangeType.ALL.getValue() )
         {
             return pr;
         }
@@ -477,12 +447,12 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             int end = range.length == 1 ? range[0] : Math.min( range[0] + 500, range[1] );
             for ( int pageIndex = start; pageIndex <= end; pageIndex++ )
             {
-                if ( pageIndex % 2 == 0 && onlyPrintPages == EVEN )
+                if ( pageIndex % 2 == 0 && onlyPrintPages == PrintRangeType.EVEN.getValue() )
                 {
                     pages.add( pageIndex );
                 }
                 else
-                if ( pageIndex % 2 == 1 && onlyPrintPages == ODD )
+                if ( pageIndex % 2 == 1 && onlyPrintPages == PrintRangeType.ODD.getValue() )
                 {
                     pages.add( pageIndex );
                 }
@@ -562,163 +532,185 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             previousSize = ( MediaSizeName )previousPaper;
         }
 
-
-        String[] paperNames = new String [sizes.length];
-        paperSizes = new ArrayList<Media>();
-        int index = -1;
-        int letterSizeIndex = 0;
-        for ( int i = 0; i < sizes.length; i++ )
+        if (paperSize != null)
         {
-            MediaSizeName m = sizes[i];
-            if ( MediaSizeName.NA_LETTER.equals( m ) )
+            String[] paperNames = new String [sizes.length];
+            paperSizes = new ArrayList<Media>();
+            int index = -1;
+            int letterSizeIndex = 0;
+            for ( int i = 0; i < sizes.length; i++ )
             {
-                letterSizeIndex = i;
+                MediaSizeName m = sizes[i];
+                if ( MediaSizeName.NA_LETTER.equals( m ) )
+                {
+                    letterSizeIndex = i;
+                }
+                else
+                if ( m.equals( previousSize ) )
+                {
+                    index = i;
+                }
+    
+    
+                paperSizes.add( m );
+                paperNames[i] = getMessage( m.toString() );
             }
-            else
-            if ( m.equals( previousSize ) )
-            {
-                index = i;
-            }
-
-
-            paperSizes.add( m );
-            paperNames[i] = getMessage( m.toString() );
+            index = index == -1 ? letterSizeIndex : index;
+            paperSize.setModel( new DefaultComboBoxModel<String>( paperNames ) );
+            paperSize.setEnabled( true );
+            paperSize.setSelectedIndex( index );
         }
-        index = index == -1 ? letterSizeIndex : index;
-        paperSize.setModel( new DefaultComboBoxModel<String>( paperNames ) );
-        paperSize.setEnabled( true );
-        paperSize.setSelectedIndex( index );
-
+        
         // finishing
-        value = categoryValueMap.get( Finishings.class );
-        if ( value == null )
+        if (finishing != null) 
         {
-            finishing.setModel( new DefaultComboBoxModel<Finishings>() );
-            finishing.setEnabled( false );
-        }
-        else
-        {
-            Finishings[] finishings = ( Finishings[] )value;
-            if ( finishings.length == 0 || ( finishings.length == 1 && Finishings.NONE.equals( finishings[0] ) ) )
+            value = categoryValueMap.get( Finishings.class );
+            if ( value == null )
             {
                 finishing.setModel( new DefaultComboBoxModel<Finishings>() );
                 finishing.setEnabled( false );
             }
             else
             {
-                finishing.setModel( new DefaultComboBoxModel<Finishings>( finishings ) );
-                finishing.setEnabled( true );
+                Finishings[] finishings = ( Finishings[] )value;
+                if ( finishings.length == 0 || ( finishings.length == 1 && Finishings.NONE.equals( finishings[0] ) ) )
+                {
+                    finishing.setModel( new DefaultComboBoxModel<Finishings>() );
+                    finishing.setEnabled( false );
+                }
+                else
+                {
+                    finishing.setModel( new DefaultComboBoxModel<Finishings>( finishings ) );
+                    finishing.setEnabled( true );
+                }
             }
         }
 
 
         // sides
-        value = categoryValueMap.get( Sides.class );
-        if ( value == null )
+        if (sides != null)
         {
-            sides.setEnabled( false );
-        }
-        else
-        {
-            sides.setModel( new DefaultComboBoxModel<Sides>( ( Sides[] )value ) );
-            Sides previousSides = ( Sides )attributes.get( Sides.class );
-            sides.setSelectedItem( previousSides == null ? Sides.ONE_SIDED : previousSides );
-            sides.setEnabled( true );
+            value = categoryValueMap.get( Sides.class );
+            if ( value == null )
+            {
+                sides.setEnabled( false );
+            }
+            else
+            {
+                sides.setModel( new DefaultComboBoxModel<Sides>( ( Sides[] )value ) );
+                Sides previousSides = ( Sides )attributes.get( Sides.class );
+                sides.setSelectedItem( previousSides == null ? Sides.ONE_SIDED : previousSides );
+                sides.setEnabled( true );
+            }
         }
 
 
         // pages per side
-        value = categoryValueMap.get( NumberUp.class );
-        if ( value == null )
+        if (pagesPerSide != null)
         {
-            pagesPerSide.setEnabled( false );
-        }
-        else
-        {
-            NumberUp[] numberUp = ( NumberUp[] )value;
-            Arrays.sort( numberUp, new Comparator<NumberUp>()
+            value = categoryValueMap.get( NumberUp.class );
+            if ( value == null )
             {
-
-                public int compare( NumberUp a, NumberUp b )
+                pagesPerSide.setEnabled( false );
+            }
+            else
+            {
+                NumberUp[] numberUp = ( NumberUp[] )value;
+                Arrays.sort( numberUp, new Comparator<NumberUp>()
                 {
-                    int m = a.getValue();
-                    int n = b.getValue();
-                    if ( m < n )
+    
+                    public int compare( NumberUp a, NumberUp b )
                     {
-                        return -1;
+                        int m = a.getValue();
+                        int n = b.getValue();
+                        if ( m < n )
+                        {
+                            return -1;
+                        }
+                        else
+                        if ( m == n )
+                        {
+                            return 0;
+                        }
+                        else
+                        {
+                            return 1;
+                        }
                     }
-                    else
-                    if ( m == n )
-                    {
-                        return 0;
-                    }
-                    else
-                    {
-                        return 1;
-                    }
-                }
-            } );
-            pagesPerSide.setModel( new DefaultComboBoxModel<NumberUp>( numberUp ) );
-            pagesPerSide.setEnabled( true );
+                } );
+                pagesPerSide.setModel( new DefaultComboBoxModel<NumberUp>( numberUp ) );
+                pagesPerSide.setEnabled( true );
+            }
         }
 
 
         // ordering of pages per side
-        value = categoryValueMap.get( PresentationDirection.class );
-        if ( value == null )
+        if (pageOrdering != null) 
         {
-            pageOrdering.setEnabled( false );
-        }
-        else
-        {
-            PresentationDirection[] po = ( PresentationDirection[] )value;
-            pageOrdering.setModel( new DefaultComboBoxModel<PresentationDirection>( po ) );
-            pageOrdering.setEnabled( true );
+            value = categoryValueMap.get( PresentationDirection.class );
+            if ( value == null )
+            {
+                pageOrdering.setEnabled( false );
+            }
+            else
+            {
+                PresentationDirection[] po = ( PresentationDirection[] )value;
+                pageOrdering.setModel( new DefaultComboBoxModel<PresentationDirection>( po ) );
+                pageOrdering.setEnabled( true );
+            }
         }
 
 
         // paper source tray
-        value = categoryValueMap.get( Media.class );
-        if ( value == null )
+        if (paperSource != null)
         {
-            paperSource.setEnabled( false );
-        }
-        else
-        {
-            Set<MediaTray> trayNames = new HashSet<MediaTray>();
-            for ( Media m : ( Media[] )value )
+            value = categoryValueMap.get( Media.class );
+            if ( value == null )
             {
-                if ( m instanceof MediaTray )
-                {
-                    trayNames.add( ( MediaTray )m );
-                }
-            }
-            if ( trayNames.size() > 0 )
-            {
-                MediaTray[] trays = trayNames.toArray( new MediaTray [trayNames.size()]  );
-                paperSource.setModel( new DefaultComboBoxModel<MediaTray>( trays ) );
-                paperSource.setEnabled( true );
+                paperSource.setEnabled( false );
             }
             else
             {
-                paperSource.setEnabled( false );
+                Set<MediaTray> trayNames = new HashSet<MediaTray>();
+                for ( Media m : ( Media[] )value )
+                {
+                    if ( m instanceof MediaTray )
+                    {
+                        trayNames.add( ( MediaTray )m );
+                    }
+                }
+                if ( trayNames.size() > 0 )
+                {
+                    MediaTray[] trays = trayNames.toArray( new MediaTray [trayNames.size()]  );
+                    paperSource.setModel( new DefaultComboBoxModel<MediaTray>( trays ) );
+                    paperSource.setEnabled( true );
+                    MediaTray lastUsedTray = (MediaTray)attributes.get(MediaTray.class);
+                    paperSource.setSelectedItem(lastUsedTray == null ? trays[0] : lastUsedTray);
+                }
+                else
+                {
+                    paperSource.setEnabled( false );
+                }
             }
         }
 
 
         // orientation, eg. portrait or landscape
-        value = categoryValueMap.get( OrientationRequested.class );
-        if ( value == null )
+        if (orientation != null)
         {
-            orientation.setEnabled( false );
-        }
-        else
-        {
-            OrientationRequested[] or = ( OrientationRequested[] )value;
-            orientation.setModel( new DefaultComboBoxModel<OrientationRequested>( or ) );
-            orientation.setEnabled( true );
-            OrientationRequested previousOrientation = ( OrientationRequested )attributes.get( OrientationRequested.class );
-            orientation.setSelectedItem( previousOrientation == null ? OrientationRequested.PORTRAIT : previousOrientation );
+            value = categoryValueMap.get( OrientationRequested.class );
+            if ( value == null )
+            {
+                orientation.setEnabled( false );
+            }
+            else
+            {
+                OrientationRequested[] or = ( OrientationRequested[] )value;
+                orientation.setModel( new DefaultComboBoxModel<OrientationRequested>( or ) );
+                orientation.setEnabled( true );
+                OrientationRequested previousOrientation = ( OrientationRequested )attributes.get( OrientationRequested.class );
+                orientation.setSelectedItem( previousOrientation == null ? OrientationRequested.PORTRAIT : previousOrientation );
+            }
         }
     }
 
@@ -752,16 +744,15 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
         JTextField pagesField;
 
 
-        // TODO: current page and selection are not implemented yet. Note there
-        // are no standard printer attributes to specify either of these.
+        // DONE: current page and selection are not implemented yet. Note there
+        // are no standard printer attributes to specify either of these, so I
+        // added the PrintRangeType attribute to handle these.
         public GeneralPanel()
         {
             super();
             printers = new JList<PrintService>( getPrintServices() );
             printers.setCellRenderer( new PrintServiceCellRenderer() );
             printers.setSelectionMode( ListSelectionModel.SINGLE_SELECTION );
-            printers.addListSelectionListener( PrinterDialog.this );
-            selectedPrintService = printers.getModel().getElementAt( 0 );
 
             JPanel rangePanel = new JPanel( new GridLayout( 4, 2, 6, 6 ) );
             rangePanel.setBorder( BorderFactory.createCompoundBorder(
@@ -769,28 +760,10 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             BorderFactory.createEmptyBorder( 11, 11, 11, 11 ) ) );
             allPages = new JRadioButton( jEdit.getProperty( "print.dialog.All_pages", "All pages" ) );
             allPages.setSelected( true );
-            allPages.addActionListener( new ActionListener()
-            {
-
-                    public void actionPerformed( ActionEvent ae )
-                    {
-                        pagesField.setEnabled( pages.isSelected() );
-                    }
-                }
-            );
 
             pages = new JRadioButton( jEdit.getProperty( "print.dialog.Pages", "Pages" ) + ':' );
             pagesField = new JTextField();
             pagesField.setEnabled( false );
-            pages.addActionListener( new ActionListener()
-            {
-
-                    public void actionPerformed( ActionEvent ae )
-                    {
-                        pagesField.setEnabled( pages.isSelected() );
-                    }
-                }
-            );
 
             currentPage = new JRadioButton( jEdit.getProperty( "print.dialog.Current_page", "Current page" ) );
             selection = new JRadioButton( jEdit.getProperty( "print.dialog.Selection", "Selection" ) );
@@ -814,17 +787,6 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             BorderFactory.createEmptyBorder( 11, 11, 11, 11 ) ) );
             JLabel copiesLabel = new JLabel( jEdit.getProperty( "print.dialog.Copies", "Copies" + ':' ) );
             copies = new JSpinner( new SpinnerNumberModel( 1, 1, 999, 1 ) );
-            copies.addChangeListener( new ChangeListener()
-            {
-
-                    public void stateChanged( ChangeEvent e )
-                    {
-                        JSpinner spinner = ( JSpinner )e.getSource();
-                        int value = ( int )spinner.getValue();
-                        collate.setEnabled( value > 1 );
-                        collate.setSelected( value > 1 );
-                    }
-                } );
             collate = new JCheckBox( jEdit.getProperty( "print.dialog.Collate", "Collate" ) );
             collate.setSelected( false );
             collate.setEnabled( false );
@@ -849,17 +811,78 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             content.add( top, BorderLayout.CENTER );
             content.add( bottom, BorderLayout.SOUTH );
             add( content );
+            
+            // install listeners
+            printers.addListSelectionListener( PrinterDialog.this );
+            allPages.addActionListener( new ActionListener()
+            {
+
+                    public void actionPerformed( ActionEvent ae )
+                    {
+                        pagesField.setEnabled( pages.isSelected() );
+                    }
+                }
+            );
+            pages.addActionListener( new ActionListener()
+            {
+
+                    public void actionPerformed( ActionEvent ae )
+                    {
+                        pagesField.setEnabled( pages.isSelected() );
+                    }
+                }
+            );
+            copies.addChangeListener( new ChangeListener()
+            {
+
+                    public void stateChanged( ChangeEvent e )
+                    {
+                        JSpinner spinner = ( JSpinner )e.getSource();
+                        int value = ( int )spinner.getValue();
+                        collate.setEnabled( value > 1 );
+                        collate.setSelected( value > 1 );
+                    }
+                } );
+            PrintService defaultPrintService = PrintServiceLookup.lookupDefaultPrintService();
+            // choose last used printer first, default printer if no last used, or first
+            // item in print service list otherwise
+            String lastUsedPrinterName = jEdit.getProperty("print.lastUsedPrinter");
+            if (lastUsedPrinterName != null) 
+            {
+                ListModel<PrintService> lm = printers.getModel();
+                for (int i = 0; i < lm.getSize(); i++)
+                {
+                    PrintService ps = lm.getElementAt(i);
+                    if (lastUsedPrinterName.equals(ps.getName()))
+                    {
+                        printers.setSelectedValue(ps, true);
+                        selectedPrintService = ps;
+                        break;
+                    }
+                }
+            }
+            else if (defaultPrintService != null)
+            {
+                printers.setSelectedValue(defaultPrintService, true);      
+                selectedPrintService = defaultPrintService;
+            }
+            else 
+            {
+                selectedPrintService = printers.getModel().getElementAt( 0 );
+            }
         }
 
 
         public AttributeSet getAttributes()
         {
+            jEdit.setProperty("print.lastUsedPrinter", printers.getSelectedValue().getName());
+            
             AttributeSet as = new HashAttributeSet();
 
             if ( allPages.isSelected() )
             {
                 as.add( new PageRanges( 1, 1000 ) );
-                printRangeType = ALL;
+                as.add( PrintRangeType.ALL );
             }
             else
             if ( pages.isSelected() )
@@ -868,8 +891,6 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
                 if ( pageRange != null )
                 {
                     try
-
-
                     {
                         as.add( new PageRanges( pageRange ) );
                     }
@@ -878,21 +899,27 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
                         e.printStackTrace();
                     }
                 }
-
-
-                printRangeType = RANGE;
+                as.add( PrintRangeType.RANGE );
             }
             else
             if ( currentPage.isSelected() )
             {
-                as.add( new PageRanges( 1 ) );
-                printRangeType = CURRENT_PAGE;
+                PrinterDialog.this.attributes.add(new PageRanges( 1, 1000 ) );
+                HashMap<Integer, Range> currentPageRange = BufferPrinter1_7.getCurrentPageRange(view, view.getBuffer(), PrinterDialog.this.attributes);
+                int page = 1;
+                if (currentPageRange != null && !currentPageRange.isEmpty())
+                {
+                    page = currentPageRange.keySet().iterator().next();
+                }
+                
+                as.add( new PageRanges( page ) );
+                as.add( PrintRangeType.CURRENT_PAGE );
             }
             else
             if ( selection.isSelected() )
             {
-                as.add( new PageRanges( 1, 1000 ) );
-                printRangeType = SELECTION;
+                PrinterDialog.this.attributes.add(new PageRanges( 1, 1000 ) );
+                as.add( PrintRangeType.SELECTION );
             }
 
 
@@ -903,8 +930,15 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
 
 
             as.add( new Copies( ( Integer )copies.getValue() ) );
-
-            reversePrinting = reverse.isSelected();
+            
+            if (reverse.isSelected())
+            {
+                as.add(new Reverse());   
+            }
+            else
+            {
+                attributes.remove(Reverse.class);   
+            }
 
             return as;
         }
@@ -983,19 +1017,6 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
 
             pagesPerSide = new JComboBox<NumberUp>();
             pagesPerSide.setEnabled( false );
-            pagesPerSide.addActionListener( new ActionListener()
-            {
-
-                    public void actionPerformed( ActionEvent ae )
-                    {
-                        NumberUp nu = ( NumberUp )pagesPerSide.getSelectedItem();
-                        if ( nu != null && nu.getValue() == 1 )
-                        {
-                            pageOrdering.setEnabled( false );
-                        }
-                    }
-                }
-            );
 
             // disable this when pagesPerSide is 1
             pageOrdering = new JComboBox<PresentationDirection>();
@@ -1029,28 +1050,10 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
 
             paperSize = new JComboBox<String>();
             paperSize.setEnabled( false );
-            paperSize.addActionListener( new ActionListener()
-            {
-
-                    public void actionPerformed( ActionEvent ae )
-                    {
-                        PageSetupPanel.this.setDefaultMargins();
-                    }
-                }
-            );
 
             orientation = new JComboBox<OrientationRequested>();
             orientation.setEnabled( false );
             orientation.setRenderer( new OrientationCellRenderer() );
-            orientation.addActionListener( new ActionListener()
-            {
-
-                    public void actionPerformed( ActionEvent ae )
-                    {
-                        PageSetupPanel.this.setDefaultMargins();
-                    }
-                }
-            );
 
             paperPanel.add( new JLabel( jEdit.getProperty( "print.dialog.Paper_source", "Paper source" ) + ':' ) );
             paperPanel.add( paperSource );
@@ -1064,10 +1067,14 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             JPanel marginPanel = new JPanel( new VariableGridLayout( VariableGridLayout.FIXED_NUM_COLUMNS, 2, 6, 6 ) );
             marginPanel.setBorder( BorderFactory.createCompoundBorder( BorderFactory.createTitledBorder( BorderFactory.createEtchedBorder(), jEdit.getProperty( "print.dialog.Margins", "Margins" ) ), BorderFactory.createEmptyBorder( 11, 11, 11, 11 ) ) );
             boolean unitIsMM = getUnits() == MediaPrintableArea.MM;
-            topMarginField = new NumericTextField( "", true, unitIsMM );
-            leftMarginField = new NumericTextField( "", true, unitIsMM );
-            rightMarginField = new NumericTextField( "", true, unitIsMM );
-            bottomMarginField = new NumericTextField( "", true, unitIsMM );
+            String topMargin = jEdit.getProperty("print.topMargin", unitIsMM ? "25" : "1.0");
+            String leftMargin = jEdit.getProperty("print.leftMargin", unitIsMM ? "25" : "1.0");
+            String rightMargin = jEdit.getProperty("print.rightMargin", unitIsMM ? "25" : "1.0");
+            String bottomMargin = jEdit.getProperty("print.bottomMargin", unitIsMM ? "25" : "1.0");
+            topMarginField = new NumericTextField( topMargin, true, unitIsMM );
+            leftMarginField = new NumericTextField( leftMargin, true, unitIsMM );
+            rightMarginField = new NumericTextField( rightMargin, true, unitIsMM );
+            bottomMarginField = new NumericTextField( bottomMargin, true, unitIsMM );
 
             String unitsLabel = unitIsMM ? " (mm)" : " (in)";
             marginPanel.add( new JLabel( jEdit.getProperty( "print.dialog.Top", "Top" ) + unitsLabel ) );
@@ -1096,6 +1103,41 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             content.add( marginPanel );
             content.add( finishingPanel );
             add( content );
+            
+            // add listeners
+            pagesPerSide.addActionListener( new ActionListener()
+            {
+
+                    public void actionPerformed( ActionEvent ae )
+                    {
+                        NumberUp nu = ( NumberUp )pagesPerSide.getSelectedItem();
+                        if ( nu != null && nu.getValue() == 1 )
+                        {
+                            pageOrdering.setEnabled( false );
+                        }
+                    }
+                }
+            );
+            paperSize.addActionListener( new ActionListener()
+            {
+
+                    public void actionPerformed( ActionEvent ae )
+                    {
+                        PageSetupPanel.this.setDefaultMargins();
+                    }
+                }
+            );
+            orientation.addActionListener( new ActionListener()
+            {
+
+                    public void actionPerformed( ActionEvent ae )
+                    {
+                        PageSetupPanel.this.setDefaultMargins();
+                    }
+                }
+            );
+            
+            
         }
 
 
@@ -1213,12 +1255,18 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             }
 
 
-            float topMargin = topMarginField.getValue().floatValue();
-            float leftMargin = leftMarginField.getValue().floatValue();
-            float rightMargin = rightMarginField.getValue().floatValue();
-            float bottomMargin = bottomMarginField.getValue().floatValue();
-            Margins margins = new Margins( topMargin, leftMargin, rightMargin, bottomMargin );
+            Number topMargin = topMarginField.getValue();
+            Number leftMargin = leftMarginField.getValue();
+            Number rightMargin = rightMarginField.getValue();
+            Number bottomMargin = bottomMarginField.getValue();
+            
+            Margins margins = new Margins( topMargin.floatValue(), leftMargin.floatValue(), rightMargin.floatValue(), bottomMargin.floatValue() );
             as.add( margins );
+            
+            jEdit.setProperty("print.topMargin", topMargin.toString());
+            jEdit.setProperty("print.leftMargin", leftMargin.toString());
+            jEdit.setProperty("print.rightMargin", rightMargin.toString());
+            jEdit.setProperty("print.bottomMargin", bottomMargin.toString());
 
             return as;
         }
@@ -1457,7 +1505,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             OrientationRequested orientationRequested = ( OrientationRequested )orientation.getSelectedItem();
             rotateMargins( topMargin, leftMargin, rightMargin, bottomMargin, orientationRequested );
 
-            // Log.log( Log.DEBUG, this, "getMinimumMargins returning " + topMargin + ", " + leftMargin + ", " + rightMargin + ", " + bottomMargin);
+            //Log.log( Log.DEBUG, this, "getMinimumMargins returning " + topMargin + ", " + leftMargin + ", " + rightMargin + ", " + bottomMargin);
             return new float[] {topMargin, leftMargin, rightMargin, bottomMargin};
         }
 
@@ -1500,7 +1548,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             OrientationRequested orientationRequested = ( OrientationRequested )orientation.getSelectedItem();
             rotateMargins( topMargin, leftMargin, rightMargin, bottomMargin, orientationRequested );
 
-            // Log.log( Log.DEBUG, this, "getMinimumMargins returning " + topMargin + ", " + leftMargin + ", " + rightMargin + ", " + bottomMargin);
+            //Log.log( Log.DEBUG, this, "getMaximumMargins returning " + topMargin + ", " + leftMargin + ", " + rightMargin + ", " + bottomMargin);
             return new float[] {topMargin, leftMargin, rightMargin, bottomMargin};
         }
 
@@ -1511,6 +1559,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
         private int getUnits()
         {
             String country = Locale.getDefault().getCountry();
+            //String country = "Latvia";    // for testing metric
             if ( "".equals( country ) || Locale.US.getCountry().equals( country ) || Locale.CANADA.getCountry().equals( country ) )
             {
                 return MediaPrintableArea.INCH;
@@ -1564,15 +1613,6 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             // print later
             atButton = new JRadioButton( jEdit.getProperty( "print.dialog.At", "At" ) );
             atButton.setEnabled( true );
-            atButton.addActionListener( new ActionListener()
-            {
-
-                    public void actionPerformed( ActionEvent ae )
-                    {
-                        when.setEnabled( atButton.isSelected() );
-                    }
-                }
-            );
             Calendar calendar = Calendar.getInstance( Locale.getDefault() );
             Date initialDate = calendar.getTime();
             calendar.add( Calendar.YEAR, 1 );
@@ -1596,6 +1636,18 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             content.add( jobPanel );
             content.add( printPanel );
             add( content, BorderLayout.NORTH );
+
+            // add listeners
+            atButton.addActionListener( new ActionListener()
+            {
+
+                    public void actionPerformed( ActionEvent ae )
+                    {
+                        when.setEnabled( atButton.isSelected() );
+                    }
+                }
+            );
+            
         }
 
 
@@ -1681,30 +1733,15 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             quality.addItem( PrintQuality.DRAFT );
             quality.addItem( PrintQuality.NORMAL );
             quality.addItem( PrintQuality.HIGH );
-            quality.setSelectedItem( PrintQuality.NORMAL );
+            PrintQuality pq = (PrintQuality)attributes.get(PrintQuality.class);
+            quality.setSelectedItem( pq == null ? PrintQuality.NORMAL : pq );
             quality.setRenderer( new QualityCellRenderer() );
 
             chromaticity = new JComboBox<Chromaticity>();
             chromaticity.addItem( Chromaticity.MONOCHROME );
             chromaticity.addItem( Chromaticity.COLOR );
             Chromaticity value = ( Chromaticity )attributes.get( Chromaticity.class );
-            if ( value != null )
-            {
-                if ( "color".equalsIgnoreCase( value.toString() ) )
-                {
-                    chromaticity.setSelectedItem( Chromaticity.COLOR );
-                }
-                else
-                {
-                    chromaticity.setSelectedItem( Chromaticity.MONOCHROME );
-                }
-            }
-            else
-            {
-                chromaticity.setSelectedItem( Chromaticity.MONOCHROME );
-            }
-
-
+            chromaticity.setSelectedItem(value == null ? Chromaticity.MONOCHROME : value);
             chromaticity.setRenderer( new ChromaticityCellRenderer() );
 
             JPanel content = new JPanel( new VariableGridLayout( VariableGridLayout.FIXED_NUM_COLUMNS, 2, 6, 6 ) );

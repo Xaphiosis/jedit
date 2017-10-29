@@ -68,11 +68,22 @@
 		unless="init.done">
 		<echo message="Buildfile for ${ant.project.name} (${ant.file})"
 		      level="info"/>
-		<fail message="Ant 1.8.2 or newer is needed for jEdit to build, please install it and rerun">
+		<fail message="Ant 1.9.0 or newer is needed for jEdit to build, please install it and rerun (found Ant version: '${ant.version}')">
 			<condition>
 				<not>
-					<antversion atleast="1.8.2"/>
+					<antversion atleast="1.9.0"/>
 				</not>
+			</condition>
+		</fail>
+		<fail message="Java 1.8 or 9 is needed for jEdit to build, please install it and rerun (found Java version: '${ant.java.version}')">
+			<condition>
+                <not>
+                    <or>
+                        <equals arg1="1.8" arg2="${ant.java.version}"/>
+                        <equals arg1="9" arg2="${ant.java.version}"/>
+                    </or>
+                </not>
+				
 			</condition>
 		</fail>
 		<fail message="The ant-optional package is needed for jEdit to build, please install it and rerun">
@@ -108,13 +119,44 @@
 	<target name="init-ivy"
 		depends="init,download-ivy"
 		unless="ivy.done">
+		<script language="javascript">
+			<![CDATA[
+				try {
+					var dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+					dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+					var document = dbf.newDocumentBuilder().parse('http://plugins.jedit.org/export/mirror_list.php')
+					var xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath()
+					var mirrors = xpath.evaluate('/MIRRORS/MIRROR/@ID', document, javax.xml.xpath.XPathConstants.NODESET)
+					var artifactPatterns = ''
+					for (i = 0; i < mirrors.getLength(); i++) {
+						artifactPatterns += '<artifact pattern="jar:http://'
+								    + mirrors.item(i).getTextContent()
+								    + '.dl.sourceforge.net/project/jedit-plugins/[artifact]/[revision]/[artifact]-[revision]-bin.zip!/[artifact].jar" />\n'
+					}
+					project.setUserProperty('jedit.plugins.artifact.patterns', artifactPatterns)
+				} catch(e) {
+					self.log('Error while retrieving mirror list, if plugins are not in Ivy cache, they will not be resolvable: ' + e, e, project.MSG_WARN)
+				}
+			]]>
+		</script>
+
+		<copy todir="${build.dir}"
+		      encoding="UTF-8"
+		      overwrite="true">
+			<fileset file="ivysettings.xml"/>
+			<filterset>
+				<filter token="jedit.plugins.artifact.patterns"
+					value="${jedit.plugins.artifact.patterns}"/>
+			</filterset>
+		</copy>
+
 		<property name="ivy.retrieve.pattern"
 			  value="${lib.dir}/[conf]/[artifact](-[classifier]).[ext]"/>
 		<taskdef resource="org/apache/ivy/ant/antlib.xml"
 			 classpath="${ivy.jar.file}"
 			 loaderref="ivy.loader"
 			 uri="antlib:org.apache.ivy.ant"/>
-		<ivy:settings file="ivysettings.xml"/>
+		<ivy:settings file="${build.dir}/ivysettings.xml"/>
 	</target>
 
 	<target name="retrieve"
@@ -204,6 +246,16 @@
 			<fileset dir="${dist.dir}"
 				 defaultexcludes="false"/>
 			<fileset dir="${textAreaPackage}/build"
+				 defaultexcludes="false"/>
+		</delete>
+	</target>
+
+	<target name="clean-jenkins"
+		depends="init,clean-all"
+		description="clean-all, also clean up ivy cache">
+		<delete includeemptydirs="true"
+			failonerror="false">
+			<fileset dir="${user.home}/.ivy2/cache"
 				 defaultexcludes="false"/>
 		</delete>
 	</target>
@@ -850,9 +902,6 @@
 				</tokenfilter>
 			</filterchain>
 		</copy>
-		<copy file="${basedir}/doc/stylesheet.css"
-		      todir="${jar.location}/doc/api"
-		      overwrite="true"/>
 	</target>
 
 	<target name="generate-pdf-users-guide"

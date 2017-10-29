@@ -135,7 +135,7 @@ import org.gjt.sp.util.StandardUtilities;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: View.java 24469 2016-07-31 01:55:18Z ezust $
+ * @version $Id: View.java 24725 2017-07-14 14:41:01Z ezust $
  */
 public class View extends JFrame implements InputHandlerProvider
 {
@@ -778,7 +778,7 @@ public class View extends JFrame implements InputHandlerProvider
 			editPane.focusOnTextArea();
 		}
 		else
-			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);
 	} //}}}
 
 	//{{{ unsplitCurrent() method
@@ -839,7 +839,7 @@ public class View extends JFrame implements InputHandlerProvider
 			editPane.focusOnTextArea();
 		}
 		else
-			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);
 	} //}}}
 
 	//{{{ resplit() method
@@ -851,7 +851,7 @@ public class View extends JFrame implements InputHandlerProvider
 	public void resplit()
 	{
 		if(lastSplitConfig == null)
-			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);
 		else
 			setSplitConfig(null,lastSplitConfig);
 	} //}}}
@@ -1467,6 +1467,8 @@ public class View extends JFrame implements InputHandlerProvider
 	 */
 	boolean confirmToCloseDirty()
 	{
+		boolean autosaveUntitled = jEdit.getBooleanProperty("autosaveUntitled");
+		boolean suppressNotSavedConfirmUntitled = jEdit.getBooleanProperty("suppressNotSavedConfirmUntitled") || autosaveUntitled;
 		Set<Buffer> checkingBuffers = getOpenBuffers();
 		for (View view: jEdit.getViews())
 		{
@@ -1478,7 +1480,7 @@ public class View extends JFrame implements InputHandlerProvider
 		}
 		for (Buffer buffer: checkingBuffers)
 		{
-			if (buffer.isDirty())
+			if (buffer.isDirty() && !(buffer.isUntitled() && suppressNotSavedConfirmUntitled))
 			{
 				return new CloseDialog(this, checkingBuffers).isOK();
 			}
@@ -1675,21 +1677,22 @@ public class View extends JFrame implements InputHandlerProvider
 		}
 		else
 		{
+			boolean autosaveUntitled = jEdit.getBooleanProperty("autosaveUntitled");
+
 			// the component is an editPane
 			EditPane editPane = (EditPane) component;
 			splitConfig.append('"');
-			splitConfig.append(StandardUtilities.charsToEscapes(
-				editPane.getBuffer().getPath()));
+			Buffer editPaneBuffer = editPane.getBuffer();
+			splitConfig.append(StandardUtilities.charsToEscapes(editPaneBuffer.getPath()));
 			splitConfig.append("\" buffer");
 			BufferSet bufferSet = editPane.getBufferSet();
 			Buffer[] buffers = bufferSet.getAllBuffers();
 			for (Buffer buffer : buffers)
 			{
-				if (!buffer.isNewFile())
+				if (!buffer.isNewFile() || (buffer.isUntitled() && autosaveUntitled))
 				{
 					splitConfig.append(" \"");
-					splitConfig.append(StandardUtilities.charsToEscapes(
-						buffer.getPath()));
+					splitConfig.append(StandardUtilities.charsToEscapes(buffer.getPath() ));
 					splitConfig.append("\" buff");
 				}
 			}

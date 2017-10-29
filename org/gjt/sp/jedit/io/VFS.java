@@ -104,7 +104,7 @@ import org.gjt.sp.util.ThreadUtilities;
  * @see VFSManager#getVFSForProtocol(String)
  *
  * @author Slava Pestov
- * @author $Id: VFS.java 24415 2016-06-19 11:07:55Z kerik-sf $
+ * @author $Id: VFS.java 24705 2017-06-12 20:48:59Z ezust $
  */
 public abstract class VFS
 {
@@ -473,8 +473,9 @@ public abstract class VFS
 	 * @param view The view
 	 * @param buffer The buffer
 	 * @param path The path
+	 * @param untitled is the buffer untitled
 	 */
-	public boolean load(View view, Buffer buffer, String path)
+	public boolean load(View view, Buffer buffer, String path, boolean untitled)
 	{
 		if((getCapabilities() & READ_CAP) == 0)
 		{
@@ -489,7 +490,7 @@ public abstract class VFS
 		if((getCapabilities() & WRITE_CAP) == 0)
 			buffer.setReadOnly(true);
 
-		Task request = new BufferLoadRequest(view, buffer, session, this, path);
+		Task request = new BufferLoadRequest(view, buffer, session, this, path, untitled);
 		if(buffer.isTemporary())
 			// this makes HyperSearch much faster
 			request.run();

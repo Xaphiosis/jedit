@@ -37,7 +37,7 @@ import java.awt.event.ActionListener;
  * @see ActionSet
  *
  * @author Slava Pestov
- * @version $Id: EditAction.java 23981 2015-08-10 14:56:24Z daleanson $
+ * @version $Id: EditAction.java 24750 2017-10-12 09:46:15Z ezust $
  */
 public abstract class EditAction extends JEditAbstractEditAction<View>
 {
@@ -81,6 +81,17 @@ public abstract class EditAction extends JEditAbstractEditAction<View>
 	public final String getMouseOverText()
 	{
 		return jEdit.getProperty(name + ".mouse-over");
+	} //}}}
+
+	//{{{ getToolTip() method
+	/**
+	 * @return the action's tooltip text. This returns the
+	 * value of the property named by {@link #getName()} suffixed
+	 * with <code>.tooltip</code>.
+	 */
+	public String getToolTip()
+	{
+		return jEdit.getProperty(name + ".tooltip");
 	} //}}}
 
 	//{{{ invoke() method
