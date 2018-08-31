@@ -598,7 +598,9 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 				return (modifiers & BUTTON2_DOWN_MASK) == BUTTON2_DOWN_MASK;
 		}
 		else
-			return (modifiers & BUTTON2_DOWN_MASK) == BUTTON2_DOWN_MASK;
+			// work around java bug on ubuntu where a button2 release acts as if you pressed ALT key
+			return ((modifiers & BUTTON2_DOWN_MASK) == BUTTON2_DOWN_MASK
+				|| ((modifiers & ALT_DOWN_MASK) == ALT_DOWN_MASK));
 	} //}}}
 
 	//{{{ isRightButton() method
