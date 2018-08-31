@@ -1,75 +1,45 @@
-jEdit 5.5 version history
-       (changes since jEdit 5.4.0)
+jEdit 5.6 version history
+       (changes since jEdit 5.5.0)
 :encoding=UTF-8:
 
-{{{ Version 5.5pre1
+{{{ Version 5.6pre1
 
-Thanks to AdamS, Wim West, M. Cesar R. Lacruz, Egor Abramovich,
-Hrotkó Gábor, Alan Ezust, Dale Anson, Roman Tsourick, and Jesse Pavel
-for contributing to this release.
+Thanks to Björn "Vampire" Kautler, Matthieu Casanova, Hrotkó Gábor,
+Alan Ezust, and Dale Anson for contributing to this release.
 
 {{{ Bug Fixes
 
-- RegisterViewer editable contentPane fixed (Patch #598, Jesse Pavel)
+- Patch #617 - Fixed Untitled Issue with -background command line option
+  (Hrotkó Gábor)
 
-- Command line behavior for +line fixed (Patch #590 - Wim West)
+- Fix for bug #4069, handle case where user has not set either a backup prefix
+or suffix (Dale Anson)
 
-- Autosave Untitled Buffers is now persistent across sessions
-  (Feature Request# 501, Patch #596 - Hrotkó Gábor)
+- Fix for bug # 4055, odd default colors for style editor (Dale Anson)
 
-- Fixed a number of bugs in the new jEdit printing system (Dale Anson)
+- Fix for bug # 2412, Preview Javadoc macro NPE (Dale Anson)
 
-- Add missing local properties to Insert_Buffer_Properties macro
-  (Patch #599 - Jesse Pavel)
+- Fix for bug # 2626, dockable buttons don't wrap correctly (Dale Anson)
 
-- Fixed an issue with the activity log viewer so that setting the number of
-  lines in the log actually works. (Dale Anson)
+- Fix for bug # 2719, electric scroll not working with page up/down (Dale Anson)
 
-- Fix for bug #3971, exception trying to set WM_CLASS. (Dale Anson)
-
-- Fix for bug #4047, illegal reflective access operation with Java 9.
-  (Dale Anson)
-
-- Fix Bug #4011, The Cut Lines macro gives exception if the cursor is beyond
-   text area (Patch #600, Roman Tsourick)
-
-}}}
-{{{ UI Improvements
-
-- Show tooltips in ShortcutOptionPane table (FR# 538, Roman Tsourick)
-
-- FSB: Disable first column dragging (Patch# 603, Roman Tsourick)
-
-- FSB: Sorting icon not following header when moving
-     (Bug# 4049, Patch# 604, Roman Tsourick)
+- Applied patch # 620, Chinese Taiwan localization from David Day (Dale Anson)
 
 }}}
 {{{ Miscellaneous
-
-- FR #506, FR #536: Autosaves are now saved to the Backup directory.
-  Default Backup/Autosave Directory is now $JEDIT_SETTINGS/backups.
-  (Alan Ezust, Hrotkó Gábor)
-
-- FR #175: Saving and backup option, "Never Mark Untitled Buffers Dirty" changed
-  name and behavior to "Close Dirty Untitled buffers without confirmation"
-  (Alan Ezust)
+- Fixed all deprecation warnings produced when compiling with Java 9 (Dale
+ Anson)
+ 
+- Adjusted Appearance option pane to allow setting "primary" and "secondary"
+fonts for all look and feels (Dale Anson) 
 
 }}}
 {{{ API Changes
-
+- New method IntegerArray.isEmpty() (Matthieu Casanova)
 
 }}}
 {{{ Editing
 
-- Add Gherkin mode (english) to support Cucumber feature files (Matthieu Casanova)
-
-- Patch #593 - Various small patches to modes (AdamS)
-
-- Patch #592 - for groovy mode (Egor Abramovich)
-
-- Patch #595 - New Assembly-arm32 edit mode (M. Cesar R. Lacruz)
-
-- Updated java-module-info mode (Dale Anson)
 
 }}}
 

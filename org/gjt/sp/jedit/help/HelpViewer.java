@@ -95,7 +95,7 @@ import static org.gjt.sp.jedit.help.HelpHistoryModel.HistoryEntry;
  * jEdit's searchable help viewer. It uses a Swing JEditorPane to display the HTML,
  * and implements a URL history.
  * @author Slava Pestov
- * @version $Id: HelpViewer.java 24211 2015-12-10 03:33:28Z daleanson $
+ * @version $Id: HelpViewer.java 24859 2018-04-10 23:06:33Z daleanson $
  */
 public class HelpViewer extends JFrame implements HelpViewerInterface, HelpHistoryModelListener
 {
@@ -654,7 +654,9 @@ public class HelpViewer extends JFrame implements HelpViewerInterface, HelpHisto
 
 		private void handlePopupTrigger(MouseEvent me)
 		{
-            int caret = viewer.getUI().viewToModel(viewer, me.getPoint());
+			int caret = viewer.getUI().viewToModel(viewer, me.getPoint());
+			// TODO: viewToModel is deprecated as of Java 9, use next line when jEdit requires Java 9
+            //int caret = viewer.getUI().viewToModel2D(viewer, me.getPoint(), null);
             if (caret >= 0 && viewer.getDocument() instanceof HTMLDocument)
             {
                 HTMLDocument hdoc = (HTMLDocument) viewer.getDocument();

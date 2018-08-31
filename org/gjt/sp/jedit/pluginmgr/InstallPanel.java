@@ -63,7 +63,7 @@ import java.util.List;
 //}}}
 
 /**
- * @version $Id: InstallPanel.java 24541 2016-09-14 09:58:29Z makarius $
+ * @version $Id: InstallPanel.java 24859 2018-04-10 23:06:33Z daleanson $
  */
 class InstallPanel extends JPanel implements EBComponent
 {
@@ -110,7 +110,7 @@ class InstallPanel extends JPanel implements EBComponent
 		ActionMap tableActionMap = table.getActionMap();
 		tableInputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0),"tabOutForward");
 		tableActionMap.put("tabOutForward",new KeyboardAction(KeyboardCommand.TAB_OUT_FORWARD));
-		tableInputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,InputEvent.SHIFT_MASK),"tabOutBack");
+		tableInputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,InputEvent.SHIFT_DOWN_MASK),"tabOutBack");
 		tableActionMap.put("tabOutBack",new KeyboardAction(KeyboardCommand.TAB_OUT_BACK));
 		tableInputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,0),"editPlugin");
 		tableActionMap.put("editPlugin",new KeyboardAction(KeyboardCommand.EDIT_PLUGIN));
@@ -545,7 +545,7 @@ class InstallPanel extends JPanel implements EBComponent
 					case 2:
 						return entry.set;
 					case 3:
-						if (entry.installedVersion != null)
+						if ((entry.installedVersion != null) && !entry.installedVersion.equals(entry.version))
 							return entry.installedVersion + "->" + entry.version;
 						return entry.version;
 					case 4:

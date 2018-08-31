@@ -88,7 +88,7 @@ import org.gjt.sp.util.ThreadUtilities;
  * <li>{@link #createVFSSession(String,Component)} - unless
  *     <code>NON_AWT_SESSION_CAP</code> capability is set</li>
  * <li>{@link #insert(View,Buffer,String)}</li>
- * <li>{@link #load(View,Buffer,String)}</li>
+ * <li>{@link #load(View,Buffer,String,boolean)}</li>
  * <li>{@link #save(View,Buffer,String)}</li>
  * </ul>
  *
@@ -104,7 +104,7 @@ import org.gjt.sp.util.ThreadUtilities;
  * @see VFSManager#getVFSForProtocol(String)
  *
  * @author Slava Pestov
- * @author $Id: VFS.java 24705 2017-06-12 20:48:59Z ezust $
+ * @author $Id: VFS.java 24832 2018-02-22 01:27:36Z vampire0 $
  */
 public abstract class VFS
 {

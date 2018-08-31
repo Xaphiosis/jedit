@@ -68,7 +68,7 @@ import java.util.regex.Pattern;
  * </ul>
  *
  * @author Slava Pestov
- * @version $Id: JEditBuffer.java 24427 2016-06-22 22:29:03Z daleanson $
+ * @version $Id: JEditBuffer.java 24832 2018-02-22 01:27:36Z vampire0 $
  *
  * @since jEdit 4.3pre3
  */
@@ -196,7 +196,18 @@ public class JEditBuffer
 	 */
 	public boolean isEditable()
 	{
-		return !(isPerformingIO());
+		return !(isPerformingIO()) && editable;
+	} //}}}
+
+	//{{{ setEditable() method
+	/**
+	 * @param editable {@code true} to set the buffer editable, {@code false} otherwise. Default is {@code true}.
+	 * This does not change the read only flag on the file, just makes the buffer
+	 * editable or not.
+	 */
+	public void setEditable(boolean editable)
+	{
+		this.editable = editable;
 	} //}}}
 
 	//{{{ isReadOnly() method
@@ -377,7 +388,7 @@ public class JEditBuffer
 	 * Returns the end offset of the specified line.
 	 * This method is thread-safe.
 	 * @param line The line
-	 * @return The end offset of the specified line, that is the offset 
+	 * @return The end offset of the specified line, that is the offset
 	 * after the end-of-line character. Note that
 	 * <code>buffer.getLineOfOffset(buffer.getLineEndOffset(x))</code>
 	 * does not return <code>x</code> but <code>x+1</code>.
@@ -2100,7 +2111,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 
 		if(!isEditable())
 		{
-			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);
 			return;
 		}
 
@@ -2112,7 +2123,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 			fireBeginUndo();
 			Selection[] s = undoMgr.undo();
 			if(s == null || s.length == 0)
-				javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
+				javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);
 			else
 			{
 				textArea.setCaretPosition(s[s.length - 1].getEnd());
@@ -2142,7 +2153,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 
 		if(!isEditable())
 		{
-			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
+			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);
 			return;
 		}
 
@@ -2154,7 +2165,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 			fireBeginRedo();
 			Selection[] s = undoMgr.redo();
 			if(s == null || s.length == 0)
-				javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
+				javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);
 			else
 			{
 				textArea.setCaretPosition(s[s.length - 1].getEnd());
@@ -2757,6 +2768,7 @@ loop:		for(int i = 0; i < seg.count; i++)
 	private boolean dirty;
 	private boolean readOnly;
 	private boolean readOnlyOverride;
+	private boolean editable = true;
 	private boolean transaction;
 	private boolean loading;
 	private boolean io;

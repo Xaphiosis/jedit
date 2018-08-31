@@ -32,7 +32,9 @@ import java.util.zip.GZIPInputStream;
 import org.gjt.sp.util.*;
 import org.xml.sax.XMLReader;
 import org.xml.sax.InputSource;
-import org.xml.sax.helpers.XMLReaderFactory;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.gjt.sp.jedit.*;
 //}}}
 
@@ -40,7 +42,7 @@ import org.gjt.sp.jedit.*;
 /**
  * Plugin list downloaded from server.
  * @since jEdit 3.2pre2
- * @version $Id: PluginList.java 24766 2017-10-19 00:12:44Z daleanson $
+ * @version $Id: PluginList.java 24859 2018-04-10 23:06:33Z daleanson $
  */
 class PluginList
 {
@@ -123,7 +125,7 @@ class PluginList
 			if (cachedURL != gzipURL)
 				Log.log(Log.MESSAGE, this, "Using cached pluginlist");
 			inputStream = new URL(cachedURL).openStream();
-			XMLReader parser = XMLReaderFactory.createXMLReader();
+			XMLReader parser = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
 			PluginListHandler handler = new PluginListHandler(this, cachedURL);
 			in = new BufferedInputStream(inputStream);
 			if(in.markSupported())

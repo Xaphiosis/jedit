@@ -75,15 +75,11 @@
 				</not>
 			</condition>
 		</fail>
-		<fail message="Java 1.8 or 9 is needed for jEdit to build, please install it and rerun (found Java version: '${ant.java.version}')">
+		<fail message="Java 1.8 is needed for jEdit to build, please install it and rerun (found Java version: '${ant.java.version}')">
 			<condition>
-                <not>
-                    <or>
-                        <equals arg1="1.8" arg2="${ant.java.version}"/>
-                        <equals arg1="9" arg2="${ant.java.version}"/>
-                    </or>
-                </not>
-				
+				<not>
+					<equals arg1="1.8" arg2="${ant.java.version}"/>
+				</not>
 			</condition>
 		</fail>
 		<fail message="The ant-optional package is needed for jEdit to build, please install it and rerun">
@@ -584,10 +580,17 @@
 			</contrib:then>
 		</contrib:if>
 		<contrib:if>
-			<os family="unix"/>
+			<os family="unix" arch="amd64"/>
 			<contrib:then>
 				<property name="osfamily"
-					  value="unix"/>
+					  value="unix-x64"/>
+			</contrib:then>
+		</contrib:if>
+		<contrib:if>
+			<os family="unix" arch="x86"/>
+			<contrib:then>
+				<property name="osfamily"
+					  value="unix-x32"/>
 			</contrib:then>
 		</contrib:if>
 		<contrib:switch value="${osfamily}">
@@ -595,14 +598,24 @@
 				<unjar src="${lib.dir}/launch4j/launch4j-workdir-win32.jar"
 				       dest="${build.dir}/launch4j"/>
 				<copy todir="${lib.dir}/launch4j">
-					<fileset dir="${build.dir}/launch4j/launch4j-3.5.0-workdir-win32/"/>
+					<fileset dir="${build.dir}/launch4j/launch4j-3.11-workdir-win32/"/>
 				</copy>
+			</contrib:case>
+			<contrib:case value="unix-x64">
+				<unjar src="${lib.dir}/launch4j/launch4j-workdir-linux64.jar"
+				       dest="${build.dir}/launch4j/"/>
+				<copy todir="${lib.dir}/launch4j">
+					<fileset dir="${build.dir}/launch4j/launch4j-3.11-workdir-linux64/"/>
+				</copy>
+				<chmod dir="${lib.dir}/launch4j/bin"
+				       perm="+x"
+				       includes="**"/>
 			</contrib:case>
 			<contrib:case value="unix">
 				<unjar src="${lib.dir}/launch4j/launch4j-workdir-linux.jar"
 				       dest="${build.dir}/launch4j/"/>
 				<copy todir="${lib.dir}/launch4j">
-					<fileset dir="${build.dir}/launch4j/launch4j-3.5.0-workdir-linux/"/>
+					<fileset dir="${build.dir}/launch4j/launch4j-3.11-workdir-linux/"/>
 				</copy>
 				<chmod dir="${lib.dir}/launch4j/bin"
 				       perm="+x"
@@ -892,12 +905,8 @@
 				 includes="api/**/*.html"/>
 			<filterchain>
 				<tokenfilter>
-					<replacestring from="&lt;TD BGCOLOR=&quot;#FFFFFF&quot; CLASS=&quot;NavBarCell1Rev&quot;&gt;"
-						       to="&lt;TD BGCOLOR=&quot;#00008B&quot; CLASS=&quot;NavBarCell1Rev&quot;&gt;"/>
-				</tokenfilter>
-				<tokenfilter>
 					<filetokenizer/>
-					<replaceregex pattern="(&lt;SCRIPT type=&quot;text/javascript&quot;&gt;.*?&lt;/SCRIPT&gt;|onload=&quot;.*?&quot;)"
+					<replaceregex pattern="&lt;noscript&gt;.*?JavaScript is disabled on your browser\..*?&lt;/noscript&gt;"
 						      flags="gs"/>
 				</tokenfilter>
 			</filterchain>

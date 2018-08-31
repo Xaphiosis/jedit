@@ -72,7 +72,7 @@ import org.gjt.sp.util.StandardUtilities;
 /** A container for dockable windows. This class should never be used
  * directly.
  * @author Slava Pestov
- * @version $Id: PanelWindowContainer.java 24429 2016-06-23 03:08:58Z daleanson $
+ * @version $Id: PanelWindowContainer.java 24880 2018-08-07 15:23:15Z daleanson $
  * @since jEdit 4.0pre1
  */
 public class PanelWindowContainer implements DockableWindowContainer, DockingArea
@@ -148,8 +148,16 @@ public class PanelWindowContainer implements DockableWindowContainer, DockingAre
 		else
 			throw new InternalError("Invalid position: " + position);
 
-		JToggleButton button = new JToggleButton();
-		button.setMargin(new Insets(1,1,1,1));
+		JToggleButton button;
+		if (jEdit.getBooleanProperty("use.rolloverToggleButtons"))
+		{
+			button = new RolloverToggleButton();
+		}
+		else 
+		{
+			button = new JToggleButton();	
+			button.setMargin(new Insets(1,1,1,1));
+		}
 		GenericGUIUtilities.setButtonContentMargin(button, new Insets(6,6,6,6));
 		button.setRequestFocusEnabled(false);
 		button.setIcon(new RotatedTextIcon(rotation,button.getFont(),

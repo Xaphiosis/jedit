@@ -43,7 +43,7 @@ import org.gjt.sp.jedit.*;
 /**
  * Search and replace dialog.
  * @author Slava Pestov
- * @version $Id: SearchDialog.java 24464 2016-07-19 14:47:33Z ezust $
+ * @version $Id: SearchDialog.java 24859 2018-04-10 23:06:33Z daleanson $
  */
 public class SearchDialog extends EnhancedDialog
 {
@@ -190,8 +190,8 @@ public class SearchDialog extends EnhancedDialog
 			{
 				filter.setText(((DirectoryListSet)fileset)
 					.getFileFilter());
-				directoryField.setText(((DirectoryListSet)fileset)
-					.getDirectory());
+				///directoryField.setText(((DirectoryListSet)fileset)
+				///	.getDirectory());
 				searchSubDirectories.setSelected(((DirectoryListSet)fileset)
 					.isRecursive());
 			}

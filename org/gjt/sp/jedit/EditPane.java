@@ -90,7 +90,7 @@ import org.gjt.sp.util.ThreadUtilities;
  * @see View#getEditPanes()
  *
  * @author Slava Pestov
- * @version $Id: EditPane.java 24411 2016-06-19 11:02:53Z kerik-sf $
+ * @version $Id: EditPane.java 24820 2018-01-25 20:19:28Z daleanson $
  */
 public class EditPane extends JPanel implements BufferSetListener
 {
@@ -182,7 +182,7 @@ public class EditPane extends JPanel implements BufferSetListener
 			{
 				if(bufferSwitcher.getSelectedItem() != buffer)
 					bufferSwitcher.setSelectedItem(buffer);
-				bufferSwitcher.setToolTipText(buffer.getPath());
+				bufferSwitcher.updateStyle(buffer);
 			}
 
 			EditBus.send(new EditPaneUpdate(this,EditPaneUpdate
@@ -417,6 +417,10 @@ public class EditPane extends JPanel implements BufferSetListener
 			for(int i = 0; i < selection.length; i++)
 			{
 				Selection s = selection[i];
+				// it happens sometimes when a buffer has an invalid selection and is loaded in two caret panes during
+				// startup
+				if (s == null)
+					continue;
 				int max = buffer.getLength();
 				if(s.getStart() > max || s.getEnd() > max)
 					selection[i] = null;

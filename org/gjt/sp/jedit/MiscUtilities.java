@@ -3,7 +3,7 @@
  * :tabSize=4:indentSize=4:noTabs=false:
  * :folding=explicit:collapseFolds=1:
  *
- * Copyright © 1999-2013 Slava Pestov, Richard S. Hall, Dirk Moebius,
+ * Copyright \<copyright> 1999-2013 Slava Pestov, Richard S. Hall, Dirk Moebius,
  *    jgellene, ezust, vanza, kpouer, Vampire0, Jarekczek, k_satoda, voituk,
  *    Thomas Meyer, Martin Raspe
  *   And possibly other members of the All Volunteer Developer Team (tm)
@@ -56,7 +56,7 @@ import org.gjt.sp.util.StringList;
  * <li>{@link #constructPath(String,String)}</li>
  * </ul>
  *
- * @version $Id: MiscUtilities.java 24726 2017-07-16 20:38:16Z ezust $
+ * @version $Id: MiscUtilities.java 24874 2018-07-29 18:20:49Z daleanson $
  */
 public class MiscUtilities
 {
@@ -176,7 +176,7 @@ public class MiscUtilities
 		String varName = m.group(2);
 		String expansion = System.getenv(varName);
 		if (expansion == null) {
-			if (varName.equalsIgnoreCase("jedit_settings")) {
+			if (varName.equalsIgnoreCase("jedit_settings") && jEdit.getSettingsDirectory() != null) {
 				expansion = jEdit.getSettingsDirectory();
 			}
 			else {
@@ -672,6 +672,54 @@ public class MiscUtilities
 		}
 	}// }}}
 
+	//{{{ prepareAutosaveDirectory method
+	/**
+	 * Prepares the directory to autosave the specified file.
+	 * A jEdit property is used to determine the directory.
+	 * If there is none specified by props,
+	 * then the current directory is used, but only for local files.
+	 * The directory is created if it does not exist.
+	 * @param path path to the buffer
+	 * @return Autosave directory. <code>null</code> is returned for
+	 * non-local files if no backup directory is specified in properties.
+	 * @since jEdit 5.5
+	 */
+	public static File prepareAutosaveDirectory(String path)
+	{
+		boolean isLocal = VFSManager.getVFSForPath(path) instanceof FileVFS;
+		File file;
+		if (isLocal)
+			file = new File(path);
+		else
+			file = new File(replaceNonPathChars(path, "_"));
+		File dir = file;
+		if (!dir.isDirectory())
+			dir=dir.getParentFile();
+
+		// Check for autosave.directory
+		String autosaveDirectory = jEdit.getProperty("autosave.directory");
+		if(autosaveDirectory != null)
+		{
+			autosaveDirectory = MiscUtilities.expandVariables(autosaveDirectory);
+			if (path.startsWith(autosaveDirectory))
+				return dir;
+			// Perhaps here we would want to guard with
+			// a property for parallel backups or not.
+			autosaveDirectory = MiscUtilities.concatPath(
+				autosaveDirectory, dir.getAbsolutePath());
+			dir = new File(autosaveDirectory);
+			if (!dir.exists())
+				dir.mkdirs();
+		}
+		else {
+			if (!isLocal)
+				return null;
+		}
+		return dir;
+
+	} //}}}
+
+
 	//{{{ getBackupDirectory method
 	/**
 	 * Get backup.directory property, or null.
@@ -978,8 +1026,14 @@ public class MiscUtilities
 		{
 			return false;
 		}
+		
+		// check for Untitled-XX
+		if (filename.matches("Untitled-\\d+"))
+		{
+			return false;
+		}
 
-		// check for #Untitled=X# and #filename#save#
+		// check for #Untitled-X# and #filename#save#
 		if (filename.matches("[#]Untitled-\\d+[#]") || filename.matches("[#].*?[#]save[#]"))
 		{
 			return true;
@@ -988,19 +1042,25 @@ public class MiscUtilities
 		// check for user supplied prefix and suffix
 		String backupPrefix = jEdit.getProperty("backup.prefix");
 		String backupSuffix = jEdit.getProperty("backup.suffix");
-		if (backupPrefix != null && backupSuffix != null)
+		if (backupPrefix != null && !backupPrefix.isEmpty() && backupSuffix != null && !backupSuffix.isEmpty())
 		{
 			return filename.startsWith(backupPrefix) && filename.endsWith(backupSuffix);
 		}
 
-		if (backupPrefix != null && filename.startsWith(backupPrefix))
+		if (backupPrefix != null && !backupPrefix.isEmpty() && filename.startsWith(backupPrefix))
 		{
 			return true;
 		}
 
-		if (backupSuffix != null && filename.startsWith(backupSuffix))
+		if (backupSuffix != null && !backupSuffix.isEmpty() && filename.endsWith(backupSuffix))
 		{
 			return true;
+		}
+		
+		// if the user sets an empty prefix and suffix, then check if the filename ends with a number
+		if ((backupPrefix == null || backupPrefix.isEmpty() || backupSuffix == null || backupSuffix.isEmpty()) && filename.matches(".*?\\d+"))
+		{
+			return true;		
 		}
 
 		return false;
@@ -1560,8 +1620,13 @@ loop:		for(;;)
 		Properties sorted = new Properties() {
 			@Override
 			public synchronized Enumeration<Object> keys() {
-				return Collections.enumeration(new TreeSet<Object>(super.keySet()));
+				return Collections.enumeration(new TreeSet<Object>(props.keySet()));
 			}
+			@Override
+			public synchronized Set<Map.Entry<Object,Object>> entrySet() {
+				return (new TreeMap<Object,Object>(props)).entrySet();
+			}
+
 		};
 		sorted.putAll(props);
 		sorted.store(out, comments);
@@ -1588,7 +1653,8 @@ loop:		for(;;)
 			Map<String, String> env = pb.environment();
 			if (OperatingSystem.isUnix())
 				prefixMap.put(System.getProperty("user.home"), "~");
-			prefixMap.put(jEdit.getSettingsDirectory(), "JEDIT_SETTINGS");
+			if (jEdit.getSettingsDirectory() != null)
+				prefixMap.put(jEdit.getSettingsDirectory(), "JEDIT_SETTINGS");
 			for (Map.Entry<String, String> entry: env.entrySet())
 			{
 				String k = entry.getKey();

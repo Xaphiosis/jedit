@@ -37,7 +37,7 @@ import org.xml.sax.helpers.DefaultHandler;
 /** Manages persistence of open buffers and views across jEdit sessions.
  * @since jEdit 4.2pre1
  * @author Slava Pestov
- * @version $Id: PerspectiveManager.java 24725 2017-07-14 14:41:01Z ezust $
+ * @version $Id: PerspectiveManager.java 24800 2017-12-29 15:38:11Z ezust $
  */
 public class PerspectiveManager
 {
@@ -123,12 +123,11 @@ public class PerspectiveManager
 		if(jEdit.getBufferCount() == 0)
 			return;
 
-		boolean autosaveUntitled = jEdit.getBooleanProperty("autosaveUntitled");
 		Buffer[] buffers = jEdit.getBuffers();
 		Collection<Buffer> savedBuffers = new LinkedList<Buffer>();
 		for (Buffer buffer: buffers)
 		{
-			if (!buffer.isNewFile() || (buffer.isUntitled() && autosaveUntitled))
+			if (!buffer.isNewFile() || buffer.isUntitled())
 			{
 				savedBuffers.add(buffer);
 			}
@@ -153,10 +152,6 @@ public class PerspectiveManager
 
 			for (Buffer buffer: savedBuffers)
 			{
-				if ( buffer.isUntitled() && !autosaveUntitled ) {
-					// skip buffer if untitled, and we do not want to save it
-					continue;
-				}
 				out.write("<BUFFER AUTORELOAD=\"");
 				out.write(buffer.getAutoReload() ? "TRUE" : "FALSE");
 				out.write("\" AUTORELOAD_DIALOG=\"");

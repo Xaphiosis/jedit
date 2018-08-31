@@ -41,7 +41,7 @@ import org.gjt.sp.jedit.gui.RolloverButton;
 
 /**
  * @author Slava Pestov
- * @version $Id: TextAreaOptionPane.java 24499 2016-08-15 13:28:43Z kerik-sf $
+ * @version $Id: TextAreaOptionPane.java 24775 2017-11-04 01:43:57Z ezust $
  */
 public class TextAreaOptionPane extends AbstractOptionPane
 {
@@ -417,7 +417,6 @@ public class TextAreaOptionPane extends AbstractOptionPane
 
 				if (selected != null)
 				{
-					selected = selected.deriveFont(Font.PLAIN, 12);
 					fontsModel.addElement(selected);
 					fonts.setSelectedIndex(fontsModel.size() - 1);
 				}
@@ -497,7 +496,7 @@ public class TextAreaOptionPane extends AbstractOptionPane
 								   index,
 								   isSelected,
 								   cellHasFocus);
-				setText(f.getFamily());
+				setText(f.getFamily() + " " + f.getSize());
 				return this;
 			}
 

@@ -35,7 +35,7 @@ import org.gjt.sp.jedit.browser.VFSBrowser;
  * The Save and Backup option panel.
  *
  * @author Slava Pestov
- * @author $Id: SaveBackupOptionPane.java 24732 2017-08-04 23:26:50Z ezust $
+ * @author $Id: SaveBackupOptionPane.java 24843 2018-03-19 00:04:03Z ezust $
  */
 public class SaveBackupOptionPane extends AbstractOptionPane
 {
@@ -94,6 +94,24 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 		suppressNotSavedConfirmUntitled.setSelected(jEdit.getBooleanProperty("suppressNotSavedConfirmUntitled"));
 		addComponent(suppressNotSavedConfirmUntitled);
 
+		addSeparator("options.autosave");
+
+		/* Autosave Directory */
+
+		autosaveDirectory = new JTextField(jEdit.getProperty(
+			"autosave.directory"));
+		autosaveDirectory.setToolTipText(
+			jEdit.getProperty("options.save-back.backupDirectory.tooltip"));
+
+		JButton browseAutosaveDirectory = new JButton("...");
+		browseAutosaveDirectory.addActionListener(new MyActionListener2());
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(autosaveDirectory);
+		panel.add(browseAutosaveDirectory, BorderLayout.EAST);
+		addComponent(jEdit.getProperty("options.save-back.autosaveDirectory"),
+			panel);
+
+
 		/* Autosave untitled buffers */
 		autosaveUntitled = new JCheckBox(jEdit.getProperty(
 			"options.save-back.autosaveUntitled"));
@@ -102,7 +120,14 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 		autosaveUntitled.setSelected(jEdit.getBooleanProperty("autosaveUntitled"));
 		addComponent(autosaveUntitled);
 
-		/* Autosave, Backup directory */
+		/* Autosave interval */
+		autosave = new NumericTextField(jEdit.getProperty("autosave"), true);
+		autosave.setToolTipText(jEdit.getProperty("options.save-back.autosave.tooltip"));
+		addComponent(jEdit.getProperty("options.save-back.autosave"),autosave);
+
+		addSeparator("options.backup");
+
+		/* Backup directory */
 		backupDirectory = new JTextField(jEdit.getProperty(
 			"backup.directory"));
 		backupDirectory.setToolTipText(
@@ -110,16 +135,12 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 
 		JButton browseBackupDirectory = new JButton("...");
 		browseBackupDirectory.addActionListener(new MyActionListener());
-		JPanel panel = new JPanel(new BorderLayout());
+		panel = new JPanel(new BorderLayout());
 		panel.add(backupDirectory);
 		panel.add(browseBackupDirectory, BorderLayout.EAST);
 		addComponent(jEdit.getProperty("options.save-back.backupDirectory"),
 			panel);
 
-		/* Autosave interval */
-		autosave = new NumericTextField(jEdit.getProperty("autosave"), true);
-		autosave.setToolTipText(jEdit.getProperty("options.save-back.autosave.tooltip"));
-		addComponent(jEdit.getProperty("options.save-back.autosave"),autosave);
 
 		/* Backup count */
 		backups = new NumericTextField(jEdit.getProperty("backups"), true);
@@ -154,8 +175,10 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 		jEdit.setBooleanProperty("confirmSaveAll",confirmSaveAll.isSelected());
 		jEdit.setProperty("autosave", this.autosave.getText());
 		jEdit.setProperty("backups",backups.getText());
-		String backupDirectoryOriginal = jEdit.getProperty("backup.directory");
+
 		jEdit.setProperty("backup.directory",backupDirectory.getText());
+		String autosaveDirectoryOriginal = jEdit.getProperty("autosave.directory");
+		jEdit.setProperty("autosave.directory", autosaveDirectory.getText());
 		jEdit.setProperty("backup.prefix",backupPrefix.getText());
 		jEdit.setProperty("backup.suffix",backupSuffix.getText());
 		jEdit.setBooleanProperty("backupEverySave", backupEverySave.isSelected());
@@ -178,16 +201,15 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 			}
 		}
 
-		// if backup dir changed, we should issue to perform an autosave for all dirty and all untitled buffers
+		// if autosave dir changed, we should issue to perform an autosave for all dirty and all untitled buffers
 		// to have the autosaves at the new location
-		if (!backupDirectoryOriginal.equals(backupDirectory.getText())) {
+		if (!autosaveDirectoryOriginal.equals(autosaveDirectory.getText())) {
 			Buffer[] buffers = jEdit.getBuffers();
 			for (Buffer buffer : buffers) {
 				// save dirty
 				if ( buffer.isDirty() ) {
 					buffer.autosave(true);
 				}
-
 			}
 		}
 
@@ -203,6 +225,7 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 
 	private JCheckBox useMD5forDirtyCalculation;
 	private JTextField backups;
+	private JTextField autosaveDirectory;
 	private JTextField backupDirectory;
 	private JTextField backupPrefix;
 	private JTextField backupSuffix;
@@ -223,4 +246,17 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 		}
 	} //}}}
 
+	//{{{ MyActionListener class
+	private class MyActionListener2 implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			String[] choosenFolder =
+				GUIUtilities.showVFSFileDialog(null, autosaveDirectory.getText(),
+	   			       	VFSBrowser.CHOOSE_DIRECTORY_DIALOG, false);
+			if (choosenFolder != null)
+				autosaveDirectory.setText(choosenFolder[0]);
+
+		}
+	} //}}}
 }

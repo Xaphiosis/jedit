@@ -144,7 +144,7 @@ import static org.gjt.sp.jedit.EditBus.EBHandler;
  * @see ServiceManager
  *
  * @author Slava Pestov
- * @version $Id: PluginJAR.java 24110 2015-10-19 16:23:13Z vampire0 $
+ * @version $Id: PluginJAR.java 24859 2018-04-10 23:06:33Z daleanson $
  * @since jEdit 4.2pre1
  */
 public class PluginJAR
@@ -896,6 +896,7 @@ public class PluginJAR
 	 *
 	 * @since jEdit 4.2pre1
 	 */
+	@SuppressWarnings("unchecked")
 	public void activatePlugin()
 	{
 		synchronized (this)
@@ -930,7 +931,7 @@ public class PluginJAR
 				return;
 			}
 
-			plugin = (EditPlugin)clazz.newInstance();
+			plugin = (EditPlugin)clazz.getDeclaredConstructor().newInstance();
 			plugin.jar = this;
 		}
 		catch (Throwable t)

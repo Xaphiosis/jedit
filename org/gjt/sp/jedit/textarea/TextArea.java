@@ -72,7 +72,7 @@ import org.gjt.sp.util.ThreadUtilities;
  *
  * @author Slava Pestov
  * @author kpouer (rafactoring into standalone text area)
- * @version $Id: TextArea.java 24491 2016-08-09 22:16:29Z daleanson $
+ * @version $Id: TextArea.java 24878 2018-08-06 18:25:19Z daleanson $
  */
 public abstract class TextArea extends JPanel
 {
@@ -2533,7 +2533,7 @@ loop:			for(int i = 0; i < text.length(); i++)
 	 */
 	public void goToNextPage(boolean select)
 	{
-		scrollToCaret(false);
+		scrollToCaret(electricScroll > 0);
 		int magic = getMagicCaretPosition();
 		if(caretLine < displayManager.getFirstVisibleLine())
 		{
@@ -2830,7 +2830,7 @@ loop:		for(int i = getCaretPosition() - 1; i >= 0; i--)
 	 */
 	public void goToPrevPage(boolean select)
 	{
-		scrollToCaret(false);
+		scrollToCaret(electricScroll > 0);
 		int magic = getMagicCaretPosition();
 
 		if(caretLine < displayManager.getFirstVisibleLine())

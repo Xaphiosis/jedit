@@ -50,6 +50,7 @@ import org.gjt.sp.jedit.io.VFS;
 import org.gjt.sp.jedit.io.VFSFile;
 import org.gjt.sp.jedit.io.VFSManager;
 import org.gjt.sp.jedit.msg.BufferUpdate;
+import org.gjt.sp.jedit.msg.PropertiesChanged;
 import org.gjt.sp.jedit.syntax.ModeProvider;
 import org.gjt.sp.jedit.syntax.ParserRuleSet;
 import org.gjt.sp.jedit.syntax.TokenHandler;
@@ -90,7 +91,7 @@ import org.gjt.sp.util.ThreadUtilities;
 
  *
  * @author Slava Pestov
- * @version $Id: Buffer.java 24725 2017-07-14 14:41:01Z ezust $
+ * @version $Id: Buffer.java 24849 2018-03-27 16:24:10Z vampire0 $
  */
 public class Buffer extends JEditBuffer
 {
@@ -351,17 +352,17 @@ public class Buffer extends JEditBuffer
 	{
 		autosave(false);
 	} //}}}
-	
+
 	//{{{ autosave() method
 	/**
 	 * Autosaves this buffer.
-	 * 
+	 *
 	 * @param force save even if AUTOSAVE_DIRTY not set
 	 * @since jEdit 5.5pre1
 	 */
 	public void autosave(boolean force)
 	{
-		
+
 		if(autosaveFile == null || (!getFlag(AUTOSAVE_DIRTY) && !force)
 			|| !isDirty() || isPerformingIO() ||
 			!autosaveFile.getParentFile().exists())
@@ -370,12 +371,12 @@ public class Buffer extends JEditBuffer
 		// re-set autosave file path, based on the path at the settings
 		File autosaveFileOriginal = autosaveFile;
 		setAutosaveFile();
-		
+
 		// if autosave path settings changed, delete the old file
 		if(autosaveFile != null && !autosaveFileOriginal.toString().equals(autosaveFile.toString())) {
 			autosaveFileOriginal.delete();
 		}
-	
+
 		setFlag(AUTOSAVE_DIRTY,false);
 
 		ThreadUtilities.runInBackground(new BufferAutosaveRequest(
@@ -978,6 +979,60 @@ public class Buffer extends JEditBuffer
 		return getFlag(TEMPORARY);
 	} //}}}
 
+	//{{{ isBackup() method
+	/**
+	 * @return if this buffer most probably contains backup file
+	 */
+	public boolean isBackup()
+	{
+		return MiscUtilities.isBackup(MiscUtilities.getFileName(getPath()));
+	} //}}}
+
+
+	public boolean isEditable()
+	{
+		return super.isEditable() && !isLocked(); // respects "locked" property
+	}
+
+	//{{{ isLocked() method
+	/**
+	 * @return if this buffer is locked for editing
+	 */
+	public boolean isLocked()
+	{
+		return getBooleanProperty("locked", false);
+	}
+	//}}}
+
+	//{{{ setLocked() method
+	/**
+	 * Changes locked state of the buffer.
+	 * @param locked true to lock, false to unlock
+	 */
+	public void setLocked(boolean locked)
+	{
+		setBooleanProperty("locked", locked);
+		propertiesChanged();
+	}
+	//}}}
+
+	//{{{ toggleLocked() method
+	/**
+	 * Toggles locked state of the buffer.
+	 * @param view We show a message in the view's status bar
+	 */
+	public void toggleLocked(View view)
+	{
+		setLocked(!isLocked());
+
+		view.getStatus().setMessageAndClear(
+				jEdit.getProperty("view.status.locked-changed",
+						new Integer[] { isLocked() ? 1 : 0 }));
+		EditBus.send(new PropertiesChanged(Buffer.this));
+
+	}
+	//}}}
+
 	//{{{ getIcon() method
 	/**
 	 * @return this buffer's icon.
@@ -987,7 +1042,7 @@ public class Buffer extends JEditBuffer
 	{
 		if(isDirty())
 			return GUIUtilities.loadIcon("dirty.gif");
-		else if(isReadOnly())
+		else if(isReadOnly() || isLocked())
 			return GUIUtilities.loadIcon("readonly.gif");
 		else if(getFlag(NEW_FILE))
 			return GUIUtilities.loadIcon("new.gif");
@@ -1044,7 +1099,7 @@ public class Buffer extends JEditBuffer
 		// Try returning it as an integer first
 		try
 		{
-			retVal = new Integer(value);
+			retVal = Integer.valueOf(value);
 		}
 		catch(NumberFormatException nf)
 		{
@@ -1925,14 +1980,6 @@ public class Buffer extends JEditBuffer
 		if((vfs.getCapabilities() & VFS.WRITE_CAP) == 0)
 			setFileReadOnly(true);
 		name = vfs.getFileName(path);
-		
-		// clean up buffer name
-		// #filename# is for autosave, e.g. reloading autosaved file, remove #'s from the buffer's name
-		if ( name.startsWith("#") && name.endsWith("#"))
-		{
-			name = name.substring(1, name.length());
-			name = name.substring(0, name.length() - 1);
-		}
 
 		directory = vfs.getParentOfPath(path);
 
@@ -1944,7 +1991,7 @@ public class Buffer extends JEditBuffer
 			// deleted after a save as
 			if(autosaveFile != null)
 				autosaveFile.delete();
-			
+
 			setAutosaveFile();
 		}
 		else
@@ -1964,7 +2011,7 @@ public class Buffer extends JEditBuffer
 	 */
 	private void setAutosaveFile()
 	{
-		File autosaveDir = MiscUtilities.prepareBackupDirectory(symlinkPath);
+		File autosaveDir = MiscUtilities.prepareAutosaveDirectory(symlinkPath);
 		autosaveFile = new File(autosaveDir,'#' + name + '#');
 	} //}}}
 

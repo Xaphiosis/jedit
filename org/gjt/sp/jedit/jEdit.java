@@ -85,7 +85,7 @@ import org.gjt.sp.util.SyntaxUtilities;
 /**
  * The main class of the jEdit text editor.
  * @author Slava Pestov
- * @version $Id: jEdit.java 24747 2017-10-05 19:14:28Z daleanson $
+ * @version $Id: jEdit.java 24882 2018-08-12 21:21:47Z ezust $
  */
 public class jEdit
 {
@@ -106,7 +106,7 @@ public class jEdit
 	public static String getBuild()
 	{
 		// (major).(minor).(<99 = preX, 99 = "final").(bug fix)
-		return "05.05.01.00";
+		return "05.06.00.01";
 	} //}}}
 
 	//{{{ main() method
@@ -506,6 +506,8 @@ public class jEdit
 			MigrationService keymapMigration = ServiceManager.getService(MigrationService.class, "keymap");
 			keymapMigration.migrate();
 		}
+		else
+			GUIUtilities.advanceSplashProgress();
 
 		SearchAndReplace.load();
 
@@ -569,13 +571,14 @@ public class jEdit
 			File file = new File(path);
 			if(file.exists())
 			{
+				GUIUtilities.advanceSplashProgress("run startup scripts");
 				runStartupScripts(file);
 			}
 			else
 				GUIUtilities.advanceSplashProgress();
 		}
 		else
-			GUIUtilities.advanceSplashProgress("run startup scripts");
+			GUIUtilities.advanceSplashProgress();
 
 		if(runStartupScripts && settingsDirectory != null)
 		{
@@ -1710,6 +1713,23 @@ public class jEdit
 				// if it is new, then it is untitled
 				newBuffer = new Buffer(path,newFile,false,props,newFile);
 
+
+				if (newBuffer.isBackup()) {
+					Object[] args = {newBuffer.getName()};
+					int result = GUIUtilities.option(view, "file-is-backup",
+							args, JOptionPane.WARNING_MESSAGE,
+							new String[]{
+									jEdit.getProperty("file-is-backup.open"),
+									jEdit.getProperty("file-is-backup.open-locked"),
+									jEdit.getProperty("common.cancel")
+							}, jEdit.getProperty("common.cancel"));
+					if (result == 2)
+						return null;
+					if (result == 1)
+						newBuffer.setLocked(true);
+				}
+
+
 				if(!newBuffer.load(view,false))
 					return null;
 				addBufferToList(newBuffer);
@@ -2259,14 +2279,16 @@ public class jEdit
 					buffer.getMode().getName());
 			}
 
-			if(!isExiting)
+			// do not delete untitled buffer when started with background
+			if(!isExiting && !(buffer.isUntitled() && autosaveUntitled))
 			{
 				EditBus.send(new BufferUpdate(buffer,view,BufferUpdate.CLOSING));
 			}
 
 			buffer.close();
 			DisplayManager.bufferClosed(buffer);
-			if(!isExiting)
+			// do not delete untitled buffer when started with background
+			if(!isExiting && !(buffer.isUntitled() && autosaveUntitled))
 			{
 				bufferSetManager.removeBuffer(buffer);
 				EditBus.send(new BufferUpdate(buffer,view,
@@ -2407,11 +2429,11 @@ public class jEdit
 			path = path.toLowerCase();
 		}
 
-		/// danson, this causes ProjectViewer to block, not sure why yet
-		///synchronized(bufferListLock)
-		///{
+		// TODO: danson, this causes ProjectViewer to block, not sure why yet
+		synchronized(bufferListLock)
+		{
 			return bufferHash.get(path);
-		///}
+		}
 	} //}}}
 
 	//{{{ getBuffer() method

@@ -37,7 +37,7 @@ import org.gjt.sp.util.Log;
  * of the position are implemented separately.
  *
  * @author Slava Pestov
- * @version $Id: PositionManager.java 21831 2012-06-18 22:54:17Z ezust $
+ * @version $Id: PositionManager.java 24859 2018-04-10 23:06:33Z daleanson $
  * @since jEdit 4.2pre3
  */
 class PositionManager
@@ -134,6 +134,8 @@ class PositionManager
 		} //}}}
 
 		//{{{ finalize() method
+		// TODO: 'finalize' is deprecated as of Java 9
+		@SuppressWarnings("deprecation")
 		@Override
 		protected void finalize()
 		{

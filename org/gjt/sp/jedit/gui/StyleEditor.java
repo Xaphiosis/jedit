@@ -91,8 +91,9 @@ public class StyleEditor extends EnhancedDialog implements ActionListener
 		}
 		String typeName = Token.tokenToString(token.id);
 		String property = "view.style." + typeName.toLowerCase();
+		Font font = new JLabel().getFont();
 		SyntaxStyle currentStyle = SyntaxUtilities.parseStyle(
-				jEdit.getProperty(property), "Dialog",12, true);
+				jEdit.getProperty(property), font.getFamily(), font.getSize(), true);
 		SyntaxStyle style = new StyleEditor(textArea.getView(),
 				currentStyle, typeName).getStyle();
 		if(style != null)
@@ -137,7 +138,8 @@ public class StyleEditor extends EnhancedDialog implements ActionListener
 		Color fg = style.getForegroundColor();
 		if (fg == null) 
 		{
-			fg = jEdit.getActiveView().getForeground();	
+			fg = jEdit.getActiveView().getEditPane().getTextArea().getPainter().getForeground();	
+			
 		}
 		fgColorCheckBox = new JCheckBox(jEdit.getProperty("style-editor.fgColor"));
 		fgColorCheckBox.setSelected(fg != null);
@@ -151,7 +153,7 @@ public class StyleEditor extends EnhancedDialog implements ActionListener
 		Color bg = style.getBackgroundColor();
 		if (bg == null) 
 		{
-			bg = jEdit.getActiveView().getBackground();	
+			bg = jEdit.getActiveView().getEditPane().getTextArea().getPainter().getBackground();	
 		}
 		bgColorCheckBox = new JCheckBox(jEdit.getProperty("style-editor.bgColor"));
 		bgColorCheckBox.setSelected(bg != null);
@@ -229,11 +231,12 @@ public class StyleEditor extends EnhancedDialog implements ActionListener
 			? bgColor.getSelectedColor()
 			: null);
 
+		Font font = new JLabel().getFont();
 		return new SyntaxStyle(foreground,background,
-				new Font("Dialog",
+				new Font(font.getFamily(),
 				(italics.isSelected() ? Font.ITALIC : 0)
 				| (bold.isSelected() ? Font.BOLD : 0),
-				12));
+				font.getSize()));
 	} //}}}
 
 	//{{{ Private members

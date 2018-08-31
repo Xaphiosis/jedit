@@ -135,7 +135,7 @@ import org.gjt.sp.util.StandardUtilities;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: View.java 24725 2017-07-14 14:41:01Z ezust $
+ * @version $Id: View.java 24814 2018-01-10 03:51:43Z ezust $
  */
 public class View extends JFrame implements InputHandlerProvider
 {
@@ -1790,7 +1790,7 @@ loop:		while (true)
 						if (buffer == null)
 						{
 							buffer = jEdit.openTemporary(jEdit.getActiveView(), null,
-												path, true, null);
+												path, true, null, true);
 							jEdit.commitTemporary(buffer);
 						}
 					}

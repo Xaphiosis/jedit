@@ -53,7 +53,7 @@ import org.gjt.sp.jedit.textarea.TextAreaMouseHandler;
 *
 * @author Slava Pestov
 * @author Eric Le Lay
-* @version $Id: GenericGUIUtilities.java 24411 2016-06-19 11:02:53Z kerik-sf $
+* @version $Id: GenericGUIUtilities.java 24859 2018-04-10 23:06:33Z daleanson $
 */
 public class GenericGUIUtilities {
 	//{{{ prettifyMenuLabel() method
@@ -179,7 +179,7 @@ public class GenericGUIUtilities {
 	 */
 	public static boolean isPopupTrigger(MouseEvent evt)
 	{
-		return TextAreaMouseHandler.isRightButton(evt.getModifiers());
+		return TextAreaMouseHandler.isRightButton(evt.getModifiersEx());
 	} //}}}
 
 	//{{{ isMiddleButton() method

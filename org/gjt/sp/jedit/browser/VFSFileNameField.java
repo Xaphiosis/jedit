@@ -36,7 +36,7 @@ import org.gjt.sp.util.TaskManager;
 
 /**
  * @author Slava Pestov
- * @version $Id: VFSFileNameField.java 23549 2014-05-17 18:44:55Z ezust $
+ * @version $Id: VFSFileNameField.java 24859 2018-04-10 23:06:33Z daleanson $
  * @since jEdit 4.2pre1 (public since 4.5pre1)
  */
 public class VFSFileNameField extends HistoryTextField
@@ -75,7 +75,7 @@ public class VFSFileNameField extends HistoryTextField
 				doComplete(path);
 				break;
 			case KeyEvent.VK_LEFT:
-				if ((evt.getModifiers() & KeyEvent.ALT_MASK) > 0)
+				if ((evt.getModifiersEx() & KeyEvent.ALT_DOWN_MASK) == KeyEvent.ALT_DOWN_MASK)
 				{
 					browser.previousDirectory();
 					evt.consume();
@@ -87,7 +87,7 @@ public class VFSFileNameField extends HistoryTextField
 				}
 				break;
 			case KeyEvent.VK_UP:
-				if ((evt.getModifiers() & KeyEvent.ALT_MASK)>0)
+				if ((evt.getModifiersEx() & KeyEvent.ALT_DOWN_MASK) == KeyEvent.ALT_DOWN_MASK)
 				{
 					String p = browser.getDirectory();
 					browser.setDirectory(MiscUtilities.getParentOfPath(p));
@@ -100,7 +100,7 @@ public class VFSFileNameField extends HistoryTextField
 				}
 				break;
 			case KeyEvent.VK_RIGHT:
-				if ((evt.getModifiers() & KeyEvent.ALT_MASK)>0)
+				if ((evt.getModifiersEx() & KeyEvent.ALT_DOWN_MASK) == KeyEvent.ALT_DOWN_MASK)
 				{
 					evt.consume();
 					browser.nextDirectory();
@@ -265,6 +265,7 @@ public class VFSFileNameField extends HistoryTextField
 	} //}}}
 
 	//{{{ goToParent() method
+	// TODO: remove this, it's never called
 	private void goToParent()
 	{
 		String name = MiscUtilities.getFileName(browser.getDirectory());
