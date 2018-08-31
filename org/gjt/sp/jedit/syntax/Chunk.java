@@ -34,6 +34,7 @@ import java.util.*;
 import java.lang.ref.SoftReference;
 import java.util.List;
 
+import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.jedit.Debug;
 import org.gjt.sp.jedit.IPropertyManager;
 //}}}
@@ -241,15 +242,15 @@ public class Chunk extends Token
 		int i = 0;
 		if (props != null)
 		{
-			while ((family = props.getProperty("view.fontSubstList." + i)) != null)
+			Font f = null;
+			while ((f = jEdit.getFontProperty("view.fontSubstList." + i)) != null)
 			{
 				/*
 				 * The default font is Font.DIALOG if the family
 				 * doesn't match any installed fonts. The following
 				 * check skips fonts that don't exist.
 				 */
-				Font f = Font.decode(props.getProperty("view.fontSubstList." + i));
-				if (!"dialog".equalsIgnoreCase(f.getFamily()) || "dialog".equalsIgnoreCase(family))
+				if (f != null && (!"dialog".equalsIgnoreCase(f.getFamily())))
 					userFonts.add(f);
 				i++;
 			}
