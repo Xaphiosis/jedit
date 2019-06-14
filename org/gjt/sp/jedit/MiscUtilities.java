@@ -126,6 +126,21 @@ public class MiscUtilities
 	static final Pattern winPattern = Pattern.compile(winPatternString);
 
 
+	private static Map<String,String> environ =
+		Collections.synchronizedMap(new HashMap(System.getenv()));
+
+	public static String getenv(String varName)
+	{
+		return environ.get(varName);
+	}
+
+	public static void putenv(String varName, String value)
+	{
+		if (value == null) environ.remove(varName);
+		else environ.put(varName, value);
+	}
+	
+
 	/** A helper function for expandVariables when handling Windows paths on non-windows systems.
 	*/
 	private static String win2unix(String winPath)
@@ -135,7 +150,7 @@ public class MiscUtilities
 		if (m.find())
 		{
 			String varName = m.group(2);
-			String expansion = System.getenv(varName);
+			String expansion = getenv(varName);
 			if (expansion != null)
 				return m.replaceFirst(expansion);
 		}
@@ -174,7 +189,7 @@ public class MiscUtilities
 				return arg;
 		}
 		String varName = m.group(2);
-		String expansion = System.getenv(varName);
+		String expansion = getenv(varName);
 		if (expansion == null) {
 			if (varName.equalsIgnoreCase("jedit_settings") && jEdit.getSettingsDirectory() != null) {
 				expansion = jEdit.getSettingsDirectory();
@@ -184,7 +199,7 @@ public class MiscUtilities
 				varName = varName.toUpperCase();
 				String uparg = arg.toUpperCase();
 				m = p.matcher(uparg);
-				expansion = System.getenv(varName);
+				expansion = getenv(varName);
 			}
 		}
 		if (expansion != null) {
@@ -1668,13 +1683,11 @@ loop:		for(;;)
 		//{{{ VarCompressor constructor
 		VarCompressor()
 		{
-			ProcessBuilder pb = new ProcessBuilder();
-			Map<String, String> env = pb.environment();
 			if (OperatingSystem.isUnix())
 				prefixMap.put(System.getProperty("user.home"), "~");
 			if (jEdit.getSettingsDirectory() != null)
 				prefixMap.put(jEdit.getSettingsDirectory(), "JEDIT_SETTINGS");
-			for (Map.Entry<String, String> entry: env.entrySet())
+			for (Map.Entry<String, String> entry: environ.entrySet())
 			{
 				String k = entry.getKey();
 				if (k.equalsIgnoreCase("pwd") || k.equalsIgnoreCase("oldpwd")) continue;
