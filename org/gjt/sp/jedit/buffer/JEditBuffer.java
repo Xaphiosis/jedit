@@ -1961,29 +1961,23 @@ loop:		for(int i = 0; i < seg.count; i++)
 			{
 				Segment seg = new Segment();
 				newFoldLevel = foldHandler.getFoldLevel(this,i,seg);
-				if(newFoldLevel != lineMgr.getFoldLevel(i))
+				if(Debug.FOLD_DEBUG)
+					Log.log(Log.DEBUG,this,i + " fold level changed");
+				changed = true;
+				// Update preceding fold levels if necessary
+				List<Integer> precedingFoldLevels =
+					foldHandler.getPrecedingFoldLevels(
+						this,i,seg,newFoldLevel);
+				if (precedingFoldLevels != null)
 				{
-					if(Debug.FOLD_DEBUG)
-						Log.log(Log.DEBUG,this,i + " fold level changed");
-					changed = true;
-					// Update preceding fold levels if necessary
-					if (i == firstInvalidFoldLevel)
+					int j = i;
+					for (Integer foldLevel: precedingFoldLevels)
 					{
-						List<Integer> precedingFoldLevels =
-							foldHandler.getPrecedingFoldLevels(
-								this,i,seg,newFoldLevel);
-						if (precedingFoldLevels != null)
-						{
-							int j = i;
-							for (Integer foldLevel: precedingFoldLevels)
-							{
-								j--;
-								lineMgr.setFoldLevel(j,foldLevel.intValue());
-							}
-							if (j < firstUpdatedFoldLevel)
-								firstUpdatedFoldLevel = j;
-						}
+						j--;
+						lineMgr.setFoldLevel(j,foldLevel.intValue());
 					}
+					if (j < firstUpdatedFoldLevel)
+						firstUpdatedFoldLevel = j;
 				}
 				lineMgr.setFoldLevel(i,newFoldLevel);
 			}
