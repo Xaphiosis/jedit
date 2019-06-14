@@ -297,6 +297,12 @@ public class VFSFile implements Serializable
 		}
 	} //}}}
 
+	//{{{ getPathMarker() method (for jEdit.gotoMarker)
+	public String getPathMarker()
+	{
+		return null;
+	} //}}}
+
 	//{{{ getPath() method
 	public String getPath()
 	{

@@ -4503,7 +4503,7 @@ loop:
 	} //}}}
 
 	//{{{ gotoMarker() method
-	private static void gotoMarker(final View view, final Buffer buffer,
+	public static void gotoMarker(final View view, final Buffer buffer,
 		final String marker)
 	{
 		AwtRunnableQueue.INSTANCE.runAfterIoTasks(new Runnable()
