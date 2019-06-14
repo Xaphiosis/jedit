@@ -53,7 +53,7 @@ import org.gjt.sp.jedit.textarea.TextAreaMouseHandler;
 *
 * @author Slava Pestov
 * @author Eric Le Lay
-* @version $Id: GenericGUIUtilities.java 24859 2018-04-10 23:06:33Z daleanson $
+* @version $Id: GenericGUIUtilities.java 24903 2019-04-23 21:45:19Z daleanson $
 */
 public class GenericGUIUtilities {
 	//{{{ prettifyMenuLabel() method
@@ -302,9 +302,9 @@ public class GenericGUIUtilities {
 				&& y + offsetY + win.getY() >= size.height)
 			{
 				if(point)
-					y = win.getHeight() - size.height - offsetY + extraOffset;
+					y -= size.height + extraOffset;
 				else
-					y = -size.height - 1;
+					y = win.getHeight() - size.height - offsetY + extraOffset;
 			}
 			else
 			{

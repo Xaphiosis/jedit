@@ -44,7 +44,7 @@ import org.gjt.sp.util.ThreadUtilities;
 /**
  * VFS browser tree view.
  * @author Slava Pestov
- * @version $Id: BrowserView.java 24859 2018-04-10 23:06:33Z daleanson $
+ * @version $Id: BrowserView.java 24904 2019-06-04 16:41:33Z daleanson $
  */
 @SuppressWarnings({"unchecked"})	// TODO: need to check on ParentDirectoryList and make it generic
 class BrowserView extends JPanel
@@ -176,6 +176,10 @@ class BrowserView extends JPanel
 				browser.directoryLoaded(node,loadInfo,addToHistory);
 				if (delayedAWTTask != null)
 					delayedAWTTask.run();
+				
+				// -1 means the divider should be reset to a value that attempts 
+				// to honor the preferred size of the left/top component
+				splitPane.setDividerLocation(-1);
 			}
 		};
 		ThreadUtilities.runInBackground(new ListDirectoryBrowserTask(browser,
@@ -647,13 +651,6 @@ class BrowserView extends JPanel
 	
 	class ParentDirectoryList extends JList
 	{
-		@Override
-		public Dimension getPreferredSize() {
-			Dimension d = super.getPreferredSize();
-			splitPane.setDividerLocation(browser.isHorizontalLayout() ? d.width + 3 : d.height + 3);
-			return d;
-		}
-		
 		@Override
 		protected void processKeyEvent(KeyEvent evt)
 		{
