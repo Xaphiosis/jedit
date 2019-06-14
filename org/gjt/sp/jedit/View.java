@@ -1233,15 +1233,10 @@ public class View extends JFrame implements InputHandlerProvider
 
 		StringBuilder title = new StringBuilder();
 
-		/* On Mac OS X, apps are not supposed to show their name in the
-		title bar. */
-		if(!OperatingSystem.isMacOS())
-		{
-			if (userTitle != null)
-				title.append(userTitle);
-			else
-				title.append(jEdit.getProperty("view.title"));
-		}
+		if (userTitle != null)
+			title.append(userTitle);
+		else
+			title.append(jEdit.getProperty("view.title"));
 
 		for(int i = 0; i < buffers.size(); i++)
 		{
