@@ -1204,6 +1204,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		VFSFile[] selectedFiles = browserView.getSelectedFiles();
 
 		Buffer buffer = null;
+		String bufferMarker = null;
 
 check_selected:
 		for (VFSFile file : selectedFiles)
@@ -1253,7 +1254,10 @@ check_selected:
 				}
 
 				if (_buffer != null)
+				{
 					buffer = _buffer;
+					bufferMarker = file.getPathMarker();
+				}
 			}
 			// otherwise if a file is selected in OPEN_DIALOG or
 			// SAVE_DIALOG mode, just let the listener(s)
@@ -1262,20 +1266,29 @@ check_selected:
 
 		if(buffer != null)
 		{
+			View gotoView = null;
+
 			switch(mode)
 			{
 			case M_OPEN:
 				view.setBuffer(buffer);
+				gotoView = view;
 				break;
 			case M_OPEN_NEW_VIEW:
-				jEdit.newView(view,buffer,false);
+				gotoView = jEdit.newView(view,buffer,false);
 				break;
 			case M_OPEN_NEW_PLAIN_VIEW:
-				jEdit.newView(view,buffer,true);
+				gotoView = jEdit.newView(view,buffer,true);
 				break;
 			case M_OPEN_NEW_SPLIT:
 				view.splitHorizontally().setBuffer(buffer);
+				gotoView = view;
 				break;
+			}
+
+			if (gotoView != null && bufferMarker != null)
+			{
+				jEdit.gotoMarker(gotoView, buffer, bufferMarker);
 			}
 		}
 
