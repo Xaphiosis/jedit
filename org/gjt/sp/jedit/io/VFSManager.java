@@ -380,6 +380,18 @@ public class VFSManager
 
 				if(vfsUpdates.size() == 1)
 				{
+					// slowdown race concerning Buffer.isLoading() status
+					// of Buffer.save() + Buffer.finishSaving()
+					// versus Buffer.load() + "runnable"
+					try
+					{
+						Thread.sleep(100);
+					}
+					catch(InterruptedException ie)
+					{
+						Thread.currentThread().interrupt();
+					}
+
 					// we were the first to add an update;
 					// add update sending runnable to AWT
 					// thread
