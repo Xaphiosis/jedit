@@ -24,7 +24,6 @@ package org.gjt.sp.jedit;
 
 //{{{ Imports
 import java.awt.*;
-import java.awt.Desktop.Action;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
@@ -35,9 +34,17 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Set;
+import java.util.Stack;
+
+import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -54,11 +61,9 @@ import javax.swing.MenuSelectionManager;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
-import org.jedit.options.CombinedOptions;
 import org.gjt.sp.jedit.EditBus.EBHandler;
 import org.gjt.sp.jedit.bufferset.BufferSet;
 import org.gjt.sp.jedit.bufferset.BufferSetManager;
-import org.gjt.sp.jedit.gui.AboutDialog;
 import org.gjt.sp.jedit.gui.ActionBar;
 import org.gjt.sp.jedit.gui.CloseDialog;
 import org.gjt.sp.jedit.gui.DefaultInputHandler;
@@ -72,8 +77,6 @@ import org.gjt.sp.jedit.gui.ToolBarManager;
 import org.gjt.sp.jedit.gui.VariableGridLayout;
 import org.gjt.sp.jedit.gui.DockableWindowManager.DockingLayout;
 import org.gjt.sp.jedit.input.InputHandlerProvider;
-import org.gjt.sp.jedit.manager.BufferManager;
-import org.gjt.sp.jedit.manager.ViewManager;
 import org.gjt.sp.jedit.msg.BufferUpdate;
 import org.gjt.sp.jedit.msg.EditPaneUpdate;
 import org.gjt.sp.jedit.msg.PropertiesChanged;
@@ -132,11 +135,10 @@ import org.gjt.sp.util.StandardUtilities;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: View.java 25349 2020-06-10 12:07:06Z makarius $
+ * @version $Id: View.java 24814 2018-01-10 03:51:43Z ezust $
  */
 public class View extends JFrame implements InputHandlerProvider
 {
-	public static final EditPane[] EMPTY_EDIT_PANES_ARRAY = new EditPane[0];
 	//{{{ User interface
 
 	//{{{ ToolBar-related constants
@@ -731,7 +733,14 @@ public class View extends JFrame implements InputHandlerProvider
 
 		}
 
-		EventQueue.invokeLater(() -> newSplitPane.setDividerLocation(dividerPosition));
+		EventQueue.invokeLater(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				newSplitPane.setDividerLocation(dividerPosition);
+			}
+		});
 
 		newEditPane.focusOnTextArea();
 
@@ -973,9 +982,9 @@ public class View extends JFrame implements InputHandlerProvider
 			if (retval == null) {
 				Comparator<Buffer> sorter = bs.getSorter();
 				if (sorter == null)
-					retval = new LinkedHashSet<>();
+					retval = new LinkedHashSet<Buffer>();
 				else
-					retval = new TreeSet<>(sorter);
+					retval = new TreeSet<Buffer>(sorter);
 			}
 			Collections.addAll(retval, bs.getAllBuffers());
 			// If scope is not editpane, then all buffersets
@@ -1058,32 +1067,20 @@ public class View extends JFrame implements InputHandlerProvider
 	 */
 	public EditPane[] getEditPanes()
 	{
-		List<EditPane> list = new ArrayList<>();
-		forEachEditPane(list::add);
-		return list.toArray(EMPTY_EDIT_PANES_ARRAY);
-	} //}}}
-
-	/**
-	 * Perform the given action on every EditPane
-	 *
-	 * @param action an action to perform on every EditPane
-	 */
-	public void forEachEditPane(Consumer<? super EditPane> action)
-	{
-		Objects.requireNonNull(action);
 		if(splitPane == null)
 		{
-			if (editPane != null)
-			{
-				// it can be null if it is called during the view creation.
-				action.accept(editPane);
-			}
+			EditPane[] ep = { editPane };
+			return ep;
 		}
 		else
 		{
-			performAction(splitPane, action);
+			List<EditPane> vec = new ArrayList<EditPane>();
+			getEditPanes(vec,splitPane);
+			EditPane[] ep = new EditPane[vec.size()];
+			vec.toArray(ep);
+			return ep;
 		}
-	}
+	} //}}}
 
 	//{{{ getViewConfig() method
 	/**
@@ -1178,32 +1175,6 @@ public class View extends JFrame implements InputHandlerProvider
 		return prev;
 	} //}}}
 
-	//{{{ setPrev() method
-
-	/**
-	 * Set the previous view in linked list.
-	 * To be used by {@link BufferManager} only
-	 * @since jEdit 5.6pre1
-	 * @param prev
-	 */
-	public void setPrev(View prev)
-	{
-		this.prev = prev;
-	} //}}}
-
-	//{{{ setNext() method
-
-	/**
-	 * Set the next view in linked list.
-	 * To be used by {@link BufferManager} only
-	 * @since jEdit 5.6pre1
-	 * @param next
-	 */
-	public void setNext(View next)
-	{
-		this.next = next;
-	} //}}}
-
 	//{{{ handlePropertiesChanged()
 	@EBHandler
 	public void handlePropertiesChanged(PropertiesChanged msg)
@@ -1251,7 +1222,7 @@ public class View extends JFrame implements InputHandlerProvider
 	 */
 	public void updateTitle()
 	{
-		List<Buffer> buffers = new ArrayList<>();
+		List<Buffer> buffers = new ArrayList<Buffer>();
 		EditPane[] editPanes = getEditPanes();
 		for (EditPane ep : editPanes)
 		{
@@ -1499,13 +1470,14 @@ public class View extends JFrame implements InputHandlerProvider
 		boolean autosaveUntitled = jEdit.getBooleanProperty("autosaveUntitled");
 		boolean suppressNotSavedConfirmUntitled = jEdit.getBooleanProperty("suppressNotSavedConfirmUntitled") || autosaveUntitled;
 		Set<Buffer> checkingBuffers = getOpenBuffers();
-		ViewManager viewManager = jEdit.getViewManager();
-		viewManager
-			.getViews()
-			.stream()
-			.filter(view -> view != this)
-			.forEach(view -> checkingBuffers.removeAll(view.getOpenBuffers()));
-
+		for (View view: jEdit.getViews())
+		{
+			if (view != this)
+			{
+				checkingBuffers.removeAll(
+					view.getOpenBuffers());
+			}
+		}
 		for (Buffer buffer: checkingBuffers)
 		{
 			if (buffer.isDirty() && !(buffer.isUntitled() && suppressNotSavedConfirmUntitled))
@@ -1625,15 +1597,15 @@ public class View extends JFrame implements InputHandlerProvider
 	} //}}}
 
 	//{{{ getEditPanes() method
-	private static void performAction(Component comp, Consumer<? super EditPane> action)
+	private static void getEditPanes(List<EditPane> vec, Component comp)
 	{
 		if(comp instanceof EditPane)
-			action.accept((EditPane) comp);
+			vec.add((EditPane) comp);
 		else if(comp instanceof JSplitPane)
 		{
 			JSplitPane split = (JSplitPane)comp;
-			performAction(split.getLeftComponent(), action);
-			performAction(split.getRightComponent(), action);
+			getEditPanes(vec,split.getLeftComponent());
+			getEditPanes(vec,split.getRightComponent());
 		}
 	} //}}}
 
@@ -1736,7 +1708,6 @@ public class View extends JFrame implements InputHandlerProvider
 	// this is where checked exceptions piss me off. this method only uses
 	// a StringReader which can never throw an exception...
 	{
-		BufferManager bufferManager = jEdit.getBufferManager();
 		if(buffer != null)
 		{
 			return editPane = createEditPane(buffer);
@@ -1744,16 +1715,16 @@ public class View extends JFrame implements InputHandlerProvider
 		else if(splitConfig == null || splitConfig.trim().length() == 0)
 		{
 
-			Buffer buf = bufferManager.getFirst();
+			Buffer buf = jEdit.getFirstBuffer();
 			if (buf == null)
 			{
 				buf = BufferSetManager.createUntitledBuffer();
 			}
 			return editPane = createEditPane(buf);
 		}
-		List<Buffer> buffers = bufferManager.getBuffers();
+		Buffer[] buffers = jEdit.getBuffers();
 
-		Stack<Object> stack = new Stack<>();
+		Stack<Object> stack = new Stack<Object>();
 
 		// we create a stream tokenizer for parsing a simple
 		// stack-based language
@@ -1765,7 +1736,7 @@ public class View extends JFrame implements InputHandlerProvider
 		st.commentChar('!');
 		st.quoteChar('"');
 		st.eolIsSignificant(false);
-		Collection<Buffer> editPaneBuffers = new ArrayList<>();
+		List<Buffer> editPaneBuffers = new ArrayList<Buffer>();
 loop:		while (true)
 		{
 			switch(st.nextToken())
@@ -1809,39 +1780,36 @@ loop:		while (true)
 					if(obj instanceof Integer)
 					{
 						int index = (Integer) obj;
-						if(index >= 0 && index < buffers.size())
-							buffer = buffers.get(index);
+						if(index >= 0 && index < buffers.length)
+							buffer = buffers[index];
 					}
 					else if(obj instanceof String)
 					{
 						String path = (String)obj;
-						Optional<Buffer> bufferOptional = bufferManager.getBuffer(path);
-						buffer = bufferOptional.orElseGet(() ->
+						buffer = jEdit.getBuffer(path);
+						if (buffer == null)
 						{
-							Buffer buf = jEdit.openTemporary(jEdit.getActiveView(), null,
-								path, true, null, true);
-							jEdit.commitTemporary(buf);
-							return buf;
-						});
+							buffer = jEdit.openTemporary(jEdit.getActiveView(), null,
+												path, true, null, true);
+							jEdit.commitTemporary(buffer);
+						}
 					}
 
 					if(buffer == null)
-						buffer = bufferManager.getFirst();
+						buffer = jEdit.getFirstBuffer();
 					stack.push(buffer);
 					editPaneBuffers.add(buffer);
 				}
 				else if ("buff".equals(st.sval))
 				{
 					String path = (String)stack.pop();
-
-					Optional<Buffer> bufferOptional = bufferManager.getBuffer(path);
-					if (bufferOptional.isEmpty())
+					buffer = jEdit.getBuffer(path);
+					if (buffer == null)
 					{
 						Log.log(Log.WARNING, this, "Buffer " + path + " doesn't exist");
 					}
 					else
 					{
-						buffer = bufferOptional.get();
 						editPaneBuffers.add(buffer);
 					}
 				}
@@ -1911,30 +1879,6 @@ loop:		while (true)
 		}
 
 		setJMenuBar(mbar);
-
-		if (Desktop.isDesktopSupported())
-		{
-			Desktop desktop = Desktop.getDesktop();
-
-			if (desktop.isSupported(Action.APP_QUIT_HANDLER))
-			{
-				desktop.setQuitHandler((e, response) ->
-				{
-					jEdit.exit(jEdit.getActiveView(), true);
-					response.cancelQuit();
-				});
-			}
-
-			if (desktop.isSupported(Action.APP_ABOUT))
-			{
-				desktop.setAboutHandler((e) -> new AboutDialog(jEdit.getActiveView()));
-			}
-
-			if (desktop.isSupported(Action.APP_PREFERENCES))
-			{
-				desktop.setPreferencesHandler((e) -> new CombinedOptions(jEdit.getActiveView(), 0));
-			}
-		}
 
 		loadToolBars();
 
@@ -2017,12 +1961,9 @@ loop:		while (true)
 			}
 		}
 		// Toggle the visibility of the BufferSwitcher itself
-		// todo : flatmap
-		jEdit.getViewManager()
-			.forEach(view -> {
-				for (EditPane ep: view.getEditPanes())
-					ep.loadBufferSwitcher();
-			});
+		for (View v: jEdit.getViews())
+			for (EditPane ep: v.getEditPanes())
+				ep.loadBufferSwitcher();
 	} //}}}
 
 
@@ -2198,7 +2139,7 @@ loop:		while (true)
 	//{{{ getOpenBuffers() method
 	private Set<Buffer> getOpenBuffers()
 	{
-		Set<Buffer> openBuffers = new LinkedHashSet<>();
+		Set<Buffer> openBuffers = new LinkedHashSet<Buffer>();
 		for (EditPane editPane: getEditPanes())
 		{
 			openBuffers.addAll(Arrays.asList(

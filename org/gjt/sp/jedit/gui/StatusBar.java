@@ -25,7 +25,6 @@
 package org.gjt.sp.jedit.gui;
 
 //{{{ Imports
-import javax.annotation.Nullable;
 import javax.swing.border.*;
 import javax.swing.text.Segment;
 import javax.swing.*;
@@ -53,7 +52,7 @@ import org.gjt.sp.util.*;
  * <li>Displaying memory status
  * </ul>
  *
- * @version $Id: StatusBar.java 25335 2020-05-10 09:57:11Z kpouer $
+ * @version $Id: StatusBar.java 24809 2017-12-30 21:11:37Z daleanson $
  * @author Slava Pestov
  * @since jEdit 3.2pre2
  */
@@ -75,7 +74,7 @@ public class StatusBar extends JPanel
 		panel.add(BorderLayout.EAST,box);
 		add(BorderLayout.CENTER,panel);
 
-		MouseListener mouseHandler = new MouseHandler();
+		MouseHandler mouseHandler = new MouseHandler();
 
 		caretStatus = new ToolTipLabel();
 		caretStatus.setName("caretStatus");
@@ -190,15 +189,14 @@ public class StatusBar extends JPanel
 	} //}}}
 
 	//{{{ TaskListener implementation
-	private class TaskHandler extends TaskAdapter
+	private class TaskHandler implements TaskListener
 	{
 		private final Runnable statusLineIo = new Runnable()
 		{
-			@Override
 			public void run()
 			{
 				// don't obscure existing message
-				if(!currentMessageIsIO && message != null && !message.getText().trim().isEmpty())
+				if(!currentMessageIsIO && message != null && !"".equals(message.getText().trim()))
 					return;
 
 				int requestCount = TaskManager.instance.countIoTasks();
@@ -225,17 +223,35 @@ public class StatusBar extends JPanel
 		};
 
 		//{{{ waiting() method
-		@Override
 		public void waiting(Task task)
 		{
 			SwingUtilities.invokeLater(statusLineIo);
 		} //}}}
-
+	
+		//{{{ running() method
+		public void running(Task task)
+		{
+		} //}}}
+	
 		//{{{ done() method
-		@Override
 		public void done(Task task)
 		{
 			SwingUtilities.invokeLater(statusLineIo);
+		} //}}}
+	
+		//{{{ statusUpdate() method
+		public void statusUpdated(Task task)
+		{
+		} //}}}
+
+		//{{{ maximumUpdated() method
+		public void maximumUpdated(Task task)
+		{
+		} //}}}
+
+		//{{{ valueUpdated() method
+		public void valueUpdated(Task task)
+		{
 		} //}}}
 	} //}}}
 
@@ -263,11 +279,14 @@ public class StatusBar extends JPanel
 	{
 		setMessage(message);
 
-		tempTimer = new Timer(0, evt ->
+		tempTimer = new Timer(0,new ActionListener()
 		{
-			// so if view is closed in the meantime...
-			if(isShowing())
-				setMessage(null);
+			public void actionPerformed(ActionEvent evt)
+			{
+				// so if view is closed in the meantime...
+				if(isShowing())
+					setMessage(null);
+			}
 		});
 
 		tempTimer.setInitialDelay(10000);
@@ -445,7 +464,6 @@ public class StatusBar extends JPanel
 	private final Widget lineSepWidget;
 	private final Widget lockedWidget;
 	/* package-private for speed */ StringBuilder buf = new StringBuilder();
-	@Nullable
 	private Timer tempTimer;
 	private boolean currentMessageIsIO;
 

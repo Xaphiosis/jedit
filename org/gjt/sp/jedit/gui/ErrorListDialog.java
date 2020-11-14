@@ -24,8 +24,7 @@ package org.gjt.sp.jedit.gui;
 
 //{{{ Imports
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.awt.event.*;
 import java.util.Vector;
 import javax.swing.*;
 import javax.swing.border.*;
@@ -37,15 +36,13 @@ import javax.swing.text.StyledDocument;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.pluginmgr.PluginManager;
 import org.gjt.sp.util.Log;
-import org.gjt.sp.util.StandardUtilities;
 //}}}
-
-/**
- * Used to list I/O and plugin load errors
- */
+/** Used to list I/O and plugin load errors
+  */
 public class ErrorListDialog extends EnhancedDialog
 {
 	//{{{ ErrorEntry class
+	
 	public static class ErrorEntry
 	{
 		String path;
@@ -70,24 +67,26 @@ public class ErrorListDialog extends EnhancedDialog
 			Log.log(urgency, this, path + ":");
 			Log.log(urgency, this, message);
 
-			Collection<String> tokenizedMessage = new ArrayList<>();
+			Vector<String> tokenizedMessage = new Vector<String>();
 			int lastIndex = -1;
 			for(int i = 0; i < message.length(); i++)
 			{
 				if(message.charAt(i) == '\n')
 				{
-					tokenizedMessage.add(message.substring(lastIndex + 1,i));
+					tokenizedMessage.addElement(message.substring(
+						lastIndex + 1,i));
 					lastIndex = i;
 				}
 			}
 
 			if(lastIndex != message.length())
 			{
-				tokenizedMessage.add(message.substring(lastIndex + 1));
+				tokenizedMessage.addElement(message.substring(
+					lastIndex + 1));
 			}
 
-
-			messages = tokenizedMessage.toArray(StandardUtilities.EMPTY_STRING_ARRAY);
+			messages = new String[tokenizedMessage.size()];
+			tokenizedMessage.copyInto(messages);
 		}
 
 		public boolean equals(Object o)
@@ -106,16 +105,15 @@ public class ErrorListDialog extends EnhancedDialog
 		// if the entry is selected by a mouse click.
 		public String toString()
 		{
-			return path + ":\n" + String.join("\n", messages);
+			return path + ":\n" +
+				TextUtilities.join(java.util.Arrays.asList(messages), "\n");
 		}
 	} //}}}
 
 	//{{{ JTextPaneSized class
-	/**
-	 * This text pane sets its size to a constant amount of 80x25 chars,
-	 * when used inside a scrollpane.
-	 */
-	protected static class JTextPaneSized extends JTextPane
+	/** This text pane sets its size to a constant amount of 80x25 chars,
+	    when used inside a scrollpane. */
+	protected class JTextPaneSized extends JTextPane
 	{
 		@Override
 		public Dimension getPreferredScrollableViewportSize()
@@ -181,13 +179,13 @@ public class ErrorListDialog extends EnhancedDialog
 		Box buttons = new Box(BoxLayout.X_AXIS);
 		buttons.add(Box.createGlue());
 
-		JButton ok = new JButton(jEdit.getProperty("common.ok"));
-		ok.addActionListener(e -> dispose());
+		ok = new JButton(jEdit.getProperty("common.ok"));
+		ok.addActionListener(new ActionHandler());
 
 		if(pluginError)
 		{
-			JButton pluginMgr = new JButton(jEdit.getProperty("error-list.plugin-manager"));
-			pluginMgr.addActionListener(e -> PluginManager.showPluginManager(JOptionPane.getFrameForComponent(this)));
+			pluginMgr = new JButton(jEdit.getProperty("error-list.plugin-manager"));
+			pluginMgr.addActionListener(new ActionHandler());
 			buttons.add(pluginMgr);
 			buttons.add(Box.createHorizontalStrut(6));
 		}
@@ -205,16 +203,34 @@ public class ErrorListDialog extends EnhancedDialog
 	} //}}}
 
 	//{{{ ok() method
-	@Override
 	public void ok()
 	{
 		dispose();
 	} //}}}
 
 	//{{{ cancel() method
-	@Override
 	public void cancel()
 	{
 		dispose();
+	} //}}}
+
+	//{{{ Private members
+	private JButton ok, pluginMgr;
+	//}}}
+
+	//{{{ ActionHandler class
+	class ActionHandler implements ActionListener
+	{
+		//{{{ actionPerformed() method
+		public void actionPerformed(ActionEvent evt)
+		{
+			if(evt.getSource() == ok)
+				dispose();
+			else if(evt.getSource() == pluginMgr)
+			{
+				PluginManager.showPluginManager(JOptionPane.getFrameForComponent(
+					ErrorListDialog.this));
+			}
+		} //}}}
 	} //}}}
 }

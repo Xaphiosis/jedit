@@ -46,11 +46,12 @@ public class EnhancedCheckBoxMenuItem extends JCheckBoxMenuItem
 	 * @param context An action context
 	 * @since jEdit 4.2pre1
 	 */
-	public EnhancedCheckBoxMenuItem(String label, String action, ActionContext context)
+	public EnhancedCheckBoxMenuItem(String label, String action,
+		ActionContext context)
 	{
 		this.context = context;
 		this.action = action;
-		shortcut = GUIUtilities.getShortcutLabel(action, true);
+		this.shortcut = GUIUtilities.getShortcutLabel(action, true);
 		String toolTip = jEdit.getProperty(action+ ".tooltip");
 		if (toolTip != null) {
 			setToolTipText(toolTip);
@@ -138,7 +139,7 @@ public class EnhancedCheckBoxMenuItem extends JCheckBoxMenuItem
 	//}}}
 
 	//{{{ Model class
-	private class Model extends DefaultButtonModel
+	class Model extends DefaultButtonModel
 	{
 		@Override
 		public boolean isSelected()
@@ -149,7 +150,8 @@ public class EnhancedCheckBoxMenuItem extends JCheckBoxMenuItem
 			EditAction a = context.getAction(action);
 			if(a == null)
 			{
-				Log.log(Log.WARNING,this,"Unknown action: " + action);
+				Log.log(Log.WARNING,this,"Unknown action: "
+					+ action);
 				return false;
 			}
 

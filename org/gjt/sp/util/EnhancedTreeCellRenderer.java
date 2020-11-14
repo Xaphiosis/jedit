@@ -74,23 +74,26 @@ import java.util.WeakHashMap;
 public abstract class EnhancedTreeCellRenderer extends DefaultTreeCellRenderer
 {
 	//{{{ getTreeCellRendererComponent() method
-	@Override
 	public final Component getTreeCellRendererComponent(JTree tree,
 		Object value, boolean selected, boolean expanded,
 		boolean leaf, int row, boolean hasFocus)
 	{
 		if (!propertyChangeListeners.containsKey(tree))
 		{
-			PropertyChangeListener propertyChangeListener = evt ->
+			PropertyChangeListener propertyChangeListener = new PropertyChangeListener()
 			{
-				if (!(evt.getSource() instanceof JTree))
-					return;
+				@Override
+				public void propertyChange(PropertyChangeEvent evt)
+				{
+					if (!(evt.getSource() instanceof JTree))
+						return;
 
-				JTree tree1 = (JTree) evt.getSource();
-				if (tree1.getCellRenderer() == EnhancedTreeCellRenderer.this)
-					tree1.setCellRenderer(newInstance());
+					JTree tree = (JTree) evt.getSource();
+					if (tree.getCellRenderer() == EnhancedTreeCellRenderer.this)
+						tree.setCellRenderer(newInstance());
 
-				tree1.removePropertyChangeListener("UI", propertyChangeListeners.remove(tree1));
+					tree.removePropertyChangeListener("UI", propertyChangeListeners.remove(tree));
+				}
 			};
 			tree.addPropertyChangeListener("UI", propertyChangeListener);
 			propertyChangeListeners.put(tree, propertyChangeListener);
@@ -146,6 +149,6 @@ public abstract class EnhancedTreeCellRenderer extends DefaultTreeCellRenderer
 	//}}}
 
 	//{{{ Instance variables
-	private final Map<JTree, PropertyChangeListener> propertyChangeListeners = new WeakHashMap<>();
+	private final Map<JTree, PropertyChangeListener> propertyChangeListeners = new WeakHashMap<JTree, PropertyChangeListener>();
 	//}}}
 }

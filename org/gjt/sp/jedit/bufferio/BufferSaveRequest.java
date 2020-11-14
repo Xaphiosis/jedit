@@ -24,6 +24,7 @@ package org.gjt.sp.jedit.bufferio;
 
 //{{{ Imports
 import java.io.*;
+import java.io.Closeable;
 import java.util.zip.*;
 
 import org.gjt.sp.jedit.io.*;
@@ -35,7 +36,7 @@ import java.nio.charset.UnsupportedCharsetException;
 /**
  * A buffer save request.
  * @author Slava Pestov
- * @version $Id: BufferSaveRequest.java 25003 2020-03-22 08:40:48Z kpouer $
+ * @version $Id: BufferSaveRequest.java 24222 2015-12-11 23:27:42Z daleanson $
  */
 public class BufferSaveRequest extends BufferIORequest
 {
@@ -55,7 +56,6 @@ public class BufferSaveRequest extends BufferIORequest
 	} //}}}
 
 	//{{{ run() method
-	@Override
 	public void _run()
 	{
 		/* if the VFS supports renaming files, we first
@@ -68,7 +68,11 @@ public class BufferSaveRequest extends BufferIORequest
 		 * since some VFS's might not allow # in filenames.
 		 */
 
-		boolean twoStageSave = willTwoStageSave(buffer);
+		boolean vfsRenameCap = (vfs.getCapabilities() &
+			VFS.RENAME_CAP) != 0;
+
+		boolean wantTwoStage = wantTwoStageSave(buffer);
+		boolean twoStageSave = vfsRenameCap && wantTwoStage;
 
 		try
 		{
@@ -93,22 +97,70 @@ public class BufferSaveRequest extends BufferIORequest
 						"Can't get a temporary path for two-stage save: "
 						+ path);
 				}
-				if (!doSave(savePath))
-					return;
-
-				makeBackup();
-				if(!vfs._rename(session,savePath,path,view))
-					throw new IOException("Rename failed: " + savePath);
 			}
 			else
 			{
 				makeBackup();
 				savePath = path;
-				if (!doSave(savePath))
-					return;
-
-				VFSManager.sendVFSUpdate(vfs, originalPath, true);
 			}
+
+			OutputStream out = vfs._createOutputStream(session,savePath,view);
+			if(out == null)
+			{
+				buffer.setBooleanProperty(ERROR_OCCURRED,true);
+				return;
+			}
+			try
+			{
+				// this must be after the stream is created or
+				// we deadlock with SSHTools.
+				buffer.readLock();
+				try
+				{
+					// Can't use buffer.getName() here because
+					// it is not changed until the save is
+					// complete
+					if(path.endsWith(".gz"))
+						buffer.setBooleanProperty(Buffer.GZIPPED,true);
+					else if (buffer.getName().endsWith(".gz"))
+					{
+						// The path do not ends with gz.
+						// The buffer name was .gz.
+						// So it means it's blabla.txt.gz -> blabla.txt, I remove
+						// the gz property
+						buffer.setBooleanProperty(Buffer.GZIPPED, false);
+					}
+
+					if(buffer.getBooleanProperty(Buffer.GZIPPED))
+						out = new GZIPOutputStream(out);
+
+					write(buffer,out);
+				}
+				finally
+				{
+					buffer.readUnlock();
+				}
+			}
+			catch(InterruptedException e)
+			{
+				buffer.setBooleanProperty(ERROR_OCCURRED,true);
+				Thread.currentThread().interrupt();
+			}
+			finally
+			{
+				IOUtilities.closeQuietly((Closeable)out);
+			}
+
+			if(twoStageSave)
+			{
+				makeBackup();
+				if(!vfs._rename(session,savePath,path,view))
+					throw new IOException("Rename failed: " + savePath);
+			}
+
+			if(!twoStageSave)
+				// send the original path, let the receiver resolve symlinks if necessary
+				VFSManager.sendVFSUpdate(vfs, originalPath, true);
 		}
 		catch (FileNotFoundException e)
 		{
@@ -159,79 +211,19 @@ public class BufferSaveRequest extends BufferIORequest
 		}
 	} //}}}
 
-	//{{{ run() method
-
-	/**
-	 * Save the file
-	 *
-	 * @param savePath the save path to save the file
-	 * @return false if we were unable to create output stream.
-	 * @throws IOException
-	 */
-	private boolean doSave(String savePath) throws IOException
-	{
-		OutputStream out = vfs._createOutputStream(session,savePath,view);
-		if(out == null)
-		{
-			buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			return false;
-		}
-		try
-		{
-			// this must be after the stream is created or
-			// we deadlock with SSHTools.
-			buffer.readLock();
-			try
-			{
-				// Can't use buffer.getName() here because
-				// it is not changed until the save is
-				// complete
-				if(path.endsWith(".gz"))
-					buffer.setBooleanProperty(Buffer.GZIPPED,true);
-				else if (buffer.getName().endsWith(".gz"))
-				{
-					// The path do not ends with gz.
-					// The buffer name was .gz.
-					// So it means it's blabla.txt.gz -> blabla.txt, I remove
-					// the gz property
-					buffer.setBooleanProperty(Buffer.GZIPPED, false);
-				}
-
-				if(buffer.getBooleanProperty(Buffer.GZIPPED))
-					out = new GZIPOutputStream(out);
-
-				write(buffer,out);
-			}
-			finally
-			{
-				buffer.readUnlock();
-			}
-		}
-		catch(InterruptedException e)
-		{
-			buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			Thread.currentThread().interrupt();
-		}
-		finally
-		{
-			IOUtilities.closeQuietly(out);
-		}
-		return true;
-	} //}}}
-
 	//{{{ Private members
 
 	//{{{ makeBackup() method
 	/**
 	 * Make the backup.
-	 * Only one backup per jEdit session is done unless if you choosed "backup at every save"
 	 */
 	private void makeBackup()
 	{
 		try
 		{
 			// Only backup once per session
-			if(!buffer.hasProperty(Buffer.BACKED_UP) || jEdit.getBooleanProperty("backupEverySave"))
+			if(buffer.getProperty(Buffer.BACKED_UP) == null
+				|| jEdit.getBooleanProperty("backupEverySave"))
 			{
 				if (jEdit.getIntegerProperty("backups",1) > 0)
 					vfs._backup(session,path,view);
@@ -251,13 +243,11 @@ public class BufferSaveRequest extends BufferIORequest
 	} //}}}
 
 	//{{{ wantTwoStageSave() method
-	private boolean willTwoStageSave(Buffer buffer)
+	private static boolean wantTwoStageSave(Buffer buffer)
 	{
-		boolean vfsRenameCap = (vfs.getCapabilities() & VFS.RENAME_CAP) != 0;
-		return vfsRenameCap &&
-				!buffer.getBooleanProperty("forbidTwoStageSave") &&
-				(buffer.getBooleanProperty("overwriteReadonly") ||
-						jEdit.getBooleanProperty("twoStageSave"));
+		return !buffer.getBooleanProperty("forbidTwoStageSave") &&
+			(buffer.getBooleanProperty("overwriteReadonly") ||
+			jEdit.getBooleanProperty("twoStageSave"));
 	}//}}}
 
 	//}}}

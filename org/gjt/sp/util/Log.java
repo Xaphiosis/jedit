@@ -57,7 +57,7 @@ import static java.text.DateFormat.MEDIUM;
  * to the log, see {@link #init}.
  *
  * @author Slava Pestov
- * @version $Id: Log.java 25123 2020-04-04 22:40:51Z kpouer $
+ * @version $Id: Log.java 24740 2017-09-20 17:16:54Z daleanson $
  */
 public class Log
 {
@@ -517,7 +517,7 @@ public class Log
 	//{{{ LogListModel class
 	static class LogListModel implements ListModel<String>
 	{
-		final List<ListDataListener> listeners = new ArrayList<>();
+		final List<ListDataListener> listeners = new ArrayList<ListDataListener>();
 
 		//{{{ fireIntervalAdded() method
 		private void fireIntervalAdded(int index1, int index2)
@@ -540,21 +540,18 @@ public class Log
 		} //}}}
 
 		//{{{ addListDataListener() method
-		@Override
 		public void addListDataListener(ListDataListener listener)
 		{
 			listeners.add(listener);
 		} //}}}
 
 		//{{{ removeListDataListener() method
-		@Override
 		public void removeListDataListener(ListDataListener listener)
 		{
 			listeners.remove(listener);
 		} //}}}
 
 		//{{{ getElementAt() method
-		@Override
 		public String getElementAt(int index)
 		{
 			if(wrap)
@@ -569,7 +566,6 @@ public class Log
 		} //}}}
 
 		//{{{ getSize() method
-		@Override
 		public int getSize()
 		{
 			if(wrap)
@@ -584,26 +580,29 @@ public class Log
 			if(lineCount == 0 || listeners.isEmpty())
 				return;
 
-			SwingUtilities.invokeLater(() ->
+			SwingUtilities.invokeLater(new Runnable()
 			{
-				if(wrap)
+				public void run()
 				{
-					if(oldWrap)
-						fireIntervalRemoved(0,lineCount - 1);
+					if(wrap)
+					{
+						if(oldWrap)
+							fireIntervalRemoved(0,lineCount - 1);
+						else
+						{
+							fireIntervalRemoved(0,
+								logLineCount);
+						}
+						fireIntervalAdded(
+							MAXLINES - lineCount + 1,
+							MAXLINES);
+					}
 					else
 					{
-						fireIntervalRemoved(0,
+						fireIntervalAdded(
+							logLineCount - lineCount + 1,
 							logLineCount);
 					}
-					fireIntervalAdded(
-						MAXLINES - lineCount + 1,
-						MAXLINES);
-				}
-				else
-				{
-					fireIntervalAdded(
-						logLineCount - lineCount + 1,
-						logLineCount);
 				}
 			});
 		} //}}}
@@ -640,7 +639,6 @@ public class Log
 		 * would be needed for the "other" printf method, but
 		 * I'll settle for the common case only.
 		 */
-		@Override
 		public PrintStream printf(String format, Object... args)
 		{
 			synchronized (orig)
@@ -682,7 +680,6 @@ public class Log
 		} //}}}
 
 		//{{{ write() method
-		@Override
 		public synchronized void write(int b)
 		{
 			byte[] barray = { (byte)b };
@@ -690,7 +687,6 @@ public class Log
 		} //}}}
 
 		//{{{ write() method
-		@Override
 		public synchronized void write(byte[] b, int off, int len)
 		{
 			String str = new String(b,off,len);

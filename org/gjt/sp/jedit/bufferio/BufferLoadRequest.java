@@ -25,7 +25,11 @@ package org.gjt.sp.jedit.bufferio;
 //{{{ Imports
 import java.io.*;
 import java.nio.charset.*;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.zip.GZIPInputStream;
 import org.gjt.sp.jedit.io.*;
 import org.gjt.sp.jedit.*;
@@ -36,11 +40,11 @@ import org.gjt.sp.util.*;
 /**
  * A buffer load request.
  * @author Slava Pestov
- * @version $Id: BufferLoadRequest.java 25308 2020-05-03 22:08:41Z kpouer $
+ * @version $Id: BufferLoadRequest.java 24705 2017-06-12 20:48:59Z ezust $
  */
 public class BufferLoadRequest extends BufferIORequest
 {
-	private final boolean untitled;
+	private boolean untitled;
 	
 	//{{{ BufferLoadRequest constructor
 	/**
@@ -60,7 +64,6 @@ public class BufferLoadRequest extends BufferIORequest
 	} //}}}
 
 	//{{{ run() method
-	@Override
 	public void _run()
 	{
 		try
@@ -216,11 +219,12 @@ public class BufferLoadRequest extends BufferIORequest
 			= AutoDetection.getMarkedStream(getNakedStream());
 		try
 		{
-			boolean gzipped;
+			boolean gzipped = false;
 			// encodingProviders is consist of given
 			// encodings as String or contents-aware
 			// detectors as EncodingDetector.
-			List<Object> encodingProviders = new ArrayList<>();
+			List<Object> encodingProviders
+				= new ArrayList<Object>();
 
 			boolean autodetect = buffer.getBooleanProperty(Buffer.ENCODING_AUTODETECT);
 			if(autodetect)
@@ -234,7 +238,7 @@ public class BufferLoadRequest extends BufferIORequest
 				encodingProviders.add(buffer.getStringProperty(JEditBuffer.ENCODING));
 
 				String fallbackEncodings = jEdit.getProperty("fallbackEncodings");
-				if(fallbackEncodings != null && !fallbackEncodings.isEmpty())
+				if(fallbackEncodings != null && fallbackEncodings.length() > 0)
 					Collections.addAll(encodingProviders, fallbackEncodings.split("\\s+"));
 			}
 			else
@@ -250,7 +254,7 @@ public class BufferLoadRequest extends BufferIORequest
 					new GZIPInputStream(markedStream));
 			}
 
-			Collection<String> failedEncodings = new HashSet<>();
+			Set<String> failedEncodings = new HashSet<String>();
 			Exception encodingError = null;
 			for(Object encodingProvider: encodingProviders)
 			{
@@ -291,7 +295,19 @@ public class BufferLoadRequest extends BufferIORequest
 					}
 					return;
 				}
-				catch(CharConversionException | CharacterCodingException | UnsupportedEncodingException | UnsupportedCharsetException e)
+				catch(CharConversionException e)
+				{
+					encodingError = e;
+				}
+				catch(CharacterCodingException e)
+				{
+					encodingError = e;
+				}
+				catch(UnsupportedEncodingException e)
+				{
+					encodingError = e;
+				}
+				catch(UnsupportedCharsetException e)
 				{
 					encodingError = e;
 				}
@@ -300,7 +316,7 @@ public class BufferLoadRequest extends BufferIORequest
 				failedEncodings.add(encoding);
 			}
 			// All possible detectors and encodings failed.
-			Object[] pp = { String.join(",", failedEncodings), "" };
+			Object[] pp = { TextUtilities.join(failedEncodings,","), "" };
 			if(failedEncodings.size() < 2)
 			{
 				pp[1] = encodingError.toString();
@@ -333,8 +349,9 @@ public class BufferLoadRequest extends BufferIORequest
 		// For `reload' command
 		buffer.removeAllMarkers();
 
+		BufferedReader in = new BufferedReader(new InputStreamReader(_in));
 
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(_in)))
+		try
 		{
 			String line;
 			while((line = in.readLine()) != null)
@@ -343,7 +360,7 @@ public class BufferLoadRequest extends BufferIORequest
 					throw new InterruptedException();
 
 				// malformed marks file?
-				if(line.isEmpty())
+				if(line.length() == 0)
 					continue;
 
 				// compatibility kludge for jEdit 3.1 and earlier
@@ -358,6 +375,10 @@ public class BufferLoadRequest extends BufferIORequest
 				buffer.addMarker(shortcut,position);
 			}
 			buffer.setMarkersChanged(false);
+		}
+		finally
+		{
+			in.close();
 		}
 	} //}}}
 }

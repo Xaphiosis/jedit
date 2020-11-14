@@ -24,13 +24,10 @@ package org.gjt.sp.jedit.msg;
 
 import org.gjt.sp.jedit.*;
 
-import javax.annotation.Nonnull;
-import java.util.Objects;
-
 /**
  * Message sent when a view-related change occurs.
  * @author Slava Pestov
- * @version $Id: ViewUpdate.java 25221 2020-04-12 16:00:17Z kpouer $
+ * @version $Id: ViewUpdate.java 23714 2014-11-02 01:29:37Z daleanson $
  *
  * @since jEdit 2.2pre6
  */
@@ -71,10 +68,13 @@ public class ViewUpdate extends EBMessage
 	 * @param view The view
 	 * @param what What happened
 	 */
-	public ViewUpdate(View view, @Nonnull Object what)
+	public ViewUpdate(View view, Object what)
 	{
 		super(view);
-		Objects.requireNonNull(what);
+
+		if(what == null)
+			throw new NullPointerException("What must be non-null");
+
 		this.what = what;
 	} //}}}
 
@@ -97,13 +97,12 @@ public class ViewUpdate extends EBMessage
 	} //}}}
 
 	//{{{ paramString() method
-	@Override
 	public String paramString()
 	{
 		return "what=" + what + "," + super.paramString();
 	} //}}}
 
 	//{{{ Private members
-	private final Object what;
+	private Object what;
 	//}}}
 }

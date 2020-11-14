@@ -29,17 +29,15 @@ import java.util.ArrayList;
 /**
  * History model used by the help browser 
  * @author Nicholas O'Leary
- * @version $Id: HelpHistoryModel.java 25300 2020-05-01 08:16:32Z kpouer $
+ * @version $Id: HelpHistoryModel.java 23221 2013-09-29 20:03:32Z shlomy $
  */
 public class HelpHistoryModel
 {
-	public static final HistoryEntry[] EMPTY_HISTORY_ENTRIES_ARRAY = new HistoryEntry[0];
-
 	//{{{ HelpHistoryModel constructor
 	public HelpHistoryModel(int size)
 	{
 		history = new HistoryEntry[size];
-		listeners = new ArrayList<>();
+		listeners = new ArrayList<HelpHistoryModelListener>();
 	} //}}}
 
 	//{{{ forward() method
@@ -146,9 +144,9 @@ public class HelpHistoryModel
 	//{{{ getPreviousURLs() method
 	HistoryEntry[] getPreviousURLs()
 	{
-		if (historyPos <= 1)
+		if (historyPos<=1)
 		{
-			return EMPTY_HISTORY_ENTRIES_ARRAY;
+			return new HelpHistoryModel.HistoryEntry[0];
 		}
 		HistoryEntry[] previous = new HistoryEntry[historyPos-1];
 		System.arraycopy(history,0,previous,0,historyPos-1);
@@ -160,11 +158,11 @@ public class HelpHistoryModel
 	{
 		if (history.length - historyPos <= 1)
 		{
-			return EMPTY_HISTORY_ENTRIES_ARRAY;
+			return new HelpHistoryModel.HistoryEntry[0];
 		}
 		if (history[historyPos] == null)
 		{
-			return EMPTY_HISTORY_ENTRIES_ARRAY;
+			return new HelpHistoryModel.HistoryEntry[0];
 		}
 		HistoryEntry[] next = new HistoryEntry[history.length-historyPos];
 		System.arraycopy(history,historyPos,next,0,history.length-historyPos);
@@ -192,8 +190,8 @@ public class HelpHistoryModel
 
 	//{{{ Private members
 	private int historyPos;
-	private final HistoryEntry[] history;
-	private final List<HelpHistoryModelListener> listeners;
+	private HistoryEntry[] history;
+	private List<HelpHistoryModelListener> listeners;
 	//}}}
 
 	//{{{ Inner Classes
@@ -228,7 +226,9 @@ public class HelpHistoryModel
 		//{{{ equals() method
 		public boolean equals(HistoryEntry he)
 		{
-			return he.url.equals(url) && he.title.equals(title) && (he.scrollPosition == scrollPosition);
+			return he.url.equals(this.url) &&
+			       he.title.equals(this.title) &&
+			       (he.scrollPosition == scrollPosition);
 		} //}}}
 
 		//{{{ toString() method

@@ -33,7 +33,7 @@ import org.gjt.sp.util.Log;
  * 
  * @since jEdit 4.3pre1
  * @author Slava Pestov
- * @version $Id: ScreenLineManager.java 25262 2020-04-18 08:12:07Z kpouer $
+ * @version $Id: ScreenLineManager.java 24252 2015-12-23 01:06:15Z daleanson $
  */
 class ScreenLineManager
 {
@@ -86,32 +86,23 @@ class ScreenLineManager
 		}
 
 		if(Debug.SCREEN_LINES_DEBUG)
-			Log.log(Log.DEBUG,this,"setScreenLineCount(" + line + ',' + count + ')');
+			Log.log(Log.DEBUG,this,new Exception("setScreenLineCount(" + line + ',' + count + ')'));
 		if (screenLines == null) 
 			reset();
 		screenLines[line] = (char)count;
 	} //}}}
 
 	//{{{ invalidateScreenLineCounts() method
-	/**
-	 * Invalidate all screenlines
-	 */
 	void invalidateScreenLineCounts()
 	{
-		invalidateScreenLineCountRange(0, buffer.getLineCount());
+		for(int i = 0, lineCount = buffer.getLineCount(); i < lineCount; i++)
+			invalidateScreenLineCount(i);
 	} //}}}
 
 	//{{{ invalidateScreenLineCounts() method
 	private void invalidateScreenLineCount(int physicalLineNo)
 	{
 		screenLines[physicalLineNo] = 0;
-	} //}}}
-
-	//{{{ invalidateScreenLineCounts() method
-	private void invalidateScreenLineCountRange(int physicalLineStart, int physicalLineEnd)
-	{
-		for (int i = physicalLineStart; i < physicalLineEnd; i++)
-			screenLines[i] = 0;
 	} //}}}
 
 	//{{{ reset() method
@@ -123,41 +114,26 @@ class ScreenLineManager
 	//{{{ contentInserted() method
 	public void contentInserted(int startLine, int numLines)
 	{
+		int endLine = startLine + numLines;
+		invalidateScreenLineCount(startLine);
+
 		int lineCount = buffer.getLineCount();
+
 		if(numLines > 0)
 		{
-			int nbLinesBeforeInsert = lineCount - numLines;
 			if(screenLines.length <= lineCount)
 			{
-				// the array is too small for the new buffer length
-				// create a bigger one and copy data into it
 				char[] screenLinesN = new char[((lineCount + 1) << 1)];
-				if (startLine != 0)
-					System.arraycopy(screenLines, 0, screenLinesN, 0, startLine);
-
-
-				int lengthToCopy = nbLinesBeforeInsert - startLine - 1;
-				if (lengthToCopy > 0)
-					System.arraycopy(screenLines, startLine + 1, screenLinesN,
-						startLine + numLines + 1, lengthToCopy);
-
+				System.arraycopy(screenLines,0,screenLinesN,0,
+						 screenLines.length);
 				screenLines = screenLinesN;
 			}
-			else
-			{
 
-				int lengthToCopy = nbLinesBeforeInsert - startLine - 1;
-				if (lengthToCopy > 0)
-					System.arraycopy(screenLines, startLine + 1, screenLines,
-						startLine + numLines + 1, lengthToCopy);
+			System.arraycopy(screenLines,startLine,screenLines,
+				endLine,lineCount - endLine);
 
-				invalidateScreenLineCountRange(startLine, startLine + numLines + 1);
-			}
-		}
-		else
-		{
-			// the current line count becomes invalid
-			invalidateScreenLineCount(startLine);
+			for(int i = 0; i < numLines; i++)
+				screenLines[startLine + i] = 0;
 		}
 	} //}}}
 
@@ -169,7 +145,6 @@ class ScreenLineManager
 
 		if(numLines > 0 && endLine != screenLines.length)
 		{
-			// copy the lines after removed lines to their new position
 			System.arraycopy(screenLines,endLine + 1,screenLines,
 				startLine + 1,screenLines.length - endLine - 1);
 		}

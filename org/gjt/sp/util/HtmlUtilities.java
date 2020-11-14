@@ -178,7 +178,14 @@ public class HtmlUtilities
 	//{{{ color2html()
 	private static String color2html(Color c)
 	{
-		return "rgb(" + c.getRed() + "," + c.getGreen() + "," + c.getBlue() + ");";
+		StringBuilder cs = new StringBuilder("rgb(");
+		cs.append(c.getRed());
+		cs.append(",");
+		cs.append(c.getGreen());
+		cs.append(",");
+		cs.append(c.getBlue());
+		cs.append(");");
+		return cs.toString();
 	} //}}}
 
 	//}}}

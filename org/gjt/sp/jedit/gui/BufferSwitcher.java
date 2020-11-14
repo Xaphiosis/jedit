@@ -32,8 +32,10 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.EditBus.EBHandler;
@@ -44,7 +46,7 @@ import org.gjt.sp.util.ThreadUtilities;
 //}}}
 
 /** BufferSwitcher class
-   @version $Id: BufferSwitcher.java 25334 2020-05-10 09:51:15Z kpouer $
+   @version $Id: BufferSwitcher.java 24820 2018-01-25 20:19:28Z daleanson $
 */
 public class BufferSwitcher extends JComboBox<Buffer>
 {
@@ -58,6 +60,7 @@ public class BufferSwitcher extends JComboBox<Buffer>
 	// actual colors will be set in constructor, here are just fallback values
 	static Color defaultColor   = Color.BLACK;
 	static Color defaultBGColor = Color.LIGHT_GRAY;
+
 
 	public BufferSwitcher(final EditPane editPane)
 	{
@@ -98,12 +101,16 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		EditBus.addToBus(this);
 
 
-		addItemListener(evt ->
+		addItemListener(new ItemListener() 
 		{
-			if (evt.getStateChange() == ItemEvent.SELECTED)
+			@Override
+			public void itemStateChanged(ItemEvent evt) 
 			{
-				Buffer buffer = (Buffer) evt.getItem();
-				updateStyle(buffer);
+				if (evt.getStateChange() == ItemEvent.SELECTED) 
+				{
+					Buffer buffer = (Buffer) evt.getItem();
+					updateStyle(buffer);
+				}
 			}
 		});
 
@@ -132,7 +139,7 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		target.setToolTipText(path != null ? makeToolTipText(path, isBackup) : null);
 	}
 
-	static String makeToolTipText(String path, boolean isBackup)
+	static String makeToolTipText(String path, Boolean isBackup)
 	{
 		String text = path;
 
@@ -141,13 +148,15 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		return text;
 	}
 
+
 	public void updateStyle(Buffer buffer)
 	{
 		String path = buffer.getPath();
-		boolean isBackup = buffer.isBackup();
+		Boolean isBackup = buffer.isBackup();
 
 		updateStyle(this, isBackup, path);
 	}
+
 
 	public void updateBufferList()
 	{
@@ -157,31 +166,38 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		if(bufferSet.size() == 0)
 			return;
 
-		Runnable runnable = () ->
+		Runnable runnable = new Runnable()
 		{
-			updating = true;
-			setMaximumRowCount(jEdit.getIntegerProperty("bufferSwitcher.maxRowCount",10));
-			Buffer[] buffers = bufferSet.getAllBuffers();
-			if (jEdit.getBooleanProperty("bufferswitcher.sortBuffers", true))
+			@Override
+			public void run()
 			{
-				Arrays.sort(buffers, (a, b) ->
+				updating = true;
+				setMaximumRowCount(jEdit.getIntegerProperty("bufferSwitcher.maxRowCount",10));
+				Buffer[] buffers = bufferSet.getAllBuffers();
+				if (jEdit.getBooleanProperty("bufferswitcher.sortBuffers", true)) 
 				{
-					if (jEdit.getBooleanProperty("bufferswitcher.sortByName", true))
-						return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
-					else
-						return a.getPath().toLowerCase().compareTo(b.getPath().toLowerCase());
-				});
+					Arrays.sort(buffers, new Comparator<Buffer>()
+					{
+						public int compare(Buffer a, Buffer b) 
+						{
+							if (jEdit.getBooleanProperty("bufferswitcher.sortByName", true)) 
+								return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());		
+							else
+								return a.getPath().toLowerCase().compareTo(b.getPath().toLowerCase());	
+						}
+					});
+				}
+				setModel(new DefaultComboBoxModel<Buffer>(buffers));
+				// FIXME: editPane.getBuffer() returns wrong buffer (old buffer) after last non-untitled buffer close.
+				// When the only non-untitled (last) buffer is closed a new untitled buffer is added to BufferSet
+				// directly from BufferSetManager (@see BufferSetManager.bufferRemoved() and BufferSetManager.addBuffer())
+				// This triggers EditPane.bufferAdded() -> bufferSwitcher.updateBufferList() bypassing setting EditPane's
+				// buffer object reference to a new created untitled buffer.
+				// This is why here editPane.getBuffer() returns wrong previous already closed buffer in that case.
+				setSelectedItem(editPane.getBuffer());
+				addDnD();
+				updating = false;
 			}
-			setModel(new DefaultComboBoxModel<Buffer>(buffers));
-			// FIXME: editPane.getBuffer() returns wrong buffer (old buffer) after last non-untitled buffer close.
-			// When the only non-untitled (last) buffer is closed a new untitled buffer is added to BufferSet
-			// directly from BufferSetManager (@see BufferSetManager.bufferRemoved() and BufferSetManager.addBuffer())
-			// This triggers EditPane.bufferAdded() -> bufferSwitcher.updateBufferList() bypassing setting EditPane's
-			// buffer object reference to a new created untitled buffer.
-			// This is why here editPane.getBuffer() returns wrong previous already closed buffer in that case.
-			setSelectedItem(editPane.getBuffer());
-			addDnD();
-			updating = false;
 		};
 		ThreadUtilities.runInDispatchThread(runnable);
 	}
@@ -233,16 +249,15 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		}
 	}
 	
-	private static class ComboBoxTransferHandler extends TransferHandler
+	private class ComboBoxTransferHandler extends TransferHandler
 	{
-		private final JComboBox<?> comboBox;
+		JComboBox comboBox;
 
-		ComboBoxTransferHandler(JComboBox<?> comboBox)
+		public ComboBoxTransferHandler(JComboBox comboBox)
 		{
 			this.comboBox = comboBox;
 		}
 
-		@Override
 		public boolean canImport(TransferHandler.TransferSupport info)
 		{
 			// we only import Strings
@@ -264,7 +279,7 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		private final Buffer buffer;
 		private final JComponent source;
 		
-		BufferSwitcherTransferable(Buffer buffer, JComponent source)
+		public BufferSwitcherTransferable(Buffer buffer, JComponent source)
 		{
 			this.buffer = buffer;
 			this.source = source;
@@ -297,7 +312,7 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		private final Buffer buffer;
 		private final JComponent source;
 		
-		BufferTransferableData(Buffer buffer, JComponent source)
+		public BufferTransferableData(Buffer buffer, JComponent source)
 		{
 			this.buffer = buffer;
 			this.source = source;
@@ -305,12 +320,12 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		
 		public Buffer getBuffer()
 		{
-			return buffer;
+			return this.buffer;
 		}
 		
 		public JComponent getSource()
 		{
-			return source;
+			return this.source;
 		}
 	}
 	
@@ -320,7 +335,8 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		public boolean canImport(TransferSupport support)
 		{
 
-			if (!support.isDataFlavorSupported(BufferSwitcher.BufferDataFlavor))
+			if (!support
+					.isDataFlavorSupported(BufferSwitcher.BufferDataFlavor))
 			{
 				return false;
 			}
@@ -458,8 +474,8 @@ public class BufferSwitcher extends JComboBox<Buffer>
 		@Override
 		public Transferable createTransferable(JComponent c)
 		{
-			JList<Buffer> list = (JList<Buffer>) c;
-			Buffer buffer = list.getSelectedValue();
+			JList list = (JList) c;
+			Buffer buffer = (Buffer) list.getSelectedValue();
 			if (buffer == null)
 			{
 				return null;

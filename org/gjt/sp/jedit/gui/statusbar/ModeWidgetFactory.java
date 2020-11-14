@@ -42,10 +42,9 @@ import org.gjt.sp.jedit.jEdit;
 public class ModeWidgetFactory implements StatusWidgetFactory
 {
     //{{{ getWidget() method
-    @Override
-    public Widget getWidget(View view)
+    public Widget getWidget(View view) 
     {
-	Widget mode = new ModeWidget(view);
+	ModeWidget mode = new ModeWidget(view);
 	return mode;
     } //}}}
 
@@ -54,8 +53,7 @@ public class ModeWidgetFactory implements StatusWidgetFactory
     {
 	    private final JLabel mode;
 	    private final View view;
-
-	    ModeWidget(final View view)
+	    public ModeWidget(final View view) 
 	    {
 		    mode = new ToolTipLabel();
 		    this.view = view;
@@ -71,18 +69,22 @@ public class ModeWidgetFactory implements StatusWidgetFactory
 					  });
 	    }
 	    
-	    @Override
-	    public JComponent getComponent()
+	    public JComponent getComponent() 
 	    {
 		    return mode;
 	    }
 	    
-	    @Override
-	    public void update()
+	    public void update() 
 	    {
 		    Buffer buffer = view.getBuffer();
 		    if (buffer.isLoaded())
 			    mode.setText(buffer.getMode().toString());
 	    }
+	    
+	    public void propertiesChanged()
+	    {
+	    }
+	    
     } //}}}
+
 }

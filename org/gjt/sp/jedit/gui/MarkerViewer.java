@@ -94,7 +94,6 @@ public class MarkerViewer extends JPanel implements ActionListener
 	} //}}}
 
 	//{{{ requestDefaultFocus() method
-	@Override
 	@SuppressWarnings("deprecation")
 	public boolean requestDefaultFocus()
 	{
@@ -103,7 +102,6 @@ public class MarkerViewer extends JPanel implements ActionListener
 	} //}}}
 
 	//{{{ actionPerformed() method
-	@Override
 	public void actionPerformed(ActionEvent evt)
 	{
 		String cmd = evt.getActionCommand();
@@ -157,7 +155,6 @@ public class MarkerViewer extends JPanel implements ActionListener
 	}//}}}
 
 	//{{{ addNotify() method
-	@Override
 	public void addNotify()
 	{
 		super.addNotify();
@@ -165,7 +162,6 @@ public class MarkerViewer extends JPanel implements ActionListener
 	} //}}}
 
 	//{{{ removeNotify() method
-	@Override
 	public void removeNotify()
 	{
 		super.removeNotify();
@@ -175,19 +171,19 @@ public class MarkerViewer extends JPanel implements ActionListener
 	//{{{ Private members
 
 	//{{{ Instance variables
-	private final JList<Marker> markerList;
-	private final JScrollPane markerListScroller;
-	private final View view;
-	private final RolloverButton previous;
-	private final RolloverButton next;
-	private final RolloverButton clear;
+	private JList<Marker> markerList;
+	private JScrollPane markerListScroller;
+	private View view;
+	private RolloverButton previous;
+	private RolloverButton next;
+	private RolloverButton clear;
 	//}}}
 
 	//{{{ refreshList() method
 	private void refreshList()
 	{
 		java.util.Vector<Marker> markers = view.getBuffer().getMarkers();
-		if (!markers.isEmpty())
+		if (markers.size() > 0)
 		{
 			markerListScroller.setViewportView(markerList);
 			markerList.setListData(markers);
@@ -209,10 +205,11 @@ public class MarkerViewer extends JPanel implements ActionListener
 	//{{{ goToSelectedMarker() method
 	private void goToSelectedMarker()
 	{
-		Marker mark = markerList.getSelectedValue();
-		if (mark == null)
+		Object value = markerList.getSelectedValue();
+		if(!(value instanceof Marker))
 			return;
 
+		Marker mark = (Marker)value;
 		view.getTextArea().setCaretPosition(mark.getPosition());
 		view.toFront();
 		view.requestFocus();
@@ -222,16 +219,20 @@ public class MarkerViewer extends JPanel implements ActionListener
 	//{{{ updateSelection() method
 	private void updateSelection()
 	{
-		ListModel<Marker> model = markerList.getModel();
+		ListModel model = markerList.getModel();
 		int currentLine = view.getTextArea().getCaretLine();
 		Buffer buffer = view.getBuffer();
 		for (int i = 0; i < model.getSize(); i++)
 		{
-			Marker mark = model.getElementAt(i);
-			if (buffer.getLineOfOffset(mark.getPosition()) == currentLine)
+			Object o = model.getElementAt(i);
+			if (o instanceof Marker)
 			{
-				markerList.setSelectedIndex(i);
-				break;
+				Marker mark = (Marker)model.getElementAt(i);
+				if (buffer.getLineOfOffset(mark.getPosition()) == currentLine)
+				{
+					markerList.setSelectedIndex(i);
+					break;
+				}
 			}
 		}
 
@@ -244,7 +245,6 @@ public class MarkerViewer extends JPanel implements ActionListener
 	//{{{ Renderer Class
 	class Renderer extends DefaultListCellRenderer
 	{
-		@Override
 		public Component getListCellRendererComponent(
 			JList list, Object value, int index,
 			boolean isSelected, boolean cellHasFocus)
@@ -258,7 +258,7 @@ public class MarkerViewer extends JPanel implements ActionListener
 				JEditTextArea textArea = view.getTextArea();
 				int pos = textArea.getLineOfOffset(mark.getPosition());
 				String txt = view.getTextArea().getLineText(pos);
-				if (txt.isEmpty())
+				if (txt.equals(""))
 					txt = jEdit.getProperty("markers.blank-line");
 				char shortcut_char = mark.getShortcut();
 				String shortcut = "";
@@ -273,7 +273,6 @@ public class MarkerViewer extends JPanel implements ActionListener
 	//{{{ MouseHandler Class
 	class MouseHandler extends MouseAdapter
 	{
-		@Override
 		public void mousePressed(MouseEvent evt)
 		{
 			if(evt.isConsumed())

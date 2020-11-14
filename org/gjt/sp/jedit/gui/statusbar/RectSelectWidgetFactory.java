@@ -45,8 +45,7 @@ import org.gjt.sp.jedit.textarea.JEditTextArea;
 public class RectSelectWidgetFactory implements StatusWidgetFactory
 {
     //{{{ getWidget() class
-    @Override
-    public Widget getWidget(View view)
+    public Widget getWidget(View view) 
     {
 	    Widget rect = new RectSelectWidget(view);
 	    return rect;
@@ -75,14 +74,12 @@ public class RectSelectWidgetFactory implements StatusWidgetFactory
 		    });
 	    }
 	    
-	    @Override
-	    public JComponent getComponent()
+	    public JComponent getComponent() 
 	    {
 		    return rectSelect;
 	    }
 	    
-	    @Override
-	    public void update()
+	    public void update() 
 	    {
 		    JEditTextArea textArea = view.getTextArea();
 		    if (textArea != null)
@@ -100,8 +97,7 @@ public class RectSelectWidgetFactory implements StatusWidgetFactory
 		    }
 	    }
 	    
-            @Override
-	    public void propertiesChanged()
+            public void propertiesChanged()
 	    {
 		    // retarded GTK look and feel!
 		    Font font = new JLabel().getFont();
@@ -115,4 +111,5 @@ public class RectSelectWidgetFactory implements StatusWidgetFactory
 		    
 	    }
     } //}}}
+
 }

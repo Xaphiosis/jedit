@@ -29,23 +29,20 @@ import org.gjt.sp.jedit.Buffer;
  */
 public class BufferSetAdapter implements BufferSetListener
 {
-	@Override
 	public void bufferAdded(Buffer buffer, int index)
 	{
 	}
 
-	@Override
 	public void bufferRemoved(Buffer buffer, int index)
 	{
 	}
 
-	@Override
 	public void bufferMoved(Buffer buffer, int oldIndex, int newIndex)
 	{
 	}
 
-	@Override
 	public void bufferSetSorted()
 	{
 	}
+
 }

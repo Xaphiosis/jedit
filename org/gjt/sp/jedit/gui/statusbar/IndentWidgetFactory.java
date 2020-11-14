@@ -23,6 +23,9 @@
 package org.gjt.sp.jedit.gui.statusbar;
 
 //{{{ Imports
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
@@ -39,7 +42,6 @@ import org.gjt.sp.jedit.jEdit;
  */
 public class IndentWidgetFactory implements StatusWidgetFactory
 {
-	@Override
 	public Widget getWidget(View view)
 	{
 		Widget indent = new IndentWidget(view);
@@ -51,8 +53,7 @@ public class IndentWidgetFactory implements StatusWidgetFactory
 	{
 		private final JLabel indent;
 		private final View view;
-
-		IndentWidget(final View view)
+		public IndentWidget(final View view)
 		{
 			indent = new ToolTipLabel();
 			indent.setHorizontalAlignment(SwingConstants.CENTER);
@@ -70,13 +71,11 @@ public class IndentWidgetFactory implements StatusWidgetFactory
 			});
 		}
 
-		@Override
 		public JComponent getComponent()
 		{
 			return indent;
 		}
 
-		@Override
 		public void update()
 		{
 			Buffer buffer = view.getBuffer();
@@ -99,5 +98,10 @@ public class IndentWidgetFactory implements StatusWidgetFactory
 				this.indent.setText("n");
 			}
 		}
+		
+		public void propertiesChanged()
+		{
+		}
 	} //}}}
+
 }

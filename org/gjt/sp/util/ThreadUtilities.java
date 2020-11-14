@@ -230,7 +230,7 @@ public class ThreadUtilities
 	{
 		private final Runnable runnable;
 
-		private final CountDownLatch done = new CountDownLatch(1);
+		private CountDownLatch done = new CountDownLatch(1);
 
 		private CountDownLatchRunnable(Runnable runnable)
 		{

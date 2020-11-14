@@ -44,7 +44,7 @@ import org.gjt.sp.util.ThreadUtilities;
 /**
  * VFS browser tree view.
  * @author Slava Pestov
- * @version $Id: BrowserView.java 25190 2020-04-11 16:58:12Z kpouer $
+ * @version $Id: BrowserView.java 24938 2019-08-18 15:30:20Z vampire0 $
  */
 @SuppressWarnings({"unchecked"})	// TODO: need to check on ParentDirectoryList and make it generic
 class BrowserView extends JPanel
@@ -54,7 +54,7 @@ class BrowserView extends JPanel
 	{
 		this.browser = browser;
 
-		tmpExpanded = new HashSet<>();
+		tmpExpanded = new HashSet<String>();
 		DockableWindowManager dwm = jEdit.getActiveView().getDockableWindowManager();
 		KeyListener keyListener = dwm.closeListener(VFSBrowser.NAME);
 
@@ -84,7 +84,15 @@ class BrowserView extends JPanel
 			parentScroller, tableScroller);
 		splitPane.setOneTouchExpandable(true);
 
-		EventQueue.invokeLater(() -> parentDirectories.ensureIndexIsVisible(parentDirectories.getModel().getSize()));
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				parentDirectories.ensureIndexIsVisible(
+					parentDirectories.getModel()
+					.getSize());
+			}
+		});
 
 		if(browser.isMultipleSelectionEnabled())
 			table.getSelectionModel().setSelectionMode(
@@ -161,15 +169,18 @@ class BrowserView extends JPanel
 		}
 
 		final Object[] loadInfo = new Object[2];
-		Runnable awtRunnable = () ->
+		Runnable awtRunnable = new Runnable()
 		{
-			browser.directoryLoaded(node,loadInfo,addToHistory);
-			if (delayedAWTTask != null)
-				delayedAWTTask.run();
+			public void run()
+			{
+				browser.directoryLoaded(node,loadInfo,addToHistory);
+				if (delayedAWTTask != null)
+					delayedAWTTask.run();
 
-			// -1 means the divider should be reset to a value that attempts
-			// to honor the preferred size of the left/top component
-			splitPane.setDividerLocation(-1);
+				// -1 means the divider should be reset to a value that attempts
+				// to honor the preferred size of the left/top component
+				splitPane.setDividerLocation(-1);
+			}
 		};
 		ThreadUtilities.runInBackground(new ListDirectoryBrowserTask(browser,
 			session, vfs, path, loadInfo, awtRunnable));
@@ -192,7 +203,7 @@ class BrowserView extends JPanel
 
 			String parent = path;
 
-			while (true)
+			for(;;)
 			{
 				VFS _vfs = VFSManager.getVFSForPath(parent);
 				VFSFile file = null;
@@ -234,7 +245,8 @@ class BrowserView extends JPanel
 				parentList.insertElementAt(file,0);
 				String newParent = _vfs.getParentOfPath(parent);
 
-				if(MiscUtilities.pathsEqual(parent,newParent))
+				if(newParent == null ||
+					MiscUtilities.pathsEqual(parent,newParent))
 					break;
 				else
 					parent = newParent;
@@ -355,13 +367,10 @@ class BrowserView extends JPanel
 		// currently showing directory.
 		popup.addPopupMenuListener(new PopupMenuListener()
 		{
-			@Override
 			public void popupMenuCanceled(PopupMenuEvent e) {}
 
-			@Override
 			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {}
 
-			@Override
 			public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
 			{
 				// we use SwingUtilities.invokeLater()

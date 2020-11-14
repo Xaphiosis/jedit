@@ -34,12 +34,11 @@ import javax.swing.table.*;
 import org.gjt.sp.jedit.io.FavoritesVFS;
 import org.gjt.sp.jedit.io.VFSFile;
 import org.gjt.sp.jedit.*;
-import org.gjt.sp.jedit.manager.BufferManagerImpl;
 //}}}
 
 /**
  * Local filesystem VFS.
- * @version $Id: FileCellRenderer.java 25239 2020-04-14 20:00:17Z kpouer $
+ * @version $Id: FileCellRenderer.java 21831 2012-06-18 22:54:17Z ezust $
  */
 public class FileCellRenderer extends DefaultTableCellRenderer
 {
@@ -60,7 +59,6 @@ public class FileCellRenderer extends DefaultTableCellRenderer
 	} //}}}
 
 	//{{{ getTableCellRendererComponent() method
-	@Override
 	public Component getTableCellRendererComponent(JTable table,
 		Object value, boolean isSelected, boolean hasFocus, 
 		int row, int column)
@@ -90,10 +88,7 @@ public class FileCellRenderer extends DefaultTableCellRenderer
 					path = file.getPath();
 				else
 					path = file.getSymlinkPath();
-
-				// I don't know if we should expose _getBuffer in BufferManager interface
-				BufferManagerImpl bufferManager = (BufferManagerImpl) jEdit.getBufferManager();
-				openBuffer = bufferManager._getBuffer(path).isPresent();
+				openBuffer = jEdit._getBuffer(path) != null;
 
 				setIcon(showIcons
 					? getIconForFile(file,entry.expanded,
@@ -135,7 +130,6 @@ public class FileCellRenderer extends DefaultTableCellRenderer
 	} //}}}
 
 	//{{{ paintComponent() method
-	@Override
 	public void paintComponent(Graphics g)
 	{
 		if(!isSelected)
@@ -181,10 +175,8 @@ public class FileCellRenderer extends DefaultTableCellRenderer
 	public static Icon getIconForFile(VFSFile file,
 		boolean expanded)
 	{
-		// I don't know if we should expose _getBuffer in BufferManager interface
-		BufferManagerImpl bufferManager = (BufferManagerImpl) jEdit.getBufferManager();
 		return getIconForFile(file,expanded,
-			bufferManager._getBuffer(file.getSymlinkPath()).isPresent());
+			jEdit._getBuffer(file.getSymlinkPath()) != null);
 	} //}}}
 
 	//{{{ getIconForFile() method
@@ -256,7 +248,6 @@ public class FileCellRenderer extends DefaultTableCellRenderer
 		} //}}}
 
 		//{{{ paintBorder() method
-		@Override
 		public void paintBorder(Component c, Graphics g,
 			int x, int y, int width, int height)
 		{
@@ -277,7 +268,6 @@ public class FileCellRenderer extends DefaultTableCellRenderer
 		} //}}}
 
 		//{{{ getBorderInsets() method
-		@Override
 		public Insets getBorderInsets(Component c)
 		{
 			return new Insets(1,level * LEVEL_WIDTH
@@ -285,7 +275,6 @@ public class FileCellRenderer extends DefaultTableCellRenderer
 		} //}}}
 
 		//{{{ isBorderOpaque() method
-		@Override
 		public boolean isBorderOpaque()
 		{
 			return false;
@@ -299,8 +288,8 @@ public class FileCellRenderer extends DefaultTableCellRenderer
 		} //}}}
 
 		//{{{ Private members
-		private final int state;
-		private final int level;
+		private int state;
+		private int level;
 
 		static
 		{

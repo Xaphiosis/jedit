@@ -32,7 +32,7 @@ import org.gjt.sp.util.Log;
 /**
  * URL VFS.
  * @author Slava Pestov
- * @version $Id: UrlVFS.java 25000 2020-03-21 19:40:09Z kpouer $
+ * @version $Id: UrlVFS.java 21831 2012-06-18 22:54:17Z ezust $
  */
 public class UrlVFS extends VFS
 {
@@ -43,7 +43,6 @@ public class UrlVFS extends VFS
 	} //}}}
 
 	//{{{ constructPath() method
-	@Override
 	public String constructPath(String parent, String path)
 	{
 		if(parent.endsWith("/"))
@@ -53,8 +52,8 @@ public class UrlVFS extends VFS
 	} //}}}
 
 	//{{{ _createInputStream() method
-	@Override
-	public InputStream _createInputStream(Object session, String path, boolean ignoreErrors, Component comp)
+	public InputStream _createInputStream(Object session,
+		String path, boolean ignoreErrors, Component comp)
 		throws IOException
 	{
 		try
@@ -71,8 +70,8 @@ public class UrlVFS extends VFS
 	} //}}}
 
 	//{{{ _createOutputStream() method
-	@Override
-	public OutputStream _createOutputStream(Object session, String path, Component comp) throws IOException
+	public OutputStream _createOutputStream(Object session, String path,
+		Component comp) throws IOException
 	{
 		try
 		{

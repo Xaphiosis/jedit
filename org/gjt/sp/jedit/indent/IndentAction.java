@@ -27,7 +27,7 @@ import org.gjt.sp.util.StandardUtilities;
 
 /** Abstract Indentation Action 
  * @author Slava Pestov
- * @version $Id: IndentAction.java 25223 2020-04-12 16:14:27Z kpouer $
+ * @version $Id: IndentAction.java 21831 2012-06-18 22:54:17Z ezust $
  */
 public interface IndentAction
 {
@@ -39,7 +39,8 @@ public interface IndentAction
 	 * @param newIndent The new indent -- ie, indent returned by previous
 	 * indent action.
 	 */
-	int calculateIndent(JEditBuffer buffer, int line, int oldIndent, int newIndent);
+	int calculateIndent(JEditBuffer buffer, int line, int oldIndent,
+		int newIndent);
 
 	/**
 	 * @return true if the indent engine should keep processing after
@@ -54,13 +55,12 @@ public interface IndentAction
 		 * This does nothing; it is merely a sentinel for the
 		 * <code>OpenBracketIndentRule</code>.
 		 */
-		@Override
-		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent, int newIndent)
+		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent,
+			int newIndent)
 		{
 			return newIndent;
 		}
 
-		@Override
 		public boolean keepChecking()
 		{
 			return true;
@@ -73,13 +73,12 @@ public interface IndentAction
 
 	class Reset implements IndentAction
 	{
-		@Override
-		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent, int newIndent)
+		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent,
+			int newIndent)
 		{
 			return oldIndent;
 		}
 
-		@Override
 		public boolean keepChecking()
 		{
 			return true;
@@ -88,7 +87,7 @@ public interface IndentAction
 
 	class Increase implements IndentAction
 	{
-		private final int amount;
+		private int amount;
 
 		public Increase()
 		{
@@ -100,13 +99,12 @@ public interface IndentAction
 			this.amount = amount;
 		}
 
-		@Override
-		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent, int newIndent)
+		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent,
+			int newIndent)
 		{
 			return newIndent + buffer.getIndentSize() * amount;
 		}
 
-		@Override
 		public boolean keepChecking()
 		{
 			return true;
@@ -123,13 +121,12 @@ public interface IndentAction
 
 	class Decrease implements IndentAction
 	{
-		@Override
-		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent, int newIndent)
+		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent,
+			int newIndent)
 		{
 			return newIndent - buffer.getIndentSize();
 		}
 
-		@Override
 		public boolean keepChecking()
 		{
 			return true;
@@ -141,20 +138,19 @@ public interface IndentAction
 	*/
 	class AlignOffset implements IndentAction
 	{
-		private final int offset;
+		private int offset;
 
 		public AlignOffset(int offset)
 		{
 			this.offset = offset;
 		}
 
-		@Override
-		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent, int newIndent)
+		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent,
+			int newIndent)
 		{
 			return offset;
 		}
 
-		@Override
 		public boolean keepChecking()
 		{
 			return false;
@@ -167,20 +163,19 @@ public interface IndentAction
 	*/
 	class AlignParameter implements IndentAction
 	{
-		private final int openParensColumn;
+		private int openParensColumn;
 
 		public AlignParameter(int openParensColumn)
 		{
 			this.openParensColumn = openParensColumn;
 		}
 
-		@Override
-		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent, int newIndent)
+		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent,
+				     int newIndent)
 		{
 			return openParensColumn + 1;
 		}
 
-		@Override
 		public boolean keepChecking()
 		{
 			return false;
@@ -194,15 +189,14 @@ public interface IndentAction
 	 */
 	class NoIncrease implements IndentAction
 	{
-		@Override
-		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent, int newIndent)
+		public int calculateIndent(JEditBuffer buffer, int line, int oldIndent,
+				           int newIndent)
 		{
 			int current = StandardUtilities.getLeadingWhiteSpaceWidth(
 					buffer.getLineSegment(line),buffer.getTabSize());
-			return Math.min(current, newIndent);
+			return (current < newIndent) ? current : newIndent;
 		}
 
-		@Override
 		public boolean keepChecking()
 		{
 			return true;

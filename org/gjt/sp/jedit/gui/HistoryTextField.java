@@ -36,7 +36,7 @@ import org.gjt.sp.util.GenericGUIUtilities;
 /** Text field with an arrow-key + drop-down accessable history.
  *
  * @author Slava Pestov
- * @version $Id: HistoryTextField.java 25051 2020-03-28 17:27:53Z kpouer $
+ * @version $Id: HistoryTextField.java 24859 2018-04-10 23:06:33Z daleanson $
  */
 public class HistoryTextField extends JTextField
 {
@@ -94,7 +94,6 @@ public class HistoryTextField extends JTextField
 		super(4);
 		controller = new HistoryText(this,null)
 		{
-			@Override
 			public void fireActionPerformed()
 			{
 				HistoryTextField.this.fireActionPerformed();
@@ -214,7 +213,6 @@ public class HistoryTextField extends JTextField
 	/**
 	 * Sets the displayed text.
 	 */
-	@Override
 	public void setText(String text)
 	{
 		super.setText(text);
@@ -225,7 +223,6 @@ public class HistoryTextField extends JTextField
 	/**
 	 * Make it public.
 	 */
-	@Override
 	public void fireActionPerformed()
 	{
 		super.fireActionPerformed();
@@ -234,7 +231,6 @@ public class HistoryTextField extends JTextField
 	//{{{ Protected members
 
 	//{{{ processKeyEvent() method
-	@Override
 	protected void processKeyEvent(KeyEvent evt)
 	{
 		if(!isEnabled())
@@ -292,7 +288,6 @@ public class HistoryTextField extends JTextField
 	} //}}}
 
 	//{{{ processMouseEvent() method
-	@Override
 	protected void processMouseEvent(MouseEvent evt)
 	{
 		if(!isEnabled())
@@ -328,7 +323,7 @@ public class HistoryTextField extends JTextField
 	//{{{ Private members
 
 	//{{{ Instance variables
-	private final HistoryText controller;
+	private HistoryText controller;
 	private boolean enterAddsToHistory;
 	private boolean selectAllOnFocus;
 	//}}}
@@ -343,25 +338,25 @@ public class HistoryTextField extends JTextField
 		boolean selectAll;
 
 		//{{{ mousePressed() method
-		@Override
 		public void mousePressed(MouseEvent evt)
 		{
 			selectAll = (!hasFocus() && selectAllOnFocus);
 		} //}}}
 
 		//{{{ mouseReleased() method
-		@Override
 		public void mouseReleased(MouseEvent evt)
 		{
-			SwingUtilities.invokeLater(() ->
+			SwingUtilities.invokeLater(new Runnable()
 			{
-				if(selectAll)
-					selectAll();
+				public void run()
+				{
+					if(selectAll)
+						selectAll();
+				}
 			});
 		} //}}}
 
 		//{{{ mouseMoved() method
-		@Override
 		public void mouseMoved(MouseEvent evt)
 		{
 			Border border = getBorder();
@@ -375,7 +370,6 @@ public class HistoryTextField extends JTextField
 		} //}}}
 
 		//{{{ mouseDragged() method
-		@Override
 		public void mouseDragged(MouseEvent evt)
 		{
 			selectAll = false;
@@ -387,7 +381,6 @@ public class HistoryTextField extends JTextField
 	{
 		static final int WIDTH = 16;
 
-		@Override
 		public void paintBorder(Component c, Graphics g,
 			int x, int y, int w, int h)
 		{
@@ -415,7 +408,6 @@ public class HistoryTextField extends JTextField
 			g.translate(-(x+w-WIDTH),-(y-1));
 		}
 
-		@Override
 		public Insets getBorderInsets(Component c)
 		{
 			return new Insets(0,0,0,WIDTH);

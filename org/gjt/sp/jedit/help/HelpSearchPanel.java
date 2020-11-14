@@ -50,7 +50,7 @@ public class HelpSearchPanel extends JPanel
 
 		add(BorderLayout.NORTH,box);
 
-		results = new JList<>();
+		results = new JList<Result>();
 		results.addMouseListener(new MouseHandler());
 		results.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		results.setCellRenderer(new ResultRenderer());
@@ -58,9 +58,9 @@ public class HelpSearchPanel extends JPanel
 	} //}}}
 
 	//{{{ Private members
-	private final HelpViewerInterface helpViewer;
-	private final HistoryTextField searchField;
-	private final JList<Result> results;
+	private HelpViewerInterface helpViewer;
+	private HistoryTextField searchField;
+	private JList<Result> results;
 	private HelpIndex index;
 
 	private HelpIndex getHelpIndex()
@@ -87,11 +87,11 @@ public class HelpSearchPanel extends JPanel
 	//{{{ ResultIcon class
 	static class ResultIcon implements Icon
 	{
-		private static final RenderingHints renderingHints;
+		private static RenderingHints renderingHints;
 
 		static
 		{
-			Map<RenderingHints.Key, Object> hints = new HashMap<>();
+			Map<RenderingHints.Key, Object> hints = new HashMap<RenderingHints.Key, Object>();
 
 			hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 			hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -99,26 +99,23 @@ public class HelpSearchPanel extends JPanel
 			renderingHints = new RenderingHints(hints);
 		}
 
-		private final int rank;
+		private int rank;
 
 		ResultIcon(int rank)
 		{
 			this.rank = rank;
 		}
 
-		@Override
 		public int getIconWidth()
 		{
 			return 40;
 		}
 
-		@Override
 		public int getIconHeight()
 		{
 			return 9;
 		}
 
-		@Override
 		public void paintIcon(Component c, Graphics g, int x, int y)
 		{
 			Graphics2D g2d = (Graphics2D)g.create();
@@ -138,7 +135,6 @@ public class HelpSearchPanel extends JPanel
 	//{{{ ResultRenderer class
 	static class ResultRenderer extends DefaultListCellRenderer
 	{
-		@Override
 		public Component getListCellRendererComponent(
 			JList list,
 			Object value,
@@ -188,7 +184,6 @@ public class HelpSearchPanel extends JPanel
 	//{{{ ResultCompare class
 	static class ResultCompare implements Comparator<Result>
 	{
-		@Override
 		public int compare(Result r1, Result r2)
 		{
 			if(r1.rank == r2.rank)
@@ -201,7 +196,6 @@ public class HelpSearchPanel extends JPanel
 	//{{{ ActionHandler class
 	class ActionHandler implements ActionListener
 	{
-		@Override
 		public void actionPerformed(ActionEvent evt)
 		{
 			final HelpIndex index = getHelpIndex();
@@ -213,73 +207,81 @@ public class HelpSearchPanel extends JPanel
 			});
 
 			final String text = searchField.getText();
-			final java.util.List<Result> resultModel = new ArrayList<>();
+			final java.util.List<Result> resultModel = new ArrayList<Result>();
 
-			ThreadUtilities.runInBackground(() ->
+			ThreadUtilities.runInBackground(new Runnable()
 			{
-				StringTokenizer st = new StringTokenizer(text,",.;:-? ");
-
-				// we later use this to compute a relative ranking
-				int maxRank = 0;
-
-				while(st.hasMoreTokens())
+				public void run()
 				{
-					String word = st.nextToken().toLowerCase();
-					HelpIndex.Word lookup = index.lookupWord(word);
-					if(lookup == null)
-						continue;
+					StringTokenizer st = new StringTokenizer(text,",.;:-? ");
 
-					for(int i = 0; i < lookup.occurCount; i++)
+					// we later use this to compute a relative ranking
+					int maxRank = 0;
+
+					while(st.hasMoreTokens())
 					{
-						HelpIndex.Word.Occurrence occur = lookup.occurrences[i];
+						String word = st.nextToken().toLowerCase();
+						HelpIndex.Word lookup = index.lookupWord(word);
+						if(lookup == null)
+							continue;
 
-						boolean ok = false;
-
-						HelpIndex.HelpFile file = index.getFile(occur.file);
-						for (Result result : resultModel)
+						for(int i = 0; i < lookup.occurCount; i++)
 						{
-							if (result.file.equals(file.file))
+							HelpIndex.Word.Occurrence occur = lookup.occurrences[i];
+
+							boolean ok = false;
+
+							HelpIndex.HelpFile file = index.getFile(occur.file);
+							for(int j = 0; j < resultModel.size(); j++)
 							{
-								result.rank += occur.count;
-								result.rank += 20; // multiple files w/ word bonus
-								maxRank = Math.max(result.rank, maxRank);
-								ok = true;
-								break;
+								Result result = resultModel.get(j);
+								if(result.file.equals(file.file))
+								{
+									result.rank += occur.count;
+									result.rank += 20; // multiple files w/ word bonus
+									maxRank = Math.max(result.rank,maxRank);
+									ok = true;
+									break;
+								}
+							}
+
+							if(!ok)
+							{
+								maxRank = Math.max(occur.count,maxRank);
+								resultModel.add(new Result(file,occur.count));
 							}
 						}
+					}
 
-						if(!ok)
+					if(maxRank != 0)
+					{
+						// turn the rankings into relative rankings, from 1 to 4
+						for(int i = 0; i < resultModel.size(); i++)
 						{
-							maxRank = Math.max(occur.count,maxRank);
-							resultModel.add(new Result(file,occur.count));
+							Result result = resultModel.get(i);
+							result.rank = (int)Math.ceil((double)result.rank * 4 / maxRank);
 						}
-					}
-				}
 
-				if(maxRank != 0)
-				{
-					// turn the rankings into relative rankings, from 1 to 4
-					for (Result result : resultModel)
+						Collections.sort(resultModel,new ResultCompare());
+					}
+
+					EventQueue.invokeLater(new Runnable()
 					{
-						result.rank = (int) Math.ceil((double) result.rank * 4 / maxRank);
-					}
+						public void run()
+						{
+							if(resultModel.isEmpty())
+							{
+								results.setListData(new Result[] { 
+										new Result(jEdit.getProperty("helpviewer.no-results")) 
+								});								
 
-					resultModel.sort(new ResultCompare());
+								javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
+							}
+							else
+								results.setListData(resultModel.toArray(new Result[resultModel.size()]));
+						}
+					});
 				}
-
-				EventQueue.invokeLater(() ->
-				{
-					if(resultModel.isEmpty())
-					{
-						results.setListData(new Result[] {
-								new Result(jEdit.getProperty("helpviewer.no-results"))
-						});
-
-						UIManager.getLookAndFeel().provideErrorFeedback(null);
-					}
-					else
-						results.setListData(resultModel.toArray(new Result[0]));
-				});
 			});
 
 
@@ -290,13 +292,13 @@ public class HelpSearchPanel extends JPanel
 	//{{{ MouseHandler class
 	public class MouseHandler extends MouseAdapter
 	{
-		@Override
 		public void mouseReleased(MouseEvent evt)
 		{
 			int row = results.locationToIndex(evt.getPoint());
 			if(row != -1)
 			{
-				Result result = results.getModel().getElementAt(row);
+				Result result = (Result)results.getModel()
+					.getElementAt(row);
 				helpViewer.gotoURL(result.file,true, 0);
 			}
 		}

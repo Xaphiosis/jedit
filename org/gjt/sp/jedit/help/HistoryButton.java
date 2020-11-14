@@ -28,12 +28,13 @@ import org.gjt.sp.jedit.gui.RolloverButton;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.event.*;
 //}}}
 
 /**
  * History Button
  * @author Nicholas O'Leary
- * @version $Id: HistoryButton.java 25243 2020-04-15 14:51:21Z kpouer $
+ * @version $Id: HistoryButton.java 23221 2013-09-29 20:03:32Z shlomy $
  */
 public class HistoryButton extends JPanel implements ActionListener
 {
@@ -41,10 +42,11 @@ public class HistoryButton extends JPanel implements ActionListener
 	public static final int FORWARD = 1;
 
 	//{{{ Private Members
-	private final int type;
-	private final HelpHistoryModel history;
-	private final RolloverButton arrow_button;
-	private final RolloverButton drop_button;
+	private int type;
+	private HelpHistoryModel history;
+	private RolloverButton arrow_button;
+	private RolloverButton drop_button;
+	private JPopupMenu historyList;
 	private ActionListener arrowActionListener;
 	//}}}
 
@@ -77,7 +79,6 @@ public class HistoryButton extends JPanel implements ActionListener
 	} //}}}
 
 	//{{{ setEnabled() method
-	@Override
 	public void setEnabled(boolean state)
 	{
 		super.setEnabled(state);
@@ -93,7 +94,6 @@ public class HistoryButton extends JPanel implements ActionListener
 	} //}}}
 
 	//{{{ actionPerformed() method
-	@Override
 	public void actionPerformed(ActionEvent evt)
 	{
 		arrowActionListener.actionPerformed(
@@ -118,10 +118,9 @@ public class HistoryButton extends JPanel implements ActionListener
 	class DropActionHandler implements ActionListener
 	{
 		//{{{ actionPerformed() method
-		@Override
 		public void actionPerformed(ActionEvent evt)
 		{
-			JPopupMenu historyList = new JPopupMenu();
+			historyList = new JPopupMenu();
 			HelpHistoryModel.HistoryEntry[] urls;
 			if (type == BACK)
 			{
@@ -170,7 +169,6 @@ public class HistoryButton extends JPanel implements ActionListener
 		} //}}}
 
 		//{{{ actionPerformed() method
-		@Override
 		public void actionPerformed(ActionEvent ae)
 		{
 			getParentHistoryButton().actionPerformed(ae);

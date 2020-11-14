@@ -28,7 +28,10 @@ import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.text.Segment;
@@ -88,7 +91,7 @@ import org.gjt.sp.util.ThreadUtilities;
 
  *
  * @author Slava Pestov
- * @version $Id: Buffer.java 25241 2020-04-15 14:34:21Z kpouer $
+ * @version $Id: Buffer.java 24849 2018-03-27 16:24:10Z vampire0 $
  */
 public class Buffer extends JEditBuffer
 {
@@ -239,7 +242,6 @@ public class Buffer extends JEditBuffer
 		//{{{ Do some stuff once loading is finished
 		Runnable runnable = new Runnable()
 		{
-			@Override
 			public void run()
 			{
 				String newPath = getStringProperty(
@@ -326,10 +328,9 @@ public class Buffer extends JEditBuffer
 
 		path = MiscUtilities.constructPath(this.path,path);
 
-		Optional<Buffer> bufferOptional = jEdit.getBufferManager().getBuffer(path);
-		if(bufferOptional.isPresent())
+		Buffer buffer = jEdit.getBuffer(path);
+		if(buffer != null)
 		{
-			Buffer buffer = bufferOptional.get();
 			view.getTextArea().setSelectedText(
 				buffer.getText(0,buffer.getLength()));
 			return true;
@@ -406,7 +407,7 @@ public class Buffer extends JEditBuffer
 		String[] files = GUIUtilities.showVFSFileDialog(view, fileSavePath, VFSBrowser.SAVE_DIALOG,false);
 		// files[] should have length 1, since the dialog type is
 		// SAVE_DIALOG
-		if(files.length == 0)
+		if(files == null)
 			return false;
 
 		boolean saved = save(view, files[0], rename);
@@ -632,15 +633,18 @@ public class Buffer extends JEditBuffer
 		}
 
 		// Once save is complete, do a few other things
-		AwtRunnableQueue.INSTANCE.runAfterIoTasks(() ->
-		{
-			setPerformingIO(false);
-			setProperty("overwriteReadonly",null);
-			finishSaving(view,oldPath,oldSymlinkPath,
-				newPath,rename,getBooleanProperty(
-					BufferIORequest.ERROR_OCCURRED));
-			updateMarkersFile(view);
-		});
+		AwtRunnableQueue.INSTANCE.runAfterIoTasks(new Runnable()
+			{
+				public void run()
+				{
+					setPerformingIO(false);
+					setProperty("overwriteReadonly",null);
+					finishSaving(view,oldPath,oldSymlinkPath,
+						newPath,rename,getBooleanProperty(
+							BufferIORequest.ERROR_OCCURRED));
+					updateMarkersFile(view);
+				}
+			});
 
 		return true;
 	} //}}}
@@ -915,17 +919,6 @@ public class Buffer extends JEditBuffer
 		return getFlag(UNTITLED);
 	} //}}}
 
-
-	//{{{ isTitled() method
-	/**
-	 * @return true if this file is not'untitled'. This method is thread-safe.
-	 * @since jEdit 5.6pre1
-	 */
-	public boolean isTitled()
-	{
-		return !isUntitled();
-	} //}}}
-
 	//{{{ setUntitled() method
 	/**
 	 *
@@ -995,7 +988,7 @@ public class Buffer extends JEditBuffer
 		return MiscUtilities.isBackup(MiscUtilities.getFileName(getPath()));
 	} //}}}
 
-	@Override
+
 	public boolean isEditable()
 	{
 		return super.isEditable() && !isLocked(); // respects "locked" property
@@ -1677,18 +1670,6 @@ public class Buffer extends JEditBuffer
 		return prev;
 	} //}}}
 
-	//{{{ setPrev() method
-	public void setPrev(Buffer prev)
-	{
-		this.prev = prev;
-	} //}}}
-
-	//{{{ setNext() method
-	public void setNext(Buffer next)
-	{
-		this.next = next;
-	} //}}}
-
 	//{{{ getIndex() method
 	/**
 	 * @return the position of this buffer in the buffer list.
@@ -1771,7 +1752,7 @@ public class Buffer extends JEditBuffer
 		setFlag(AUTORELOAD,jEdit.getBooleanProperty("autoReload"));
 		setFlag(AUTORELOAD_DIALOG,jEdit.getBooleanProperty("autoReloadDialog"));
 
-		undoListeners = new Vector<>();
+		undoListeners = new Vector<BufferUndoListener>();
 	} //}}}
 
 	//{{{ commitTemporary() method
@@ -1783,7 +1764,7 @@ public class Buffer extends JEditBuffer
 	} //}}}
 
 	//{{{ close() method
-	public void close()
+	void close()
 	{
 		close(false);
 	}
@@ -1847,7 +1828,6 @@ public class Buffer extends JEditBuffer
 	}
 
 	//{{{ fireBeginUndo() method
-	@Override
 	protected void fireBeginUndo()
 	{
 		for (BufferUndoListener listener: undoListeners)
@@ -1865,7 +1845,6 @@ public class Buffer extends JEditBuffer
 	} //}}}
 
 	//{{{ fireEndUndo() method
-	@Override
 	protected void fireEndUndo()
 	{
 		for (BufferUndoListener listener: undoListeners)
@@ -1883,7 +1862,6 @@ public class Buffer extends JEditBuffer
 	} //}}}
 
 	//{{{ fireBeginRedo() method
-	@Override
 	protected void fireBeginRedo()
 	{
 		for (BufferUndoListener listener: undoListeners)
@@ -1901,7 +1879,6 @@ public class Buffer extends JEditBuffer
 	} //}}}
 
 	//{{{ fireEndRedo() method
-	@Override
 	protected void fireEndRedo()
 	{
 		for (BufferUndoListener listener: undoListeners)
@@ -1964,7 +1941,7 @@ public class Buffer extends JEditBuffer
 	//{{{ Instance variables
 	/** Indicate if the autoreload property was overridden */
 	private int longLineLimit;
-	private final TokenMarker textTokenMarker;
+	private TokenMarker textTokenMarker;
 	private boolean autoreloadOverridden;
 	private String path;
 	private String symlinkPath;
@@ -1980,7 +1957,7 @@ public class Buffer extends JEditBuffer
 	private final Vector<Marker> markers;
 
 	private Socket waitSocket;
-	private final List<BufferUndoListener> undoListeners;
+	private List<BufferUndoListener> undoListeners;
 //
 //	/** the current ioTask of this buffer */
 //	private volatile IoTask ioTask;
@@ -2067,7 +2044,13 @@ public class Buffer extends JEditBuffer
 
 			// show this message when all I/O requests are
 			// complete
-			AwtRunnableQueue.INSTANCE.runAfterIoTasks(() -> GUIUtilities.message(view,"autosave-loaded",args));
+			AwtRunnableQueue.INSTANCE.runAfterIoTasks(new Runnable()
+			{
+				public void run()
+				{
+					GUIUtilities.message(view,"autosave-loaded",args);
+				}
+			});
 
 			return true;
 		}
@@ -2243,7 +2226,8 @@ public class Buffer extends JEditBuffer
 		// But I don't think anyone calls it like that anyway.
 		if(!error && !path.equals(oldPath))
 		{
-			Optional<Buffer> optionalBuffer = jEdit.getBufferManager().getBuffer(path);
+			Buffer buffer = jEdit.getBuffer(path);
+
 			if(rename)
 			{
 				/* if we save a file with the same name as one
@@ -2251,32 +2235,37 @@ public class Buffer extends JEditBuffer
 				 * close the existing file, since the user
 				 * would have confirmed the overwrite in the
 				 * 'save as' dialog box anyway */
-				optionalBuffer
-					.filter(buffer -> !buffer.getPath().equals(oldPath))
-					.ifPresent(buffer ->
-					{
-						buffer.setDirty(false);
-						jEdit.closeBuffer(view,buffer);
-					});
+				if(buffer != null && /* can't happen? */
+					!buffer.getPath().equals(oldPath))
+				{
+					buffer.setDirty(false);
+					jEdit.closeBuffer(view,buffer);
+				}
 
 				setPath(path);
-				jEdit.getEditPaneManager().forEach(editPane ->
+				jEdit.visit(new JEditVisitorAdapter()
+				{
+					@Override
+					public void visit(EditPane editPane)
 					{
 						BufferSet bufferSet = editPane.getBufferSet();
-						if (bufferSet.indexOf(this) != -1)
+						if (bufferSet.indexOf(Buffer.this) != -1)
 						{
 							bufferSet.sort();
 						}
-					});
+					}
+				});
 			}
 			else
 			{
 				/* if we saved over an already open file using
 				 * 'save a copy as', then reload the existing
 				 * buffer */
-				optionalBuffer
-					.filter(buffer -> !buffer.getPath().equals(oldPath))
-					.ifPresent(buffer -> buffer.load(view, true));
+				if(buffer != null && /* can't happen? */
+					!buffer.getPath().equals(oldPath))
+				{
+					buffer.load(view,true);
+				}
 			}
 		} //}}}
 

@@ -42,10 +42,9 @@ import org.gjt.sp.jedit.jEdit;
 public class EncodingWidgetFactory implements StatusWidgetFactory
 {
 	//{{{ getWidget() method
-	@Override
-	public Widget getWidget(View view)
+	public Widget getWidget(View view) 
 	{
-		Widget mode = new EncodingWidget(view);
+		EncodingWidget mode = new EncodingWidget(view);
 		return mode;
 	} //}}}
 
@@ -70,18 +69,21 @@ public class EncodingWidgetFactory implements StatusWidgetFactory
 						  });
 		}
 		
-		@Override
-		public JComponent getComponent()
+		public JComponent getComponent() 
 		{
 			return encoding;
 		}
 		
-		@Override
-		public void update()
+		public void update() 
 		{
 			Buffer buffer = view.getBuffer();
 			if (buffer.isLoaded())
 				encoding.setText(buffer.getStringProperty("encoding"));
 		}
+		
+		public void propertiesChanged()
+		{
+		}
+		
 	} //}}}
 }

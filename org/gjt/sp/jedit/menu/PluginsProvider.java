@@ -30,24 +30,22 @@ import org.gjt.sp.util.Log;
 public class PluginsProvider implements DynamicMenuProvider
 {
 	//{{{ updateEveryTime() method
-	@Override
 	public boolean updateEveryTime()
 	{
 		return false;
 	} //}}}
 
 	//{{{ update() method
-	@Override
 	public void update(JMenu menu)
 	{
 		// We build a set of lists, each list contains plugin menu
 		// items that begin with a given letter.
 		int count = 0;
 
-		List<List<JMenuItem>> letters = new ArrayList<>(26);
+		List<List<JMenuItem>> letters = new ArrayList<List<JMenuItem>>(26);
 		for(int i = 0; i < 26; i++)
 		{
-			letters.add(new ArrayList<>());
+			letters.add(new ArrayList<JMenuItem>());
 		}
 
 		PluginJAR[] pluginArray = jEdit.getPluginJARs();
@@ -76,7 +74,7 @@ public class PluginsProvider implements DynamicMenuProvider
 
 		// Sort each letter
 		for (List<JMenuItem> letter1 : letters)
-			letter1.sort(new MenuItemTextComparator());
+			Collections.sort(letter1, new MenuItemTextComparator());
 
 		int maxItems = jEdit.getIntegerProperty("menu.spillover", 20);
 

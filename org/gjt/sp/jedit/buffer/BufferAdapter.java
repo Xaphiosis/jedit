@@ -26,7 +26,7 @@ package org.gjt.sp.jedit.buffer;
  * An adapter you can subclass to avoid having to implement all the methods
  * of the {@link BufferListener} interface.
  * @author Slava Pestov
- * @version $Id: BufferAdapter.java 25040 2020-03-26 23:31:48Z kpouer $
+ * @version $Id: BufferAdapter.java 21831 2012-06-18 22:54:17Z ezust $
  * @since jEdit 4.3pre3
  */
 public abstract class BufferAdapter implements BufferListener
@@ -39,9 +39,9 @@ public abstract class BufferAdapter implements BufferListener
 	 * @param end The end line number
 	 * @since jEdit 4.3pre3
 	 */
-	@Override
-	public void foldLevelChanged(JEditBuffer buffer, int start, int end) {}
-	//}}}
+	public void foldLevelChanged(JEditBuffer buffer, int start, int end)
+	{
+	} //}}}
 
 	//{{{ contentInserted() method
 	/**
@@ -53,8 +53,8 @@ public abstract class BufferAdapter implements BufferListener
 	 * @param length The number of characters inserted
 	 * @since jEdit 4.3pre3
 	 */
-	@Override
-	public void contentInserted(JEditBuffer buffer, int startLine, int offset, int numLines, int length) {}
+	public void contentInserted(JEditBuffer buffer, int startLine, int offset,
+		int numLines, int length) {}
 	//}}}
 
 	//{{{ preContentInserted() method
@@ -68,9 +68,9 @@ public abstract class BufferAdapter implements BufferListener
 	 * @param length    The number of characters inserted
 	 * @since jEdit 4.3pre11
 	 */
-	@Override
-	public void preContentInserted(JEditBuffer buffer, int startLine, int offset, int numLines, int length) {}
-	//}}}
+	public void preContentInserted(JEditBuffer buffer, int startLine, int offset, int numLines, int length)
+	{
+	} //}}}
 
 	//{{{ preContentRemoved() method
 	/**
@@ -83,8 +83,8 @@ public abstract class BufferAdapter implements BufferListener
 	 * @param length The number of characters to be removed
 	 * @since jEdit 4.3pre3
 	 */
-	@Override
-	public void preContentRemoved(JEditBuffer buffer, int startLine, int offset, int numLines, int length) {}
+	public void preContentRemoved(JEditBuffer buffer, int startLine, int offset,
+		int numLines, int length) {}
 	//}}}
 
 	//{{{ contentRemoved() method
@@ -97,8 +97,8 @@ public abstract class BufferAdapter implements BufferListener
 	 * @param length The number of characters removed
 	 * @since jEdit 4.3pre3
 	 */
-	@Override
-	public void contentRemoved(JEditBuffer buffer, int startLine, int offset, int numLines, int length) {}
+	public void contentRemoved(JEditBuffer buffer, int startLine, int offset,
+		int numLines, int length) {}
 	//}}}
 
 	//{{{ transactionComplete() method
@@ -111,7 +111,6 @@ public abstract class BufferAdapter implements BufferListener
 	 * @param buffer The buffer in question
 	 * @since jEdit 4.3pre3
 	 */
-	@Override
 	public void transactionComplete(JEditBuffer buffer) {}
 	//}}}
 
@@ -125,7 +124,6 @@ public abstract class BufferAdapter implements BufferListener
 	 * @param buffer The buffer in question
 	 * @since jEdit 4.3pre3
 	 */
-	@Override
 	public void foldHandlerChanged(JEditBuffer buffer) {}
 	//}}}
 
@@ -136,7 +134,6 @@ public abstract class BufferAdapter implements BufferListener
 	 * @param buffer The buffer in question
 	 * @since jEdit 4.3pre3
 	 */
-	@Override
 	public void bufferLoaded(JEditBuffer buffer) {}
 	//}}}
 }

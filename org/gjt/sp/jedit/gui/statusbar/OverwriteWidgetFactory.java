@@ -45,7 +45,6 @@ import org.gjt.sp.jedit.textarea.JEditTextArea;
 public class OverwriteWidgetFactory implements StatusWidgetFactory
 {
 	//{{{ getWidget() method
-	@Override
 	public Widget getWidget(View view)
 	{
 		Widget overwrite = new OverwriteWidget(view);
@@ -77,14 +76,13 @@ public class OverwriteWidgetFactory implements StatusWidgetFactory
 		}
 
 		//{{{ getComponent() method
-		@Override
 		public JComponent getComponent()
 		{
 			return overwrite;
 		} //}}}
 
+
 		//{{{ update() method
-		@Override
 		public void update()
 		{
 			JEditTextArea textArea = view.getTextArea();
@@ -103,8 +101,8 @@ public class OverwriteWidgetFactory implements StatusWidgetFactory
 			}
 		} //}}}
 
+
 		//{{{ propertiesChanged() method
-		@Override
 		public void propertiesChanged()
 		{
 			// retarded GTK look and feel!
@@ -117,5 +115,6 @@ public class OverwriteWidgetFactory implements StatusWidgetFactory
 			overwrite.setPreferredSize(dim);
 			overwrite.setMaximumSize(dim);
 		} //}}}
+
 	} //}}}
 }

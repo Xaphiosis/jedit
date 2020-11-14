@@ -34,18 +34,18 @@ import org.gjt.sp.util.Log;
 import org.gjt.sp.jedit.options.PluginOptions;
 
 /**
- * @version $Id: MirrorListHandler.java 25233 2020-04-13 15:32:00Z kpouer $
+ * @version $Id: MirrorListHandler.java 24429 2016-06-23 03:08:58Z daleanson $
  */
 class MirrorListHandler extends DefaultHandler
 {
 	//{{{ Constructor
-	MirrorListHandler(MirrorList mirrors)
+	MirrorListHandler(MirrorList mirrors, String path)
 	{
 		this.mirrors = mirrors;
+		this.path = path;
 	} //}}}
 
 	//{{{ resolveEntity() method
-	@Override
 	public InputSource resolveEntity(String publicId, String systemId)
 	{
 		return XMLUtilities.findEntity(systemId, "mirrors.dtd",
@@ -53,7 +53,6 @@ class MirrorListHandler extends DefaultHandler
 	} //}}}
 
 	//{{{ characters() method
-	@Override
 	public void characters(char[] c, int off, int len)
 	{
 		String tag = peekElement();
@@ -69,7 +68,6 @@ class MirrorListHandler extends DefaultHandler
 	} //}}}
 
 	//{{{ startElement() method
-	@Override
 	public void startElement(String uri, String localName,
 				 String tag, Attributes attrs)
 	{
@@ -83,7 +81,6 @@ class MirrorListHandler extends DefaultHandler
 	} //}}}
 
 	//{{{ endElement() method
-	@Override
 	public void endElement(String uri, String localName, String tag)
 	{
 		popElement();
@@ -104,7 +101,6 @@ class MirrorListHandler extends DefaultHandler
 	} //}}}
 
 	//{{{ startDocument() method
-	@Override
 	public void startDocument()
 	{
 		try
@@ -118,7 +114,6 @@ class MirrorListHandler extends DefaultHandler
 	} //}}}
 
 	//{{{ endDocument() method
-	@Override
 	public void endDocument()
 	{
 		mirrors.finished();
@@ -136,11 +131,14 @@ class MirrorListHandler extends DefaultHandler
 	private final MirrorList mirrors;
 	private MirrorList.Mirror mirror;
 
-	private final Stack<String> stateStack = new Stack<>();
+	private final Stack<String> stateStack = new Stack<String>();
+	// TODO: path is not used, it should be removed.
+	private final String path;
 	//}}}
 
 	private String pushElement(String name)
 	{
+		name = name == null ? null : name.intern();
 		stateStack.push(name);
 		return name;
 	}

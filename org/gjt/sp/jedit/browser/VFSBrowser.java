@@ -25,8 +25,6 @@ package org.gjt.sp.jedit.browser;
 //{{{ Imports
 import org.gjt.sp.jedit.EditBus.EBHandler;
 import org.gjt.sp.jedit.bsh.*;
-
-import javax.annotation.Nullable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
 import javax.swing.*;
@@ -44,7 +42,6 @@ import java.util.concurrent.CountDownLatch;
 import org.gjt.sp.jedit.datatransfer.ListVFSFileTransferable;
 import org.gjt.sp.jedit.io.*;
 import org.gjt.sp.jedit.gui.*;
-import org.gjt.sp.jedit.manager.BufferManager;
 import org.gjt.sp.jedit.msg.*;
 import org.gjt.sp.jedit.search.*;
 import org.gjt.sp.jedit.*;
@@ -59,7 +56,7 @@ import org.gjt.sp.jedit.menu.MenuItemTextComparator;
  * VFSFileChooserDialog.
  *
  * @author Slava Pestov
- * @version $Id: VFSBrowser.java 25239 2020-04-14 20:00:17Z kpouer $
+ * @version $Id: VFSBrowser.java 24427 2016-06-22 22:29:03Z daleanson $
  */
 public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 	DockableWindow
@@ -255,7 +252,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 			pathAndFilterPanel.add(filterCheckbox);
 		}
 
-		filterField = new JComboBox<>();
+		filterField = new JComboBox<VFSFileFilter>();
 		filterEditor = new HistoryComboBoxEditor("vfs.browser.filter");
 		filterEditor.setToolTipText(jEdit.getProperty("glob.tooltip"));
 		filterEditor.setInstantPopups(true);
@@ -296,7 +293,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		{
 			String ext = MiscUtilities.getFileExtension(
 				view.getBuffer().getName());
-			if(ext.isEmpty())
+			if(ext.length() == 0)
 				filter = jEdit.getProperty("vfs.browser.default-filter");
 			else
 				filter = '*' + ext;
@@ -556,9 +553,9 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 	} //}}}
 
 	//{{{ setFilenameFilter() method
-	public void setFilenameFilter(@Nullable String filter)
+	public void setFilenameFilter(String filter)
 	{
-		if(filter == null || filter.isEmpty() || "*".equals(filter))
+		if(filter == null || filter.length() == 0 || "*".equals(filter))
 			filterCheckbox.setSelected(false);
 		else
 		{
@@ -636,7 +633,8 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		historyStack.push(path);
 		browserView.saveExpansionState();
 
-		browserView.loadDirectory(null,path,true, this::endRequest);
+		Runnable delayedAWTRequest = new DelayedEndRequest();
+		browserView.loadDirectory(null,path,true, delayedAWTRequest);
 		this.path = path;
 	} //}}}
 
@@ -755,7 +753,8 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 			Log.log(Log.ERROR, this, e, e);
 		}
 
-		EventQueue.invokeLater(this::endRequest);
+		Runnable delayedAWTRequest = new DelayedEndRequest();
+		EventQueue.invokeLater(delayedAWTRequest);
 	} //}}}
 
 	//{{{ rename() methods
@@ -840,7 +839,8 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		if(!startRequest())
 			return;
 
-		Task renameTask = new RenameBrowserTask(this, session, vfs, from, to, this::endRequest);
+		Runnable delayedAWTRequest = new DelayedEndRequest();
+		Task renameTask = new RenameBrowserTask(this, session, vfs, from, to, delayedAWTRequest);
 		ThreadUtilities.runInBackground(renameTask);
 	}
 
@@ -889,20 +889,24 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		if(!startRequest())
 			return;
 
-		Runnable runnable = () ->
+		Runnable runnable = new Runnable()
 		{
-			endRequest();
-			if (selected.length != 0 && selected[0].getType() != VFSFile.FILE)
+			@Override
+			public void run()
 			{
-				VFSDirectoryEntryTable directoryEntryTable = browserView.getTable();
-				int selectedRow = directoryEntryTable.getSelectedRow();
-				VFSDirectoryEntryTableModel model = (VFSDirectoryEntryTableModel) directoryEntryTable.getModel();
-				VFSDirectoryEntryTableModel.Entry entry = model.files[selectedRow];
-				if (!entry.expanded)
+				endRequest();
+				if (selected.length != 0 && selected[0].getType() != VFSFile.FILE)
 				{
-					browserView.clearExpansionState();
-					browserView.loadDirectory(entry,entry.dirEntry.getPath(),
-						false);
+					VFSDirectoryEntryTable directoryEntryTable = browserView.getTable();
+					int selectedRow = directoryEntryTable.getSelectedRow();
+					VFSDirectoryEntryTableModel model = (VFSDirectoryEntryTableModel) directoryEntryTable.getModel();
+					VFSDirectoryEntryTableModel.Entry entry = model.files[selectedRow];
+					if (!entry.expanded)
+					{
+						browserView.clearExpansionState();
+						browserView.loadDirectory(entry,entry.dirEntry.getPath(),
+							false);
+					}
 				}
 			}
 		};
@@ -981,7 +985,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		{
 			String name = MiscUtilities.getFileName(path);
 			String ext = MiscUtilities.getFileExtension(name);
-			filter = ext.isEmpty() ? filter : '*' + ext;	// NOPMD
+			filter = ext == null || ext.length() == 0 ? filter : '*' + ext;	// NOPMD
 			path = MiscUtilities.getParentOfPath(path);
 		}
 
@@ -1050,7 +1054,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 	{
 		if (file == null)
 			throw new IllegalArgumentException("file cannot be null");
-		String targetPath;
+		String targetPath = null;
 		switch (file.getType())
 		{
 			case VFSFile.FILESYSTEM:
@@ -1076,7 +1080,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 				return;
 			}
 			Transferable transferable = Registers.getRegister('$').getTransferable();
-			List<String> sources = new ArrayList<>();
+			List<String> sources = new ArrayList<String>();
 			if (transferable.isDataFlavorSupported(ListVFSFileTransferable.jEditFileList))
 			{
 				Iterable<VFSFile> copiedFiles = (Iterable<VFSFile>) transferable.getTransferData(ListVFSFileTransferable.jEditFileList);
@@ -1118,7 +1122,13 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		setDirectory(MiscUtilities.getParentOfPath(path));
 		// Do not change this until all VFS Browser tasks are
 		// done in ThreadUtilities
-		AwtRunnableQueue.INSTANCE.runAfterIoTasks(() -> browserView.getTable().selectFile(path));
+		AwtRunnableQueue.INSTANCE.runAfterIoTasks(new Runnable()
+		{
+			public void run()
+			{
+				browserView.getTable().selectFile(path);
+			}
+		});
 	} //}}}
 
 	//{{{ createPluginsMenu() method
@@ -1136,7 +1146,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		}
 		/* else we're in a modal dialog */
 
-		List<JMenuItem> list = new ArrayList<>();
+		List<JMenuItem> vec = new ArrayList<JMenuItem>();
 
 		//{{{ new API
 		EditPlugin[] plugins = jEdit.getPlugins();
@@ -1144,13 +1154,13 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		{
 			JMenuItem menuItem = plugin.createBrowserMenuItems();
 			if (menuItem != null)
-				list.add(menuItem);
+				vec.add(menuItem);
 		} //}}}
 
-		if (!list.isEmpty())
+		if (!vec.isEmpty())
 		{
-			list.sort(new MenuItemTextComparator());
-			for (JMenuItem item : list)
+			Collections.sort(vec,new MenuItemTextComparator());
+			for (JMenuItem item : vec)
 				pluginMenu.add(item);
 		}
 		else
@@ -1214,7 +1224,7 @@ check_selected:
 					continue check_selected;
 				}
 
-				Buffer _buffer = jEdit.getBufferManager().getBuffer(file.getPath()).orElse(null);
+				Buffer _buffer = jEdit.getBuffer(file.getPath());
 				if (_buffer == null)
 				{
 					Hashtable<String, Object> props = new Hashtable<String, Object>();
@@ -1383,7 +1393,10 @@ check_selected:
 				directoryList.add(file);
 			}
 
-			directoryList.sort(new VFS.DirectoryEntryCompare(sortMixFilesAndDirs, sortIgnoreCase));
+			Collections.sort(directoryList,
+				new VFS.DirectoryEntryCompare(
+				sortMixFilesAndDirs,
+				sortIgnoreCase));
 		}
 
 		browserView.directoryLoaded(node,path,
@@ -1410,14 +1423,11 @@ check_selected:
 
 		if(mode == BROWSER)
 		{
-			if (view != null)
+			for (VFSFile file : selectedFiles)
 			{
-				BufferManager bufferManager = jEdit.getBufferManager();
-				Arrays.stream(selectedFiles)
-					.map(VFSFile::getPath)
-					.map(bufferManager::getBuffer)
-					.flatMap(Optional::stream)
-					.forEach(view::setBuffer);
+				Buffer buffer = jEdit.getBuffer(file.getPath());
+				if (buffer != null && view != null)
+					view.setBuffer(buffer);
 			}
 		}
 
@@ -1456,23 +1466,23 @@ check_selected:
 	}
 
 	//{{{ Instance variables
-	private final EventListenerList listenerList;
-	private final View view;
+	private EventListenerList listenerList;
+	private View view;
 	private boolean horizontalLayout;
 	private String path;
-	private final JPanel pathAndFilterPanel;
-	private final HistoryTextField pathField;
+	private JPanel pathAndFilterPanel;
+	private HistoryTextField pathField;
 	private JComponent defaultFocusComponent;
-	private final JCheckBox filterCheckbox;
-	private final HistoryComboBoxEditor filterEditor;
-	private final JComboBox<VFSFileFilter> filterField;
+	private JCheckBox filterCheckbox;
+	private HistoryComboBoxEditor filterEditor;
+	private JComboBox<VFSFileFilter> filterField;
 	private Box toolbarBox;
-	private final Box topBox;
+	private Box topBox;
 	private FavoritesMenuButton favorites;
 	private PluginsMenuButton plugins;
-	private final BrowserView browserView;
-	private final int mode;
-	private final boolean multipleSelection;
+	private BrowserView browserView;
+	private int mode;
+	private boolean multipleSelection;
 
 	private boolean showHiddenFiles;
 	private boolean sortMixFilesAndDirs;
@@ -1743,7 +1753,7 @@ check_selected:
 
 	// {{{ MenuButton (abstract class)
 	@SuppressWarnings("serial")
-	abstract static class MenuButton extends RolloverButton implements KeyListener
+	static abstract class MenuButton extends RolloverButton implements KeyListener
 	{
 		JPopupMenu popup;
 
@@ -1762,13 +1772,8 @@ check_selected:
 			setAction(new Action());
 		} //}}}
 
-		@Override
 		public void keyReleased(KeyEvent e) {}
-
-		@Override
 		public void keyTyped(KeyEvent e) {}
-
-		@Override
 		public void keyPressed(KeyEvent e)
 		{
 			if ((e.getKeyCode() == KeyEvent.VK_DOWN) ||
@@ -1776,6 +1781,7 @@ check_selected:
 			{
 				doPopup();
 				e.consume();
+				return;
 			}
 		}
 
@@ -1801,7 +1807,6 @@ check_selected:
 		//{{{ Action class
 		class Action extends AbstractAction
 		{
-			@Override
 			public void actionPerformed(ActionEvent ae)
 			{
 				doPopup();
@@ -1823,7 +1828,8 @@ check_selected:
 			popup = new BrowserCommandsMenu(VFSBrowser.this, null);
 		} //}}}
 
-		@Override
+		// BrowserCommandsMenu popup;
+
 		void doPopup()
 		{
 			((BrowserCommandsMenu) popup).update();
@@ -1847,6 +1853,7 @@ check_selected:
 
 		} //}}}
 
+
 		//{{{ updatePopupMenu() method
 		void updatePopupMenu()
 		{
@@ -1854,9 +1861,7 @@ check_selected:
 
 		} //}}}
 
-		@Override
-		void doPopup()
-		{
+		void doPopup() {
 			if (popup == null) createPopupMenu();
 			GenericGUIUtilities.showPopupMenu(popup, this, 0, getHeight(), false);
 		}
@@ -1885,18 +1890,18 @@ check_selected:
 
 		} //}}}
 
-		@Override
 		void doPopup()
 		{	
 			if (popup==null) createPopupMenu();
 			GenericGUIUtilities.showPopupMenu(popup, this, 0, getHeight(), false);
 		}
 
+
 		//{{{ createPopupMenu() method
 		void createPopupMenu()
 		{
 			popup = new JPopupMenu();
-			ActionListener actionHandler = new ActionHandler();
+			ActionHandler actionHandler = new ActionHandler();
 
 			JMenuItem mi = new JMenuItem( jEdit.getProperty(
 				"vfs.browser.favorites.add-to-favorites.label"));
@@ -2188,5 +2193,16 @@ check_selected:
 		}
 
 	} //}}}
+
+	//{{{ DelayedEndRequest class
+	private class DelayedEndRequest implements Runnable
+	{
+		@Override
+		public void run()
+		{
+			endRequest();
+		}
+	} //}}}
+
 	//}}}
 }

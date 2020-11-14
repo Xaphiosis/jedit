@@ -32,12 +32,11 @@ import org.gjt.sp.util.StandardUtilities;
 /**
  * A file set for searching a user-specified list of buffers.
  * @author Slava Pestov
- * @version $Id: BufferListSet.java 25108 2020-03-31 22:41:49Z kpouer $
+ * @version $Id: BufferListSet.java 23221 2013-09-29 20:03:32Z shlomy $
  */
 public abstract class BufferListSet implements SearchFileSet
 {
 	//{{{ getFirstFile() method
-	@Override
 	public synchronized String getFirstFile(View view)
 	{
 		if(files == null)
@@ -50,7 +49,6 @@ public abstract class BufferListSet implements SearchFileSet
 	} //}}}
 	
 	//{{{ getLastFile() method
-	@Override
 	public synchronized String getLastFile(View view)
 	{
 		if(files == null)
@@ -63,21 +61,18 @@ public abstract class BufferListSet implements SearchFileSet
 	} //}}}
 
 	//{{{ getNextFile() method
-	@Override
 	public synchronized String getNextFile(View view, String path)
 	{
 		return getPrevOrNextFile(view, path, Direction.NEXT);
 	} //}}}
 	
 	//{{{ getPrevFile() method
-	@Override
 	public synchronized String getPrevFile(View view, String path)
 	{
 		return getPrevOrNextFile(view, path, Direction.PREV);
 	} //}}}
 
 	//{{{ getFiles() method
-	@Override
 	public synchronized String[] getFiles(View view)
 	{
 		if(files == null)
@@ -90,7 +85,6 @@ public abstract class BufferListSet implements SearchFileSet
 	} //}}}
 
 	//{{{ getFileCount() method
-	@Override
 	public synchronized int getFileCount(View view)
 	{
 		if(files == null)
@@ -103,7 +97,6 @@ public abstract class BufferListSet implements SearchFileSet
 	} //}}}
 
 	//{{{ getCode() method
-	@Override
 	public String getCode()
 	{
 		// not supported for arbitrary filesets

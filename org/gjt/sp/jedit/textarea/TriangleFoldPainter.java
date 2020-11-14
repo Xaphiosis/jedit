@@ -31,10 +31,9 @@ import org.gjt.sp.jedit.buffer.JEditBuffer;
 public class TriangleFoldPainter implements FoldPainter
 {
 	// {{{ paintFoldStart()
-	@Override
 	public void paintFoldStart(Gutter gutter, Graphics2D gfx, int screenLine,
-				   int physicalLine, boolean nextLineVisible, int y, int lineHeight,
-				   JEditBuffer buffer)
+			int physicalLine, boolean nextLineVisible, int y, int lineHeight,
+			JEditBuffer buffer)
 	{
 		int _y = y + lineHeight / 2;
 		gfx.setColor(gutter.getFoldColor());
@@ -57,7 +56,6 @@ public class TriangleFoldPainter implements FoldPainter
 	} // }}}
 
 	// {{{ paintFoldEnd()
-	@Override
 	public void paintFoldEnd(Gutter gutter, Graphics2D gfx, int screenLine,
 			int physicalLine, int y, int lineHeight, JEditBuffer buffer)
 	{
@@ -68,7 +66,6 @@ public class TriangleFoldPainter implements FoldPainter
 	} // }}}
 
 	// {{{ paintFoldMiddle()
-	@Override
 	public void paintFoldMiddle(Gutter gutter, Graphics2D gfx, int screenLine,
 			int physicalLine, int y, int lineHeight, JEditBuffer buffer)
 	{

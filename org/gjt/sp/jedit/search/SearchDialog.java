@@ -23,7 +23,6 @@
 package org.gjt.sp.jedit.search;
 
 //{{{ Imports
-import javax.annotation.Nonnull;
 import javax.swing.border.*;
 import javax.swing.*;
 
@@ -44,7 +43,7 @@ import org.gjt.sp.jedit.*;
 /**
  * Search and replace dialog.
  * @author Slava Pestov
- * @version $Id: SearchDialog.java 25081 2020-03-29 22:43:29Z kpouer $
+ * @version $Id: SearchDialog.java 24913 2019-07-28 18:32:11Z daleanson $
  */
 public class SearchDialog extends EnhancedDialog
 {
@@ -59,7 +58,6 @@ public class SearchDialog extends EnhancedDialog
 	//}}}
 
 	//{{{ getSearchDialog() method
-	@Nonnull
 	public static SearchDialog getSearchDialog(View view)
 	{
 		SearchDialog searchDialog = viewHash.get(view);
@@ -102,18 +100,21 @@ public class SearchDialog extends EnhancedDialog
 		}
 		else
 		{
-			SwingUtilities.invokeLater(() ->
+			SwingUtilities.invokeLater(new Runnable()
 			{
-				dialog.setVisible(true);
-				dialog.toFront();
+				public void run()
+				{
+					dialog.setVisible(true);
+					dialog.toFront();
 
-				// Ensure that the dialog gets the focus. Just bringing
-				// it to front just not necessarily give it the focus.
-				dialog.requestFocusInWindow();
+					// Ensure that the dialog gets the focus. Just bringing
+					// it to front just not necessarily give it the focus.
+					dialog.requestFocusInWindow();
 
-				// Given that the dialog has the focus, set the focus
-				// to the 'find' field.
-				dialog.find.requestFocusInWindow();
+					// Given that the dialog has the focus, set the focus
+					// to the 'find' field.
+					dialog.find.requestFocusInWindow();
+				}
 			});
 		}
 	} //}}}
@@ -203,7 +204,6 @@ public class SearchDialog extends EnhancedDialog
 	} //}}}
 
 	//{{{ ok() method
-	@Override
 	public void ok()
 	{
 		try
@@ -245,7 +245,6 @@ public class SearchDialog extends EnhancedDialog
 	} //}}}
 
 	//{{{ cancel() method
-	@Override
 	public void cancel()
 	{
 		save(true);
@@ -361,7 +360,7 @@ public class SearchDialog extends EnhancedDialog
 
 	private boolean saving;
 
-	private final FocusOrder focusOrder;
+	private FocusOrder focusOrder;
 	//}}}
 
 	//{{{ SearchDialog constructor
@@ -462,7 +461,7 @@ public class SearchDialog extends EnhancedDialog
 		cons.gridy++;
 
 		ButtonGroup grp = new ButtonGroup();
-		ActionListener replaceActionHandler = new ReplaceActionHandler();
+		ReplaceActionHandler replaceActionHandler = new ReplaceActionHandler();
 
 		stringReplace = new JRadioButton(jEdit.getProperty(
 			"search.string-replace-btn"));
@@ -506,7 +505,7 @@ public class SearchDialog extends EnhancedDialog
 			VariableGridLayout.FIXED_NUM_COLUMNS,3));
 		searchSettings.setBorder(new EmptyBorder(0,0,12,12));
 
-		ActionListener actionHandler = new SettingsActionHandler();
+		SettingsActionHandler actionHandler = new SettingsActionHandler();
 		ButtonGroup fileset = new ButtonGroup();
 		ButtonGroup direction = new ButtonGroup();
 
@@ -612,7 +611,7 @@ public class SearchDialog extends EnhancedDialog
 		cons.anchor = GridBagConstraints.WEST;
 		cons.fill = GridBagConstraints.HORIZONTAL;
 
-		ActionListener actionListener = new MultiFileActionHandler();
+		MultiFileActionHandler actionListener = new MultiFileActionHandler();
 		filter = new HistoryTextField("search.filter");
 
 		filter.setToolTipText(jEdit.getProperty("glob.tooltip"));
@@ -718,7 +717,9 @@ public class SearchDialog extends EnhancedDialog
 	private Box createButtonsPanel()
 	{
 		Box box = new Box(BoxLayout.Y_AXIS);
-		ActionListener actionHandler = new ButtonActionHandler();
+
+		ButtonActionHandler actionHandler = new ButtonActionHandler();
+
 		box.add(Box.createVerticalStrut(12));
 
 		JPanel grid = new JPanel(new GridLayout(5,1,0,12));
@@ -815,7 +816,7 @@ public class SearchDialog extends EnhancedDialog
 
 			String filter = this.filter.getText();
 			this.filter.addCurrentToHistory();
-			if(filter.isEmpty())
+			if(filter.length() == 0)
 				filter = "*";
 
 			SearchFileSet fileset = SearchAndReplace.getSearchFileSet();
@@ -887,7 +888,7 @@ public class SearchDialog extends EnhancedDialog
 			replace.addCurrentToHistory();
 			SearchAndReplace.setReplaceString(replace.getText());
 
-			if(find.getText().isEmpty())
+			if(find.getText().length() == 0)
 			{
 				if(!cancel)
 					javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null);
@@ -1001,7 +1002,6 @@ public class SearchDialog extends EnhancedDialog
 	//{{{ ReplaceActionHandler class
 	class ReplaceActionHandler implements ActionListener
 	{
-		@Override
 		public void actionPerformed(ActionEvent evt)
 		{
 			replace.setModel(beanShellReplace.isSelected()
@@ -1015,7 +1015,6 @@ public class SearchDialog extends EnhancedDialog
 	//{{{ SettingsActionHandler class
 	class SettingsActionHandler implements ActionListener
 	{
-		@Override
 		public void actionPerformed(ActionEvent evt)
 		{
 			Object source = evt.getSource();
@@ -1035,7 +1034,6 @@ public class SearchDialog extends EnhancedDialog
 	//{{{ MultiFileActionHandler class
 	class MultiFileActionHandler implements ActionListener
 	{
-		@Override
 		public void actionPerformed(ActionEvent evt)
 		{
 			String path = MiscUtilities.expandVariables(directoryField.getText());
@@ -1048,7 +1046,7 @@ public class SearchDialog extends EnhancedDialog
 					view, path,
 					VFSBrowser.CHOOSE_DIRECTORY_DIALOG,
 					false);
-				if(dirs.length > 0)
+				if(dirs != null)
 					directoryField.setText(dirs[0]);
 			}
 			else if(evt.getSource() == synchronize)
@@ -1085,7 +1083,6 @@ public class SearchDialog extends EnhancedDialog
 	//{{{ ButtonActionHandler class
 	class ButtonActionHandler implements ActionListener
 	{
-		@Override
 		public void actionPerformed(ActionEvent evt)
 		{
 			Object source = evt.getSource();
@@ -1154,14 +1151,13 @@ public class SearchDialog extends EnhancedDialog
 	// to this policy.
 	class FocusOrder extends FocusTraversalPolicy
 	{
-		private List<Component> components = new ArrayList<>();
+		private List<Component> components = new ArrayList<Component>();
 
 		public void add(Component component)
 		{
 			components.add(component);
 		}
 
-		@Override
 		public Component getComponentAfter(Container aContainer, Component aComponent)
 		{
 			int index = components.indexOf(aComponent);
@@ -1181,7 +1177,6 @@ public class SearchDialog extends EnhancedDialog
 			}
 		}
 
-		@Override
 		public Component getComponentBefore(Container aContainer, Component aComponent)
 		{
 			int index = components.indexOf(aComponent);
@@ -1201,28 +1196,24 @@ public class SearchDialog extends EnhancedDialog
 			}
 		}
 
-		@Override
 		public Component getDefaultComponent(Container aContainer)
 		{
-			return components.isEmpty() ? null : components.get(0);
+			return components.size() > 0 ? components.get(0) : null;
 		}
 
-		@Override
 		public Component getFirstComponent(Container aContainer)
 		{
-			return components.isEmpty() ? null : components.get(0);
+			return components.size() > 0 ? components.get(0) : null;
 		}
 
-		@Override
 		public Component getInitialComponent(Window window)
 		{
-			return components.isEmpty() ? null : components.get(0);
+			return components.size() > 0 ? components.get(0) : null;
 		}
 
-		@Override
 		public Component getLastComponent(Container aContainer)
 		{
-			return components.isEmpty() ? null : components.get(components.size() - 1);
+			return components.size() > 0 ? components.get(components.size() - 1) : null;
 		}
 	} //}}}
 

@@ -20,8 +20,6 @@
 
 package org.gjt.sp.util;
 
-import javax.annotation.Nonnull;
-
 /**
  * Reversed view of a given CharSequence.
  */
@@ -37,19 +35,16 @@ public class ReverseCharSequence implements CharSequence
 		return base;
 	}
 
-	@Override
 	public char charAt(int index)
 	{
 		return base.charAt(base.length() - index - 1);
 	}
 
-	@Override
 	public int length()
 	{
 		return base.length();
 	}
 
-	@Override
 	public CharSequence subSequence(int start, int end)
 	{
 		int baseLength = base.length();
@@ -57,7 +52,6 @@ public class ReverseCharSequence implements CharSequence
 			base.subSequence(baseLength - end, baseLength - start));
 	}
 
-	@Nonnull
 	public String toString()
 	{
 		int baseLength = base.length();

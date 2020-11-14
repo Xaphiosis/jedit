@@ -38,10 +38,12 @@ import javax.swing.border.*;
  */
 public class DropShadowBorder extends AbstractBorder
 {
+
     // the width in pixels of the drop shadow
-    private final int _width;
+    private int _width = 3;
     // the color of the drop shadow
-    private final Color _color;
+    private Color _color = Color.BLACK;
+
 
     /**
      * Drop shadow with default width of 3 pixels and black color.
@@ -51,6 +53,7 @@ public class DropShadowBorder extends AbstractBorder
         this( 3 );
     }
 
+
     /**
      * Drop shadow, default shadow color is black.
      * @param width the width of the shadow.
@@ -59,6 +62,7 @@ public class DropShadowBorder extends AbstractBorder
     {
         this( width, Color.BLACK );
     }
+
 
     /**
      * Drop shadow, width and color are adjustable.
@@ -71,17 +75,18 @@ public class DropShadowBorder extends AbstractBorder
         _color = color;
     }
 
+
     /**
      * This implementation returns a new Insets instance where the top and left are 1,
      * the bottom and right fields are the border width + 1.
      * @param c the component for which this border insets value applies
      * @return a new Insets object initialized as stated above.
      */
-    @Override
     public Insets getBorderInsets( Component c )
     {
         return new Insets( 1, 1, _width + 1, _width + 1 );
     }
+
 
     /**
      * Reinitializes the <code>insets</code> parameter with this DropShadowBorder's
@@ -90,7 +95,6 @@ public class DropShadowBorder extends AbstractBorder
      * @param insets the object to be reinitialized
      * @return the given <code>insets</code> object
      */
-    @Override
     public Insets getBorderInsets( Component c, Insets insets )
     {
         insets.top = 1;
@@ -100,15 +104,16 @@ public class DropShadowBorder extends AbstractBorder
         return insets;
     }
 
+
     /**
      * This implementation always returns true.
      * @return true
      */
-    @Override
     public boolean isBorderOpaque()
     {
         return true;
     }
+
 
     /**
      * Paints the drop shadow border around the given component.
@@ -119,7 +124,6 @@ public class DropShadowBorder extends AbstractBorder
      * @param width - the width of the painted border
      * @param height - the height of the painted border
      */
-    @Override
     public void paintBorder( Component c, Graphics g, int x, int y, int width, int height )
     {
         Color old_color = g.getColor();
@@ -187,6 +191,7 @@ public class DropShadowBorder extends AbstractBorder
                 g.drawLine( x1, y1, x2, y2 );
             }
         }
+
 
         g.setColor( old_color );
     }

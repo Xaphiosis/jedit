@@ -25,16 +25,18 @@ package org.gjt.sp.jedit.menu;
 //{{{ Imports
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.browser.FileCellRenderer;
-import org.gjt.sp.jedit.manager.BufferManager;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.StandardUtilities;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -44,31 +46,35 @@ import java.util.regex.PatternSyntaxException;
 public class RecentFilesProvider implements DynamicMenuProvider
 {
 	//{{{ updateEveryTime() method
-	@Override
 	public boolean updateEveryTime()
 	{
 		return false;
 	} //}}}
 
 	//{{{ update() method
-	@Override
 	public void update(JMenu menu)
 	{
 		final View view = GUIUtilities.getView(menu);
 
 		//{{{ ActionListener...
-		ActionListener actionListener = evt ->
+		ActionListener actionListener = new ActionListener()
 		{
-			jEdit.openFile(view,evt.getActionCommand());
-			view.getStatus().setMessage(null);
+			public void actionPerformed(ActionEvent evt)
+			{
+				jEdit.openFile(view,evt.getActionCommand());
+				view.getStatus().setMessage(null);
+			}
 		}; //}}}
 
 		//{{{ ChangeListener...
-		ChangeListener changeListener = e ->
+		ChangeListener changeListener = new ChangeListener()
 		{
-			JMenuItem menuItem = (JMenuItem) e.getSource();
-
-			view.getStatus().setMessage(menuItem.isArmed()?menuItem.getActionCommand():null);
+			public void stateChanged(ChangeEvent e)
+			{
+				JMenuItem menuItem = (JMenuItem) e.getSource();
+				
+				view.getStatus().setMessage(menuItem.isArmed()?menuItem.getActionCommand():null);
+			} 
 		}; //}}}
 
 		List<BufferHistory.Entry> recentVector = BufferHistory.getHistory();
@@ -82,18 +88,17 @@ public class RecentFilesProvider implements DynamicMenuProvider
 			return;
 		}
 
-		final List<JMenuItem> menuItems = new ArrayList<>();
+		final List<JMenuItem> menuItems = new ArrayList<JMenuItem>();
 		final JTextField text = new JTextField();
 		text.setToolTipText(jEdit.getProperty("recent-files.textfield.tooltip") +
 			": " + jEdit.getProperty("glob.tooltip"));
 		menu.add(text);
 		text.addKeyListener(new KeyAdapter()
 		{
-			@Override
 			public void keyReleased(KeyEvent e)
 			{
 				String typedText = text.getText();
-				boolean filter = (!typedText.isEmpty());
+				boolean filter = (typedText.length() > 0);
 				Pattern pattern = null;
 				if (filter)
 				{
@@ -101,7 +106,7 @@ public class RecentFilesProvider implements DynamicMenuProvider
 					if ((! typedText.contains("*")) && (! typedText.contains("?")))
 					{
 						// Old style (before jEdit 4.3pre18): Match start of file name
-						regex += "*";
+						regex = regex + "*";
 					}
 					pattern = Pattern.compile(StandardUtilities.globToRE(regex),
 						Pattern.CASE_INSENSITIVE);
@@ -110,7 +115,8 @@ public class RecentFilesProvider implements DynamicMenuProvider
 				{
 					for (JMenuItem recent : menuItems)
 					{
-						recent.setEnabled(!filter || pattern.matcher(recent.getText()).matches());
+						recent.setEnabled(filter ?
+							pattern.matcher(recent.getText()).matches() : true);
 					}
 				}
 				catch(PatternSyntaxException re)
@@ -125,11 +131,10 @@ public class RecentFilesProvider implements DynamicMenuProvider
 		int maxItems = jEdit.getIntegerProperty("menu.spillover",20);
 
 		Iterator<BufferHistory.Entry> iter = recentVector.iterator();
-		BufferManager bufferManager = jEdit.getBufferManager();
 		while(iter.hasNext())
 		{
 			String path = iter.next().path;
-			if (jEdit.getBooleanProperty("hideOpen") && bufferManager.getBuffer(path).isPresent())
+			if (jEdit.getBooleanProperty("hideOpen") && jEdit.getBuffer(path) != null)
 				continue;
 			JMenuItem menuItem = new JMenuItem(MiscUtilities
 				.getFileName(path));
@@ -159,7 +164,7 @@ public class RecentFilesProvider implements DynamicMenuProvider
 
 		if(sort)
 		{
-			menuItems.sort(new MenuItemTextComparator());
+			Collections.sort(menuItems, new MenuItemTextComparator());
 			for(int i = 0; i < menuItems.size(); i++)
 			{
 				if(menu.getMenuComponentCount() >= maxItems
@@ -175,7 +180,13 @@ public class RecentFilesProvider implements DynamicMenuProvider
 			}
 		}
 		JMenuItem menuItem = new JMenuItem(jEdit.getProperty("clear-recent-files.label"));
-		menuItem.addActionListener(e -> BufferHistory.clear());
+		menuItem.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				BufferHistory.clear();
+			}
+		});
 		menu.addSeparator();
 		menu.add(menuItem);
 	} //}}}

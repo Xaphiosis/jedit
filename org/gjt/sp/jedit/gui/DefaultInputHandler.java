@@ -24,18 +24,15 @@ package org.gjt.sp.jedit.gui;
 
 //{{{ Imports
 import java.awt.event.InputEvent;
+import java.awt.Toolkit;
 import java.util.Hashtable;
-import java.util.Objects;
-
 import org.gjt.sp.jedit.*;
-
-import javax.annotation.Nonnull;
 //}}}
 
 /** The default input handler maps sequences of keystrokes into actions and inserts key typed events into the text area.
  *
  * @author Slava Pestov
- * @version $Id: DefaultInputHandler.java 25221 2020-04-12 16:00:17Z kpouer $
+ * @version $Id: DefaultInputHandler.java 24211 2015-12-10 03:33:28Z daleanson $
  */
 public class DefaultInputHandler extends InputHandler
 {
@@ -47,10 +44,12 @@ public class DefaultInputHandler extends InputHandler
 	 * must not be null.
 	 * @since jEdit 4.3pre1
 	 */
-	public DefaultInputHandler(View view, @Nonnull Hashtable bindings)
+	public DefaultInputHandler(View view, Hashtable bindings)
 	{
 		super(view);
-		Objects.requireNonNull(bindings);
+
+		if(bindings == null)
+			throw new NullPointerException();
 		this.bindings = this.currentBindings = bindings;
 	} //}}}
 
@@ -104,8 +103,7 @@ public class DefaultInputHandler extends InputHandler
 	 * @param dryRun only calculate the return value, do not have any other effect
 	 * @since jEdit 4.2pre5
 	 */
-	@Override
-	public boolean handleKey(KeyEventTranslator.Key keyStroke, boolean dryRun)
+	public boolean handleKey(KeyEventTranslator.Key keyStroke,boolean dryRun)
 	{
 		char input = '\0';
 		if(keyStroke.modifiers == null

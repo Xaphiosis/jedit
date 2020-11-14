@@ -24,7 +24,6 @@
 package org.gjt.sp.jedit.textarea;
 
 // {{{ Imports
-import javax.annotation.Nonnull;
 import java.awt.geom.Rectangle2D;
 import java.text.AttributedString;
 import java.text.AttributedCharacterIterator;
@@ -38,7 +37,6 @@ import java.awt.event.InputMethodEvent;
 import java.awt.font.TextLayout;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextHitInfo;
-import java.text.CharacterIterator;
 // }}}
 
 /**
@@ -47,21 +45,22 @@ import java.text.CharacterIterator;
  * @author Kazutoshi Satoda
  * @since jEdit 4.3pre7
  */
+
 class InputMethodSupport
 	extends TextAreaExtension
 	implements InputMethodRequests, InputMethodListener
 {
 	// The owner.
-	private final TextArea owner;
+	private TextArea owner;
 	// The composed text layout which was built from last InputMethodEvent.
-	private TextLayout composedTextLayout;
+	private TextLayout composedTextLayout = null;
 	// The X offset to the caret in the composed text.
-	private int composedCaretX;
+	private int composedCaretX = 0;
 	// Last committed information to support cancelLatestCommittedText()
-	private int lastCommittedAt;
-	private String lastCommittedText;
+	private int lastCommittedAt = 0;
+	private String lastCommittedText = null;
 
-	InputMethodSupport(TextArea owner)
+	public InputMethodSupport(TextArea owner)
 	{
 		this.owner = owner;
 		owner.addInputMethodListener(this);
@@ -82,7 +81,6 @@ class InputMethodSupport
 
 
 	// {{{ extends TextAreaExtension
-	@Override
 	public void paintValidLine(Graphics2D gfx, int screenLine,
 				   int physicalLine, int start, int end, int y)
 	{
@@ -117,8 +115,6 @@ class InputMethodSupport
 
 
 	// {{{ implements InputMethodRequests
-	@Override
-	@Nonnull
 	public Rectangle getTextLocation(TextHitInfo offset)
 	{
 		int caretPosition = owner.getCaretPosition();
@@ -138,30 +134,22 @@ class InputMethodSupport
 			{
 				int caretLine = owner.getLineOfOffset(caretPosition);
 				int selectionStartLine = selection_on_caret.getStartLine();
-				if (selectionStartLine == caretLine)
-				{
+				if (selectionStartLine == caretLine) {
 					Point selection_start = owner.offsetToXY(selection_on_caret.getStart());
 					return getCaretRectangle(selection_start.x, selection_start.y);
-				}
-				else
-				{
+				} else {
 					Point caretLineStart = owner.offsetToXY(caretLine, 0);
-					if( caretLineStart == null)
-						return getCaretRectangle(0, 0);
 					return getCaretRectangle(caretLineStart.x, caretLineStart.y);
 				}
 			}
 			else
 			{
 				Point caret = owner.offsetToXY(caretPosition);
-				if (caret == null)
-					return getCaretRectangle(0, 0);
 				return getCaretRectangle(caret.x, caret.y);
 			}
 		}
 	}
 
-	@Override
 	public TextHitInfo getLocationOffset(int x, int y)
 	{
 		if(composedTextLayout != null)
@@ -185,26 +173,22 @@ class InputMethodSupport
 		return null;
 	}
 
-	@Override
 	public int getInsertPositionOffset()
 	{
 		return owner.getCaretPosition();
 	}
 
-	@Override
 	public AttributedCharacterIterator getCommittedText(int beginIndex , int endIndex
 		, AttributedCharacterIterator.Attribute[] attributes)
 	{
 		return new AttributedString(owner.getText(beginIndex, endIndex - beginIndex)).getIterator();
 	}
 
-	@Override
 	public int getCommittedTextLength()
 	{
 		return owner.getBufferLength();
 	}
 
-	@Override
 	public AttributedCharacterIterator cancelLatestCommittedText(AttributedCharacterIterator.Attribute[] attributes)
 	{
 		if(lastCommittedText != null)
@@ -227,7 +211,6 @@ class InputMethodSupport
 		return null;
 	}
 
-	@Override
 	public AttributedCharacterIterator getSelectedText(AttributedCharacterIterator.Attribute[] attributes)
 	{
 		Selection selection_on_caret = owner.getSelectionAtOffset(owner.getCaretPosition());
@@ -241,7 +224,6 @@ class InputMethodSupport
 
 
 	// {{{ implements InputMethodListener
-	@Override
 	public void inputMethodTextChanged(InputMethodEvent event)
 	{
 		composedTextLayout = null;
@@ -257,7 +239,7 @@ class InputMethodSupport
 				char c;
 				int count;
 				for(c = text.first(), count = committed_count
-					; c != CharacterIterator.DONE && count > 0
+					; c != AttributedCharacterIterator.DONE && count > 0
 					; c = text.next(), --count)
 				{
 					owner.userInput(c);
@@ -279,7 +261,6 @@ class InputMethodSupport
 		caretPositionChanged(event);
 	}
 
-	@Override
 	public void caretPositionChanged(InputMethodEvent event)
 	{
 		composedCaretX = 0;

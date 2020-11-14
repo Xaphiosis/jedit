@@ -23,7 +23,6 @@
 package org.gjt.sp.jedit.pluginmgr;
 
 //{{{ Imports
-import javax.annotation.Nonnull;
 import javax.swing.SwingUtilities;
 import java.awt.Component;
 import java.io.*;
@@ -36,13 +35,12 @@ import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.msg.PluginUpdate;
 import org.gjt.sp.util.Log;
 import org.gjt.sp.util.IOUtilities;
-import org.gjt.sp.util.ProgressObserver;
 
 import static org.gjt.sp.jedit.io.FileVFS.recursiveDelete;
 //}}}
 
 /**
- * @author $Id: Roster.java 25221 2020-04-12 16:00:17Z kpouer $
+ * @author $Id: Roster.java 24599 2017-01-30 00:40:31Z vampire0 $
  */
 class Roster
 {
@@ -51,8 +49,8 @@ class Roster
 	//{{{ Roster constructor
 	Roster()
 	{
-		operations = new ArrayList<>();
-		toLoad = new ArrayList<>();
+		operations = new ArrayList<Operation>();
+		toLoad = new ArrayList<String>();
 	} //}}}
 
 	//{{{ addRemove() method
@@ -66,7 +64,8 @@ class Roster
 	} //}}}
 
 	//{{{ addInstall() method
-	void addInstall(String installed, String url, String installDirectory, int size)
+	void addInstall(String installed, String url, String installDirectory,
+		int size)
 	{
 		addOperation(new Install(installed,url,installDirectory,size));
 	} //}}}
@@ -143,8 +142,8 @@ class Roster
 	//{{{ Private members
 	private static File downloadDir;
 
-	private final List<Operation> operations;
-	private final List<String> toLoad;
+	private List<Operation> operations;
+	private List<String> toLoad;
 
 	//{{{ addOperation() method
 	private void addOperation(Operation op)
@@ -203,7 +202,6 @@ class Roster
 		} //}}}
 
 		//{{{ runInAWTThread() method
-		@Override
 		public void runInAWTThread(Component comp)
 		{
 			// close JAR file and all JARs that depend on this
@@ -279,10 +277,12 @@ class Roster
 		int size;
 
 		//{{{ Install constructor
-		Install(String installed, @Nonnull String url, String installDirectory, int size)
+		Install(String installed, String url, String installDirectory,
+			int size)
 		{
 			// catch those hooligans passing null urls
-			Objects.requireNonNull(url);
+			if(url == null)
+				throw new NullPointerException();
 
 			this.installed = installed;
 			this.url = url;
@@ -291,21 +291,18 @@ class Roster
 		} //}}}
 
 		//{{{ getMaximum() method
-		@Override
 		public int getMaximum()
 		{
 			return size;
 		} //}}}
 
 		//{{{ runInWorkThread() method
-		@Override
 		public void runInWorkThread(PluginManagerProgress progress)
 		{
 			path = download(progress,url);
 		} //}}}
 
 		//{{{ runInAWTThread() method
-		@Override
 		public void runInAWTThread(Component comp)
 		{
 			// check if download failed
@@ -413,7 +410,8 @@ class Roster
 					Log.log(Log.ERROR,this,io);
 				}
 
-				if(jEdit.getBooleanProperty("plugin-manager.deleteDownloads"))
+				if(jEdit.getBooleanProperty(
+					"plugin-manager.deleteDownloads"))
 				{
 					new File(path).delete();
 				}
@@ -428,13 +426,13 @@ class Roster
 		} //}}}
 
 		//{{{ Private members
-		private final String installed;
+		private String installed;
 		private final String url;
-		private final String installDirectory;
+		private String installDirectory;
 		private String path;
 
 		//{{{ download() method
-		private String download(ProgressObserver progress, String url)
+		private String download(PluginManagerProgress progress, String url)
 		{
 			try
 			{
@@ -487,7 +485,13 @@ class Roster
 			{
 				Log.log(Log.ERROR,this,e);
 
-				SwingUtilities.invokeLater(() -> GUIUtilities.error(null,"plugin-error-download",new Object[]{""}));
+				SwingUtilities.invokeLater(new Runnable()
+				{
+					public void run()
+					{
+						GUIUtilities.error(null,"plugin-error-download",new Object[]{""});
+					}
+				});
 
 				return null;
 			}
@@ -495,10 +499,13 @@ class Roster
 			{
 				Log.log(Log.ERROR,this,io);
 
-				SwingUtilities.invokeLater(() ->
+				SwingUtilities.invokeLater(new Runnable()
 				{
-					String[] args = { io.getMessage() };
-					GUIUtilities.error(null,"plugin-error-download",args);
+					public void run()
+					{
+						String[] args = { io.getMessage() };
+						GUIUtilities.error(null,"plugin-error-download",args);
+					}
 				});
 
 				return null;
@@ -510,6 +517,7 @@ class Roster
 				return null;
 			}
 		} //}}}
+
 		//}}}
 	} //}}}
 }

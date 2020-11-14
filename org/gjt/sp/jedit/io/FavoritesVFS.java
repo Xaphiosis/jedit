@@ -29,8 +29,6 @@ import java.util.*;
 
 import org.gjt.sp.jedit.msg.DynamicMenuChanged;
 import org.gjt.sp.jedit.*;
-
-import javax.annotation.Nonnull;
 //}}}
 
 /**
@@ -40,7 +38,7 @@ import javax.annotation.Nonnull;
  * favorite and clicking 'delete' in the browser just deletes the
  * favorite, and not the directory itself.
  * @author Slava Pestov
- * @version $Id: FavoritesVFS.java 25331 2020-05-09 14:24:20Z kpouer $
+ * @version $Id: FavoritesVFS.java 23221 2013-09-29 20:03:32Z shlomy $
  */
 public class FavoritesVFS extends VFS
 {
@@ -62,7 +60,6 @@ public class FavoritesVFS extends VFS
 
 	//{{{ getParentOfPath() method
 	@Override
-	@Nonnull
 	public String getParentOfPath(String path)
 	{
 		return PROTOCOL + ':';
@@ -73,8 +70,7 @@ public class FavoritesVFS extends VFS
 	public VFSFile[] _listFiles(Object session, String url,
 		Component comp)
 	{
-		if (url.equals(PROTOCOL + ':')) return getFavorites();
-		else return null;
+		return getFavorites();
 	} //}}}
 
 	//{{{ _getFile() method
@@ -131,7 +127,7 @@ public class FavoritesVFS extends VFS
 			Favorite favorite = (Favorite) fav;
 			if (favorite.getPath().equals(from))
 			{
-				favorite.setLabel(to);
+				favorite.label = to;
 				return true;
 			}
 		}
@@ -143,7 +139,7 @@ public class FavoritesVFS extends VFS
 	{
 		synchronized(lock)
 		{
-			favorites = new LinkedList<>();
+			favorites = new LinkedList<Favorite>();
 
 			String favoritePath;
 			int i = 0;
@@ -151,12 +147,13 @@ public class FavoritesVFS extends VFS
 			{
 				Favorite favorite = new Favorite(favoritePath,
 					jEdit.getIntegerProperty("vfs.favorite."
-					+ i + ".type", VFSFile.DIRECTORY));
+					+ i + ".type",
+								VFSFile.DIRECTORY));
 				favorites.add(favorite);
 				String label = jEdit.getProperty("vfs.favorite." + i + ".label");
 				if (label != null)
 				{
-					favorite.setLabel(label);
+					favorite.label = label;
 				}
 				i++;
 			}
@@ -220,7 +217,8 @@ public class FavoritesVFS extends VFS
 			if(favorites == null)
 				loadFavorites();
 
-			return favorites.toArray(new VFSFile[0]);
+			return favorites.toArray(
+				new VFSFile[favorites.size()]);
 		}
 	} //}}}
 
@@ -238,17 +236,12 @@ public class FavoritesVFS extends VFS
 		Favorite(String path, int type)
 		{
 			super(path,path,PROTOCOL + ':' + path,type, 0L,false);
-			label = MiscUtilities.abbreviateView(path);
+			this.label = MiscUtilities.abbreviateView(path);
 		}
 
 		public String getLabel()
 		{
 			return label;
-		}
-
-		public void setLabel(String label)
-		{
-			this.label = label;
 		}
 
 		@Override

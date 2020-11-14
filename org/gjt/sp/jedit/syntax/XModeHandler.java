@@ -39,7 +39,7 @@ import org.gjt.sp.util.XMLUtilities;
 
 /**
  * XML handler for mode definition files.
- * @version $Id: XModeHandler.java 25244 2020-04-15 15:14:49Z kpouer $
+ * @version $Id: XModeHandler.java 21831 2012-06-18 22:54:17Z ezust $
  */
 public abstract class XModeHandler extends DefaultHandler
 {
@@ -53,21 +53,18 @@ public abstract class XModeHandler extends DefaultHandler
 	} //}}}
 
 	//{{{ resolveEntity() method
-	@Override
 	public InputSource resolveEntity(String publicId, String systemId)
 	{
 		return XMLUtilities.findEntity(systemId, "xmode.dtd", XModeHandler.class);
 	} //}}}
 
 	//{{{ characters() method
-	@Override
 	public void characters(char[] c, int off, int len)
 	{
 		peekElement().setText(c, off, len);
 	} //}}}
 
 	//{{{ startElement() method
-	@Override
 	public void startElement(String uri, String localName,
 				 String qName, Attributes attrs)
 	{
@@ -116,7 +113,6 @@ public abstract class XModeHandler extends DefaultHandler
 	} //}}}
 
 	//{{{ endElement() method
-	@Override
 	public void endElement(String uri, String localName, String name)
 	{
 		TagDecl tag = popElement();
@@ -397,16 +393,14 @@ public abstract class XModeHandler extends DefaultHandler
 	} //}}}
 
 	//{{{ startDocument() method
-	@Override
 	public void startDocument()
 	{
-		props = new Hashtable<>();
+		props = new Hashtable<String, String>();
 		pushElement(null, null);
-		reloadModes = new Vector<>();
+		reloadModes = new Vector<Mode>();
 	} //}}}
 
 	//{{{ endDocument() method
-	@Override
 	public void endDocument()
 	{
 		ParserRuleSet[] rulesets = marker.getRuleSets();
@@ -469,12 +463,12 @@ public abstract class XModeHandler extends DefaultHandler
 	//{{{ Private members
 
 	//{{{ Instance variables
-	private final String modeName;
+	private String modeName;
 	/** The token marker cannot be null. */
 	private final TokenMarker marker;
 	private KeywordMap keywords;
 	/** this stack can contains null elements. */
-	private final Stack<TagDecl> stateStack;
+	private Stack<TagDecl> stateStack;
 	private String propName;
 	private String propValue;
 	private Hashtable<String, String> props;
@@ -547,7 +541,8 @@ public abstract class XModeHandler extends DefaultHandler
 	 */
 	private class TagDecl
 	{
-		TagDecl(String tagName, Attributes attrs)
+
+		public TagDecl(String tagName, Attributes attrs)
 		{
 			this.tagName = tagName;
 

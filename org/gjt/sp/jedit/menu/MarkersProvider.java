@@ -24,6 +24,7 @@ package org.gjt.sp.jedit.menu;
 
 //{{{ Imports
 import javax.swing.*;
+import java.awt.event.*;
 import java.awt.*;
 import java.util.List;
 
@@ -33,14 +34,12 @@ import org.gjt.sp.jedit.*;
 public class MarkersProvider implements DynamicMenuProvider
 {
 	//{{{ updateEveryTime() method
-	@Override
 	public boolean updateEveryTime()
 	{
 		return true;
 	} //}}}
 
 	//{{{ update() method
-	@Override
 	public void update(JMenu menu)
 	{
 		final View view = GUIUtilities.getView(menu);
@@ -76,29 +75,36 @@ public class MarkersProvider implements DynamicMenuProvider
 				current = newCurrent;
 			}
 
-			JMenuItem mi = new MarkersMenuItem(buffer, lineNo, marker.getShortcut());
-			mi.addActionListener(evt -> view.getTextArea().setCaretPosition(marker.getPosition()));
+			JMenuItem mi = new MarkersMenuItem(buffer,
+				lineNo,marker.getShortcut());
+			mi.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent evt)
+				{
+					view.getTextArea().setCaretPosition(
+						marker.getPosition());
+				}
+			});
 			current.add(mi);
 		}
 	} //}}}
 
 	//{{{ MarkersMenuItem class
-	private static class MarkersMenuItem extends JMenuItem
+	static class MarkersMenuItem extends JMenuItem
 	{
 		//{{{ MarkersMenuItem constructor
 		MarkersMenuItem(Buffer buffer, int lineNo, char shortcut)
 		{
 			String text = buffer.getLineText(lineNo).trim();
-			if(text.isEmpty())
+			if(text.length() == 0)
 				text = jEdit.getProperty("markers.blank-line");
 			setText((lineNo + 1) + ": " + text);
 
 			shortcutProp = "goto-marker.shortcut";
-			this.shortcut = shortcut;
+			MarkersMenuItem.this.shortcut = shortcut;
 		} //}}}
 
 		//{{{ getPreferredSize() method
-		@Override
 		public Dimension getPreferredSize()
 		{
 			Dimension d = super.getPreferredSize();
@@ -114,7 +120,6 @@ public class MarkersProvider implements DynamicMenuProvider
 		} //}}}
 
 		//{{{ paint() method
-		@Override
 		public void paint(Graphics g)
 		{
 			super.paint(g);
@@ -138,11 +143,11 @@ public class MarkersProvider implements DynamicMenuProvider
 		} //}}}
 
 		//{{{ Private members
-		private final String shortcutProp;
-		private final char shortcut;
-		private static final Font acceleratorFont;
-		private static final Color acceleratorForeground;
-		private static final Color acceleratorSelectionForeground;
+		private String shortcutProp;
+		private char shortcut;
+		private static Font acceleratorFont;
+		private static Color acceleratorForeground;
+		private static Color acceleratorSelectionForeground;
 
 		//{{{ getShortcut() method
 		private String getShortcut()

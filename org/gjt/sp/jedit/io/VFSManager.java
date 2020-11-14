@@ -23,7 +23,6 @@
 package org.gjt.sp.jedit.io;
 
 //{{{ Imports
-import javax.annotation.Nonnull;
 import javax.swing.JOptionPane;
 import java.awt.Component;
 import java.awt.EventQueue;
@@ -56,7 +55,7 @@ import org.gjt.sp.util.StandardUtilities;
  * {@link #waitForRequests()}.
  *
  * @author Slava Pestov
- * @version $Id: VFSManager.java 25380 2020-09-27 19:00:35Z kpouer $
+ * @version $Id: VFSManager.java 23861 2015-02-12 04:54:35Z vanza $
  */
 public class VFSManager
 {
@@ -85,43 +84,6 @@ public class VFSManager
 
 	//{{{ VFS methods
 
-	//{{{ canReadFile() method
-	/**
-	 * Returns true if the file exists
-	 * @param path the path of the file
-	 * @return true if the file exists and can be read
-	 * @since jEdit 5.6pre1
-	 */
-	public static boolean canReadFile(String path)
-	{
-		VFS vfs = VFSManager.getVFSForPath(path);
-		Object vfsSession = vfs.createVFSSession(path, jEdit.getActiveView());
-		if (vfsSession == null)
-			return false;
-
-		try
-		{
-			VFSFile vfsFile = vfs._getFile(vfsSession, path, jEdit.getActiveView());
-			return vfsFile != null && vfsFile.isReadable();
-		}
-		catch (IOException e)
-		{
-			Log.log(Log.ERROR, VFSManager.class, e, e);
-		}
-		finally
-		{
-			try
-			{
-				vfs._endVFSSession(vfsSession, jEdit.getActiveView());
-			}
-			catch (IOException e)
-			{
-				Log.log(Log.ERROR, VFSManager.class, e, e);
-			}
-		}
-		return false;
-	} //}}}
-
 	//{{{ getFileVFS() method
 	/**
 	 * Returns the local filesystem VFS.
@@ -148,7 +110,6 @@ public class VFSManager
 	 * @param protocol The protocol
 	 * @since jEdit 2.5pre1
 	 */
-	@Nonnull
 	public static VFS getVFSForProtocol(String protocol)
 	{
 		if(protocol.equals("file"))
@@ -170,7 +131,6 @@ public class VFSManager
 	 * @param path The path
 	 * @since jEdit 2.6pre4
 	 */
-	@Nonnull
 	public static VFS getVFSForPath(String path)
 	{
 		if(MiscUtilities.isURL(path))
@@ -186,8 +146,13 @@ public class VFSManager
 	 */
 	public static String[] getVFSs()
 	{
+		// the sooner ppl move to the new api, the less we'll need
+		// crap like this
+		List<String> returnValue = new LinkedList<String>();
 		String[] newAPI = ServiceManager.getServiceNames(SERVICE);
-		return newAPI;
+		if(newAPI != null)
+			Collections.addAll(returnValue, newAPI);
+		return returnValue.toArray(new String[returnValue.size()]);
 	} //}}}
 
 	//}}}
@@ -390,9 +355,8 @@ public class VFSManager
 	} //}}}
 
 	//{{{ SendVFSUpdatesSafely class
-	private static class SendVFSUpdatesSafely implements Runnable
+	static class SendVFSUpdatesSafely implements Runnable
 	{
-		@Override
 		public void run()
 		{
 			synchronized(vfsUpdateLock)
@@ -402,8 +366,11 @@ public class VFSManager
 				// unless the vfs update for a parent arrives
 				// before any updates for the children. sorting
 				// the list alphanumerically guarantees this.
-				vfsUpdates.sort(new StandardUtilities.StringCompare<>());
-				vfsUpdates.forEach(EditBus::send);
+				Collections.sort(vfsUpdates,
+					new StandardUtilities.StringCompare<VFSUpdate>()
+				);
+				for (VFSUpdate vfsUpdate : vfsUpdates)
+					EditBus.send(vfsUpdate);
 
 				vfsUpdates.clear();
 			}
@@ -413,8 +380,8 @@ public class VFSManager
 	//{{{ Private members
 
 	//{{{ Static variables
-	private static final VFS fileVFS;
-	private static final VFS urlVFS;
+	private static VFS fileVFS;
+	private static VFS urlVFS;
 	private static boolean error;
 	private static final Object errorLock = new Object();
 	private static final Vector<ErrorListDialog.ErrorEntry> errors;
@@ -422,44 +389,47 @@ public class VFSManager
 	private static final List<VFSUpdate> vfsUpdates;
 	// An indicator of whether ErrorDisplayer is active
 	// Should be accessed with synchronized(errorLock)
-	private static boolean errorDisplayerActive;
+	private static boolean errorDisplayerActive = false;
 	//}}}
 
 	//{{{ Class initializer
 	static
 	{
-		errors = new Vector<>();
+		errors = new Vector<ErrorListDialog.ErrorEntry>();
 		fileVFS = new FileVFS();
 		urlVFS = new UrlVFS();
-		vfsUpdates = new ArrayList<>(10);
+		vfsUpdates = new ArrayList<VFSUpdate>(10);
 	} //}}}
 
 	//{{{ ErrorDisplayer class
 	private static class ErrorDisplayer implements Runnable
 	{
-		private final Frame frame;
+		private Frame frame;
 
-		ErrorDisplayer(Frame frame)
+		public ErrorDisplayer(Frame frame)
 		{
 			this.frame = frame;
 		}
 
-		private static void showDialog(final Frame frame,
+		private void showDialog(final Frame frame,
 			final Vector<ErrorListDialog.ErrorEntry> errors)
 		{
 			try
 			{
-				EventQueue.invokeAndWait(() ->
-				{
-					String caption = jEdit.getProperty(
-						"ioerror.caption" + (errors.size() == 1
-						? "-1" : ""),new Integer[] {errors.size()});
-					new ErrorListDialog(
-						frame.isShowing()
-						? frame
-						: jEdit.getFirstView(),
-						jEdit.getProperty("ioerror.title"),
-						caption,errors,false);
+				EventQueue.invokeAndWait(new Runnable() {
+					public void run()
+					{
+						String caption = jEdit.getProperty(
+							"ioerror.caption" + (errors.size() == 1
+							? "-1" : ""),new Integer[] {
+							Integer.valueOf(errors.size())});
+						new ErrorListDialog(
+							frame.isShowing()
+							? frame
+							: jEdit.getFirstView(),
+							jEdit.getProperty("ioerror.title"),
+							caption,errors,false);
+					}
 				});
 			}
 			catch (InterruptedException ie)
@@ -473,7 +443,6 @@ public class VFSManager
 			}
 		}
 
-		@Override
 		public void run()
 		{
 			synchronized(errorLock)
@@ -490,7 +459,7 @@ public class VFSManager
 
 				synchronized(errorLock)
 				{
-					if (errors.isEmpty()) {
+					if (errors.size() == 0) {
 						errorDisplayerActive = false;
 						break;
 					}
@@ -528,7 +497,7 @@ public class VFSManager
 				Vector<ErrorListDialog.ErrorEntry> errorsCopy;
 				synchronized(errorLock)
 				{
-					errorsCopy = new Vector<>(errors);
+					errorsCopy = new Vector<ErrorListDialog.ErrorEntry>(errors);
 					errors.clear();
 					error = false;
 				}

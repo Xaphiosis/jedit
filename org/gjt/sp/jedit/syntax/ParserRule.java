@@ -32,7 +32,7 @@ import java.util.regex.PatternSyntaxException;
 /**
  * A parser rule.
  * @author mike dillon, Slava Pestov
- * @version $Id: ParserRule.java 25244 2020-04-15 15:14:49Z kpouer $
+ * @version $Id: ParserRule.java 21831 2012-06-18 22:54:17Z ezust $
  */
 public class ParserRule
 {
@@ -347,7 +347,8 @@ public class ParserRule
 		this.delegate = delegate;
 		this.token = token;
 		this.matchType = matchType;
-		escapeRule = escape != null && !escape.isEmpty() ? createEscapeRule(escape) : null;
+		this.escapeRule = (escape != null && escape.length() > 0) ?
+					createEscapeRule(escape) : null;
 
 		if(this.delegate == null)
 		{
@@ -366,7 +367,7 @@ public class ParserRule
 	{
 		this.action = action;
 		this.upHashChar = null;
-		Set<Character> hashCharsSet = new HashSet<>();
+		Set<Character> hashCharsSet = new HashSet<Character>();
 		for (char c : hashChars)
 		{
 			hashCharsSet.add(Character.toUpperCase(c));
@@ -387,7 +388,8 @@ public class ParserRule
 		this.delegate = delegate;
 		this.token = token;
 		this.matchType = matchType;
-		this.escapeRule = escape != null && !escape.isEmpty() ? createEscapeRule(escape) : null;
+		this.escapeRule = (escape != null && escape.length() > 0) ?
+					createEscapeRule(escape) : null;
 
 		if(this.delegate == null)
 		{

@@ -8,33 +8,33 @@ import java.beans.PropertyChangeListener;
  * Currently used by @ref infoviewer.InfoViewerPlugin and @ref HelpViewer 
  * 
  * @since Jedit 4.2pre5
- * @version $Id: HelpViewerInterface.java 25243 2020-04-15 14:51:21Z kpouer $
+ * @version $Id: HelpViewerInterface.java 12504 2008-04-22 23:12:43Z ezust $
  */
 public interface HelpViewerInterface 
 {
+	
 	/**
 	 * 
 	 * @param url
 	 * @param addToHistory 
 	 * @param scrollPos desired vertical scrollbar position after we go there
 	 */
-	void gotoURL(String url, boolean addToHistory, int scrollPos);
+	public void gotoURL(String url, boolean addToHistory, int scrollPos);
 	
-	String getBaseURL();
+	public String getBaseURL();
 	
-	void addPropertyChangeListener(PropertyChangeListener l);
+	public void addPropertyChangeListener(PropertyChangeListener l);
 	
 	/**
 	 * Called when the helpviewer is closed
 	 */
-	void dispose();
-
+	public void dispose();
 	/**
 	 * @return the root pane of this help viewer
 	 */
-	Component getComponent();
-	String getShortURL();
+	public Component getComponent();
+	public String getShortURL();
 	
-	void queueTOCReload();
-	void setTitle(String newTitle);
+	public void queueTOCReload();
+	public void setTitle(String newTitle);
 }

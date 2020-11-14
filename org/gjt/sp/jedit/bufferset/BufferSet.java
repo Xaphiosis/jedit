@@ -50,9 +50,9 @@ public class BufferSet
 	public BufferSet(BufferSet source)
 	{
 		if (source == null)
-			buffers = Collections.synchronizedList(new ArrayList<>());
+			buffers = Collections.synchronizedList(new ArrayList<Buffer>());
 		else
-			buffers = Collections.synchronizedList(new ArrayList<>(source.buffers));
+			buffers = Collections.synchronizedList(new ArrayList<Buffer>(source.buffers));
 		listeners = new EventListenerList();
 
 		if (jEdit.getBooleanProperty("sortBuffers"))
@@ -107,7 +107,7 @@ public class BufferSet
 				if (buffers.contains(buffer))
 					return;
 				buffers.add(buffer);
-				buffers.sort(sorter);
+				Collections.sort(buffers, sorter);
 				position = buffers.indexOf(buffer);
 			}
 			else
@@ -266,7 +266,7 @@ public class BufferSet
 		if (sorter == null)
 			return;
 		// do the sort
-		buffers.sort(sorter);
+		Collections.sort(buffers, sorter);
 
 		// notify the listeners so they can repaint themselves
 		BufferSetListener[] listeners = this.listeners.getListeners(BufferSetListener.class);
@@ -362,9 +362,9 @@ public class BufferSet
 	//{{{ NameSorter class
 	public static class NameSorter implements Comparator<Buffer>
 	{
-		@Override
 		public int compare(Buffer o1, Buffer o2)
 		{
+
 			int ret = StandardUtilities.compareStrings(o1.getName(), o2.getName(), true);
 			if (ret == 0)
 			{
@@ -377,7 +377,6 @@ public class BufferSet
 	//{{{ PathSorter class
 	public static class PathSorter implements Comparator<Buffer>
 	{
-		@Override
 		public int compare(Buffer o1, Buffer o2)
 		{
 			return StandardUtilities.compareStrings(o1.getPath(), o2.getPath(), true);

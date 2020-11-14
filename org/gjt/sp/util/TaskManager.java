@@ -45,8 +45,8 @@ public class TaskManager
 
 	private TaskManager()
 	{
-		listeners = new CopyOnWriteArrayList<>();
-		tasks = Collections.synchronizedList(new ArrayList<>());
+		listeners = new CopyOnWriteArrayList<TaskListener>();
+		tasks = Collections.synchronizedList(new ArrayList<Task>());
 		ioWaitLock = new Object();
 	}
 
@@ -88,7 +88,10 @@ public class TaskManager
 
 	public void removeTaskListener(TaskListener listener)
 	{
-		listeners.remove(listener);
+		if (listeners.contains(listener))
+		{
+			listeners.remove(listener);
+		}
 	}
 
 	void fireWaiting(Task task)
@@ -135,19 +138,28 @@ public class TaskManager
 	void fireStatusUpdated(Task task)
 	{
 		List<TaskListener> listeners = this.listeners;
-		listeners.forEach(listener -> listener.statusUpdated(task));
+		for (TaskListener listener : listeners)
+		{
+			listener.statusUpdated(task);
+		}
 	}
 
 	void fireValueUpdated(Task task)
 	{
 		List<TaskListener> listeners = this.listeners;
-		listeners.forEach(listener -> listener.valueUpdated(task));
+		for (TaskListener listener : listeners)
+		{
+			listener.valueUpdated(task);
+		}
 	}
 
 	void fireMaximumUpdated(Task task)
 	{
 		List<TaskListener> listeners = this.listeners;
-		listeners.forEach(listener -> listener.maximumUpdated(task));
+		for (TaskListener listener : listeners)
+		{
+			listener.maximumUpdated(task);
+		}
 	}
 
 	/**
@@ -160,7 +172,10 @@ public class TaskManager
 	{
 		synchronized (tasks)
 		{
-			tasks.forEach(visitor::visit);
+			for (Task task : tasks)
+			{
+				visitor.visit(task);
+			}
 		}
 	}
 
@@ -176,8 +191,7 @@ public class TaskManager
 				try
 				{
 					ioWaitLock.wait();
-				}
-				catch (InterruptedException e)
+				} catch (InterruptedException e)
 				{
 					Log.log(Log.ERROR,this,e);
 				}
@@ -194,9 +208,11 @@ public class TaskManager
 	{
 		synchronized (tasks)
 		{
-			tasks.stream()
-				.filter(task -> task.getClass().equals(clazz))
-				.forEach(Task::cancel);
+			for(Task task: tasks)
+			{
+				if(task.getClass().equals(clazz))
+					task.cancel();
+			}
 		}
 	}
 
@@ -212,7 +228,6 @@ public class TaskManager
 		return new MyTask(runnable);
 	}
 
-	@FunctionalInterface
 	public interface TaskVisitor
 	{
 		void visit(Task task);
@@ -227,7 +242,6 @@ public class TaskManager
 			this.runnable = runnable;
 		}
 
-		@Override
 		public String getStatus()
 		{
 			return runnable.toString();

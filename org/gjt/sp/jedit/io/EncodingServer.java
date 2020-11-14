@@ -31,6 +31,7 @@ import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Arrays;
 
 import org.gjt.sp.jedit.jEdit;
@@ -59,13 +60,17 @@ public class EncodingServer
 		{
 			return new CharsetEncoding(name);
 		}
-		catch (IllegalCharsetNameException | UnsupportedCharsetException e)
+		catch (IllegalCharsetNameException e)
+		{
+			// just failed
+		}
+		catch (UnsupportedCharsetException e)
 		{
 			// just failed
 		}
 
 		Object namedService = ServiceManager.getService(serviceClass, name);
-		if (namedService instanceof Encoding)
+		if (namedService != null && namedService instanceof Encoding)
 		{
 			return (Encoding)namedService;
 		}
@@ -82,7 +87,7 @@ public class EncodingServer
 	 */
 	public static Set<String> getAvailableNames()
 	{
-		Set<String> set = new HashSet<>();
+		Set<String> set = new HashSet<String>();
 		set.addAll(Charset.availableCharsets().keySet());
 		set.addAll(Arrays.asList(ServiceManager.getServiceNames(serviceClass)));
 		return set;
@@ -95,7 +100,15 @@ public class EncodingServer
 	public static Set<String> getSelectedNames()
 	{
 		Set<String> set = getAvailableNames();
-		set.removeIf(name -> jEdit.getBooleanProperty("encoding.opt-out." + name, false));
+		Iterator<String> i = set.iterator();
+		while (i.hasNext())
+		{
+			String name = i.next();
+			if (jEdit.getBooleanProperty("encoding.opt-out." + name, false))
+			{
+				i.remove();
+			}
+		}
 		return set;
 	} //}}}
 

@@ -53,10 +53,9 @@ import org.gjt.sp.jedit.textarea.TextAreaMouseHandler;
 *
 * @author Slava Pestov
 * @author Eric Le Lay
-* @version $Id: GenericGUIUtilities.java 25107 2020-03-31 22:37:06Z kpouer $
+* @version $Id: GenericGUIUtilities.java 24938 2019-08-18 15:30:20Z vampire0 $
 */
-public class GenericGUIUtilities
-{
+public class GenericGUIUtilities {
 	//{{{ prettifyMenuLabel() method
 	/**
 	 * `Prettifies' a menu item label by removing the `$' sign. This
@@ -157,7 +156,14 @@ public class GenericGUIUtilities
 			@Override
 			public void windowGainedFocus(WindowEvent evt)
 			{
-				EventQueue.invokeLater(comp::requestFocusInWindow);
+				EventQueue.invokeLater(new Runnable()
+				{
+						@Override
+						public void run()
+						{
+							comp.requestFocusInWindow();
+						}
+				});
 				win.removeWindowFocusListener(this);
 			}
 		});

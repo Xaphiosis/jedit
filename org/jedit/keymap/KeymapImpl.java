@@ -22,7 +22,14 @@
 package org.jedit.keymap;
 
 //{{{ Imports
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import org.gjt.sp.jedit.MiscUtilities;
@@ -61,13 +68,19 @@ class KeymapImpl implements Keymap
 	private void loadProperties()
 	{
 		props = new Properties();
-		try (InputStream in = new BufferedInputStream(new FileInputStream(file)))
+		InputStream in = null;
+		try
 		{
+			in = new BufferedInputStream(new FileInputStream(file));
 			props.load(in);
 		}
 		catch (IOException e)
 		{
 			Log.log(Log.ERROR, this, "Unable to load properties", e);
+		}
+		finally
+		{
+			IOUtilities.closeQuietly((Closeable)in);
 		}
 	} //}}}
 

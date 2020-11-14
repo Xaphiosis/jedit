@@ -21,13 +21,10 @@ package org.gjt.sp.jedit.msg;
 
 import org.gjt.sp.jedit.*;
 
-import javax.annotation.Nonnull;
-import java.util.Objects;
-
 /**
  * Message sent when a file or directory changes.
  * @author Slava Pestov
- * @version $Id: VFSUpdate.java 25221 2020-04-12 16:00:17Z kpouer $
+ * @version $Id: VFSUpdate.java 12504 2008-04-22 23:12:43Z ezust $
  *
  * @since jEdit 2.6pre4
  */
@@ -37,10 +34,13 @@ public class VFSUpdate extends EBMessage
 	 * Creates a VFS update message.
 	 * @param path The path in question
 	 */
-	public VFSUpdate(@Nonnull String path)
+	public VFSUpdate(String path)
 	{
 		super(null);
-		Objects.requireNonNull(path);
+
+		if(path == null)
+			throw new NullPointerException("Path must be non-null");
+
 		this.path = path;
 	}
 
@@ -52,12 +52,11 @@ public class VFSUpdate extends EBMessage
 		return path;
 	}
 
-	@Override
 	public String paramString()
 	{
 		return "path=" + path + "," + super.paramString();
 	}
 
 	// private members
-	private final String path;
+	private String path;
 }

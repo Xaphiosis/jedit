@@ -42,7 +42,6 @@ public class GlobVFSFileFilter implements VFSFileFilter
 		this.glob = glob;
 	}
 
-	@Override
 	public boolean accept(VFSFile file)
 	{
 		if (file.getType() == VFSFile.DIRECTORY
@@ -56,7 +55,6 @@ public class GlobVFSFileFilter implements VFSFileFilter
 		}
 	}
 
-	@Override
 	public boolean accept(String url)
 	{
 		if (pattern == null)
@@ -67,7 +65,6 @@ public class GlobVFSFileFilter implements VFSFileFilter
 		return pattern.matcher(url).matches();
 	}
 
-	@Override
 	public String getDescription()
 	{
 		return jEdit.getProperty("vfs.browser.file_filter.glob");

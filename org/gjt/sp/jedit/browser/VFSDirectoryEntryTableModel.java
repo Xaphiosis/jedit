@@ -36,7 +36,7 @@ import org.gjt.sp.util.StandardUtilities;
 
 /**
  * @author Slava Pestov
- * @version $Id: VFSDirectoryEntryTableModel.java 25188 2020-04-11 16:50:00Z kpouer $
+ * @version $Id: VFSDirectoryEntryTableModel.java 24774 2017-10-29 23:31:27Z ezust $
  * @since jEdit 4.2pre1
  */
 public class VFSDirectoryEntryTableModel extends AbstractTableModel
@@ -44,7 +44,7 @@ public class VFSDirectoryEntryTableModel extends AbstractTableModel
 	//{{{ VFSDirectoryEntryTableModel constructor
 	public VFSDirectoryEntryTableModel()
 	{
-		extAttrs = new ArrayList<>();
+		extAttrs = new ArrayList<ExtendedAttribute>();
 		sortColumnIndex = 0;
 		ascending = true;
 	} //}}}
@@ -164,14 +164,12 @@ public class VFSDirectoryEntryTableModel extends AbstractTableModel
 	} //}}}
 
 	//{{{ getColumnCount() method
-	@Override
 	public int getColumnCount()
 	{
 		return 1 + extAttrs.size();
 	} //}}}
 
 	//{{{ getRowCount() method
-	@Override
 	public int getRowCount()
 	{
 		if(files == null)
@@ -181,7 +179,6 @@ public class VFSDirectoryEntryTableModel extends AbstractTableModel
 	} //}}}
 
 	//{{{ getColumnName() method
-	@Override
 	public String getColumnName(int col)
 	{
 		if(col == 0)
@@ -191,14 +188,12 @@ public class VFSDirectoryEntryTableModel extends AbstractTableModel
 	} //}}}
 
 	//{{{ getColumnClass() method
-	@Override
-	public Class<Entry> getColumnClass(int col)
+	public Class getColumnClass(int col)
 	{
 		return Entry.class;
 	} //}}}
 
 	//{{{ getValueAt() method
-	@Override
 	public Object getValueAt(int row, int col)
 	{
 		if(files == null)
@@ -309,7 +304,7 @@ public class VFSDirectoryEntryTableModel extends AbstractTableModel
 	//}}}
 
 	//{{{ Private members
-	private final List<ExtendedAttribute> extAttrs;
+	private List<ExtendedAttribute> extAttrs;
 	private int sortColumnIndex;
 	private boolean ascending;
 
@@ -422,10 +417,8 @@ vfs_attr_loop:	for(int i = 0; i < attrs.length; i++)
 	 */
 	static class EntryCompare implements Comparator<Entry>
 	{
-		private final boolean sortIgnoreCase;
-		private final boolean sortMixFilesAndDirs;
-		private final boolean sortAscending;
-		private final String sortAttribute;
+		private boolean sortIgnoreCase, sortMixFilesAndDirs, sortAscending;
+		private String sortAttribute;
 		/**
 		 * Creates a new <code>EntryCompare</code>
 		 * Expanded branches are sorted, too, but keep with their parent entries
@@ -442,7 +435,6 @@ vfs_attr_loop:	for(int i = 0; i < attrs.length; i++)
 			this.sortAttribute = sortBy;
 		}
 
-		@Override
 		public int compare(Entry entry1, Entry entry2)
 		{
 			// we want to compare sibling ancestors of the entries
@@ -471,10 +463,16 @@ vfs_attr_loop:	for(int i = 0; i < attrs.length; i++)
 
 			// if the modified attribute is present, then we have a LocalFile
 			if(sortAttribute == VFS.EA_MODIFIED)
-				result = Long.compare(file1.getModified(), file2.getModified());
+				result = (
+					(Long)file1.getModified())
+					.compareTo(
+					(Long)file2.getModified());
 			// sort by size
 			else if(sortAttribute == VFS.EA_SIZE)
-				result = Long.compare(file1.getLength(), file2.getLength());
+				result = (
+					(Long)file1.getLength())
+					.compareTo(
+					(Long)file2.getLength());
 			// sort by type (= extension)
 			else if(sortAttribute == VFS.EA_TYPE)
 				result = StandardUtilities.compareStrings(

@@ -22,11 +22,11 @@
 package org.gjt.sp.util;
 
 //{{{ imports
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 //}}}
 
+// {{{ StringList class
 /**
  * A List&lt;String&gt; with some perl-like convenience functions (split/join primarily),
  * and easy conversion to/from arrays.
@@ -34,10 +34,12 @@ import java.util.Collection;
  */
 public class StringList extends ArrayList<String>
 {
+
  	// {{{ Constructors
  	public StringList()
 	{
 	}
+
 
 	public StringList(Object[] array)
 	{
@@ -59,7 +61,7 @@ public class StringList extends ArrayList<String>
 	 */
 	public static StringList split(String orig, Object delim)
 	{
-		if ((orig == null) || (orig.isEmpty()))
+		if ((orig == null) || (orig.length() == 0))
 			return new StringList();
 		return new StringList(orig.split(delim.toString()));
 	} // }}}
@@ -78,7 +80,6 @@ public class StringList extends ArrayList<String>
 
 	// {{{ toArray()
 	/** @return an array of String */
-	@Nonnull
 	@Override
 	public String[] toArray() 
 	{
@@ -93,15 +94,12 @@ public class StringList extends ArrayList<String>
 	/**
 	 * The reverse of split - given a collection, takes each element
 	 * and places it in a string, joined by a delimiter.
-	 * @deprecated use {@link String#join(CharSequence, CharSequence...)} or
-	 * {@link String#join(CharSequence, Iterable)}, thos methods are available
-	 * since Java 8 and are faster in all situations
 	 */
-	@Deprecated
 	public static String join(Collection<String> c, String delim)
 	{
 		StringList sl = new StringList();
-		sl.addAll(c);
+		for (String s: c)
+			sl.add(s);
 		return sl.join(delim);
 	}
 
@@ -116,6 +114,7 @@ public class StringList extends ArrayList<String>
 	{
 		return new StringList(arr).join(delim);
 	}
+
 
 	/**
 	 * Non-static version, that joins "this" StringList.
@@ -134,11 +133,21 @@ public class StringList extends ArrayList<String>
 			StringBuilder retval = new StringBuilder();
 			retval.append(get(0));
 			for (int i = 1; i < s; ++i)
-				retval.append(delim).append(get(i));
+				retval.append(delim + get(i));
 			return retval.toString();
 		}
 
 	}  // }}}
 
+	// {{{ main()
+	public static void main(String args[])
+	{
+		String teststr = "a,b,c,d,e,f";
+		StringList.split(teststr, ",");
+		//String joinstr = sl.join(",");
+		// assert(teststr.equals(joinstr));
+		System.out.println("Test Passed");
+
+	}// }}}
 	private static final long serialVersionUID = -6408080298368668262L;
-}
+} // }}}

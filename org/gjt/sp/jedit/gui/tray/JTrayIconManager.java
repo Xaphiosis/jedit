@@ -22,6 +22,7 @@
 package org.gjt.sp.jedit.gui.tray;
 
 //{{{ Imports
+import org.gjt.sp.jedit.EBComponent;
 import org.gjt.sp.jedit.EditBus;
 import org.gjt.sp.jedit.OperatingSystem;
 import org.gjt.sp.jedit.ServiceManager;
@@ -233,7 +234,10 @@ public class JTrayIconManager
 				trayIcon = null;
 				return;
 			}
-			EditBus.addToBus(trayIcon);
+			if (trayIcon instanceof EBComponent)
+			{
+				EditBus.addToBus(trayIcon);
+			}
 		}
 	} //}}}
 
@@ -243,7 +247,10 @@ public class JTrayIconManager
 		if (trayIcon != null)
 		{
 			SystemTray.getSystemTray().remove(trayIcon);
-			EditBus.removeFromBus(trayIcon);
+			if (trayIcon instanceof EBComponent)
+			{
+				EditBus.removeFromBus(trayIcon);
+			}
 			trayIcon.setImage(originalTrayIconImage);
 			trayIcon = null;
 		}

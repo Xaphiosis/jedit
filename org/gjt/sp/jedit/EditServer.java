@@ -26,6 +26,8 @@ package org.gjt.sp.jedit;
 import org.gjt.sp.jedit.bsh.NameSpace;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 import java.util.Random;
@@ -56,7 +58,7 @@ import org.gjt.sp.util.Log;
  * complicated stuff can be done too.
  *
  * @author Slava Pestov
- * @version $Id: EditServer.java 25137 2020-04-06 15:24:02Z kpouer $
+ * @version $Id: EditServer.java 23981 2015-08-10 14:56:24Z daleanson $
  */
 public class EditServer extends Thread
 {
@@ -120,17 +122,17 @@ public class EditServer extends Thread
 	} //}}}
 
 	//{{{ run() method
-	@Override
 	public void run()
 	{
-		while (true)
+		for(;;)
 		{
 			if(abort)
 				return;
 
+			Socket client = null;
 			try
 			{
-				Socket client = socket.accept();
+				client = socket.accept();
 
 				// Stop script kiddies from opening the edit
 				// server port and just leaving it open, as a
@@ -297,7 +299,7 @@ public class EditServer extends Thread
 	//{{{ Private members
 
 	//{{{ Instance variables
-	private final String portFile;
+	private String portFile;
 	private ServerSocket socket;
 	private int authKey;
 	private boolean ok;
@@ -332,7 +334,6 @@ public class EditServer extends Thread
 
 			SwingUtilities.invokeLater(new Runnable()
 			{
-				@Override
 				public void run()
 				{
 					try

@@ -43,8 +43,7 @@ import org.gjt.sp.jedit.jEdit;
 public class FoldWidgetFactory implements StatusWidgetFactory
 {
 	//{{{ getWidget() method
-	@Override
-	public Widget getWidget(View view)
+	public Widget getWidget(View view) 
 	{
 		Widget fold = new FoldWidget(view);
 		return fold;
@@ -55,8 +54,7 @@ public class FoldWidgetFactory implements StatusWidgetFactory
 	{
 		private final JLabel fold;
 		private final View view;
-
-		FoldWidget(final View view)
+		public FoldWidget(final View view) 
 		{
 			fold = new ToolTipLabel();
 			this.view = view;
@@ -72,18 +70,20 @@ public class FoldWidgetFactory implements StatusWidgetFactory
 					      });
 		}
 		
-		@Override
-		public JComponent getComponent()
+		public JComponent getComponent() 
 		{
 			return fold;
 		}
 		
-		@Override
-		public void update()
+		public void update() 
 		{
 			Buffer buffer = view.getBuffer();
 			if (buffer.isLoaded())
 				fold.setText((String)view.getBuffer().getProperty("folding"));
+		}
+		
+		public void propertiesChanged()
+		{
 		}
 	} //}}}
 }

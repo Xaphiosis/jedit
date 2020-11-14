@@ -29,11 +29,17 @@ import org.gjt.sp.jedit.textarea.Selection.Rect;
 public class ColumnBlock extends Rect implements Node
 {
 	private Node parent;
-	private Vector<Node> children = new Vector<>();
-	private Vector<ColumnBlockLine> lines = new Vector<>();
+
+	private Vector<Node> children = new Vector<Node>();
+
+	private Vector<ColumnBlockLine> lines = new Vector<ColumnBlockLine>();
+
 	float columnBlockWidth;
+
 	private boolean tabSizesDirty = true;
+
 	private JEditBuffer buffer;
+
 	private boolean isDirty;
 
 	@Override
@@ -282,7 +288,7 @@ public class ColumnBlock extends Rect implements Node
 					return null;
 				}
 			}
-			else/* if (found < 0)*/
+			else if (found < 0)
 			{
 				if (currentSearchIndex > 0)
 				{

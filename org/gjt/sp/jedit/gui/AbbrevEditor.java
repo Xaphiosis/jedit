@@ -27,8 +27,6 @@ import javax.swing.border.*;
 import javax.swing.*;
 import java.awt.*;
 import org.gjt.sp.jedit.*;
-
-import static java.awt.GridBagConstraints.*;
 //}}}
 
 /** Panel for editing abbreviations */
@@ -41,8 +39,8 @@ public class AbbrevEditor extends JPanel
 		setLayout(layout);
 
 		GridBagConstraints cons = new GridBagConstraints();
-		cons.anchor = WEST;
-		cons.fill = BOTH;
+		cons.anchor = cons.WEST;
+		cons.fill = cons.BOTH;
 		cons.weightx = 0.0f;
 		cons.gridx = 1;
 		cons.gridy = 1;
@@ -130,7 +128,7 @@ public class AbbrevEditor extends JPanel
 			}
 		}
 
-		if(!afterCaretText.isEmpty())
+		if(afterCaretText.length() != 0)
 		{
 			buf.append("\\|");
 
@@ -228,8 +226,7 @@ public class AbbrevEditor extends JPanel
 	} //}}}
 
 	//{{{ Private members
-	private final JTextField abbrev;
-	private final JTextArea beforeCaret;
-	private final JTextArea afterCaret;
+	private JTextField abbrev;
+	private JTextArea beforeCaret, afterCaret;
 	//}}}
 }

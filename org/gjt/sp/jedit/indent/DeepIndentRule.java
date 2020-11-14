@@ -37,7 +37,7 @@ import javax.swing.text.Segment;
  * Deep indent rule.
  *
  * @author Matthieu Casanova
- * @version $Id: DeepIndentRule.java 25222 2020-04-12 16:07:38Z kpouer $
+ * @version $Id: DeepIndentRule.java 24413 2016-06-19 11:07:31Z kerik-sf $
  */
 public class DeepIndentRule implements IndentRule
 {
@@ -52,7 +52,6 @@ public class DeepIndentRule implements IndentRule
 	} //}}}
 
 	//{{{ apply() method
-	@Override
 	public void apply(JEditBuffer buffer, int thisLineIndex,
 			  int prevLineIndex, int prevPrevLineIndex,
 			  List<IndentAction> indentActions)
@@ -152,21 +151,20 @@ public class DeepIndentRule implements IndentRule
 		int openOffset;
 		int closeOffset;
 
-		private final int searchPos;
-		private final Stack<Integer> open;
-		private final Stack<Integer> close;
+		private int searchPos;
+		private Stack<Integer> open;
+		private Stack<Integer> close;
 
 		Parens(JEditBuffer b, int line, int pos)
 		{
-			searchPos = pos;
-			open = new Stack<>();
-			close = new Stack<>();
+			this.searchPos = pos;
+			this.open = new Stack<Integer>();
+			this.close = new Stack<Integer>();
 			b.markTokens(line, this);
 			openOffset = (open.isEmpty()) ? -1 : open.pop();
 			closeOffset = (close.isEmpty()) ? -1 : close.pop();
 		}
 
-		@Override
 		public void handleToken(Segment seg,
 					byte id,
 					int offset,
@@ -206,7 +204,6 @@ public class DeepIndentRule implements IndentRule
 			}
 		}
 
-		@Override
 		public void setLineContext(TokenMarker.LineContext lineContext)
 		{
 			/* Do nothing. */

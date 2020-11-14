@@ -29,7 +29,11 @@ import java.awt.Point;
 
 import java.awt.event.KeyEvent;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
@@ -54,9 +58,6 @@ import org.gjt.sp.util.StandardUtilities;
  */
 public class CompleteWord extends CompletionPopup
 {
-
-	public static final Completion[] EMPTY_COMPLETION_ARRAY = new Completion[0];
-
 	//{{{ completeWord() method
 	public static void completeWord(View view)
 	{
@@ -134,6 +135,7 @@ public class CompleteWord extends CompletionPopup
 		super(view, location);
 
 		this.noWordSep = noWordSep;
+		this.view = view;
 		this.textArea = view.getTextArea();
 		this.buffer = view.getBuffer();
 		this.word = word;
@@ -190,8 +192,15 @@ public class CompleteWord extends CompletionPopup
 	//{{{ getVisibleBuffers() method
 	private static Collection<Buffer> getVisibleBuffers()
 	{
-		final Collection<Buffer> buffers = new HashSet<>();
-		jEdit.getEditPaneManager().forEach(editPane -> buffers.add(editPane.getBuffer()));
+		final Set<Buffer> buffers = new HashSet<Buffer>();
+		jEdit.visit(new JEditVisitorAdapter()
+			{
+				@Override
+				public void visit(EditPane editPane)
+				{
+					buffers.add(editPane.getBuffer());
+				}
+			});
 		return buffers;
 	} //}}}
 
@@ -211,7 +220,7 @@ public class CompleteWord extends CompletionPopup
 
 		final Collection<Buffer> sourceBuffers =
 			jEdit.getBooleanProperty("completeFromAllBuffers") ?
-				jEdit.getBufferManager().getBuffers() :
+				Arrays.asList(jEdit.getBuffers()) :
 				getVisibleBuffers();
 
 		for (Buffer b : sourceBuffers)
@@ -229,7 +238,8 @@ public class CompleteWord extends CompletionPopup
 					offset,completions);
 		}
 
-		Completion[] completionArray = completions.toArray(EMPTY_COMPLETION_ARRAY);
+		Completion[] completionArray = completions
+			.toArray(new Completion[completions.size()]);
 
 		return completionArray;
 	} //}}}
@@ -237,7 +247,7 @@ public class CompleteWord extends CompletionPopup
 	//{{{ getCompletions() method
 	private static void getCompletions(Buffer buffer, String word,
 		KeywordMap keywordMap, String noWordSep, int caret,
-		Collection<Completion> completions)
+		Set<Completion> completions)
 	{
 		int wordLen = word.length();
 
@@ -311,10 +321,11 @@ public class CompleteWord extends CompletionPopup
 	} //}}}
 
 	//{{{ Instance variables
-	private final JEditTextArea textArea;
-	private final Buffer buffer;
+	private View view;
+	private JEditTextArea textArea;
+	private Buffer buffer;
 	private String word;
-	private final String noWordSep;
+	private String noWordSep;
 	//}}}
 
 	//{{{ Completion class
@@ -354,32 +365,28 @@ public class CompleteWord extends CompletionPopup
 		private final DefaultListCellRenderer renderer;
 		private final Completion[] completions;
 
-		Words(Completion[] completions)
+		public Words(Completion[] completions)
 		{
 			this.renderer = new DefaultListCellRenderer();
 			this.completions = completions;
 		}
 
-		@Override
 		public int getSize()
 		{
 			return completions.length;
 		}
 
-		@Override
 		public boolean isValid()
 		{
 			return true;
 		}
 
-		@Override
 		public void complete(int index)
 		{
 			String insertion = completions[index].toString().substring(word.length());
 			textArea.replaceSelection(insertion);
 		}
 
-		@Override
 		public Component getCellRenderer(JList list, int index,
 			boolean isSelected, boolean cellHasFocus)
 		{
@@ -404,7 +411,6 @@ public class CompleteWord extends CompletionPopup
 			return renderer;
 		}
 
-		@Override
 		public String getDescription(int index)
 		{
 			return null;
@@ -431,7 +437,6 @@ public class CompleteWord extends CompletionPopup
 	//}}}
 
 	//{{{ keyPressed() medhod
-	@Override
 	protected void keyPressed(KeyEvent e)
 	{
 		if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE)
@@ -451,7 +456,6 @@ public class CompleteWord extends CompletionPopup
 	} //}}}
 
 	//{{{ keyTyped() medhod
-	@Override
 	protected void keyTyped(KeyEvent e)
 	{
 		char ch = e.getKeyChar();

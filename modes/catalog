@@ -226,6 +226,7 @@
 <MODE NAME="gsp"			FILE="jsp.xml"
         FILE_NAME_GLOB="*.{gsp}" />
 
+
 <MODE NAME="haskell"		FILE="haskell.xml"
         FILE_NAME_GLOB="*.hs" />
 
@@ -419,9 +420,6 @@
 <MODE NAME="omnimark"		FILE="omnimark.xml"
         FILE_NAME_GLOB="*.x{om,in}" />
 
-<MODE NAME="opensips"		FILE="opensips.xml"
-        FILE_NAME_GLOB="opensips.cfg" />
-
 <MODE NAME="outline"		FILE="outline.xml"
         FILE_NAME_GLOB="*.{outline}" />
 
@@ -446,7 +444,7 @@
 <MODE NAME="plaintex"		FILE="plaintex.xml" />
 
 <MODE NAME="plantuml" FILE="plantuml.xml" 
-        FILE_NAME_GLOB="*.{plant,plantuml,pu,puml}"/>
+        FILE_NAME_GLOB="*.{plant,plantuml,pu}"/>
 
 <MODE NAME="PostgreSQL" FILE="pg-sql.xml"
               FILE_NAME_GLOB="*.{pg_sql,pg-sql}" />
@@ -581,7 +579,6 @@
         FILE_NAME_GLOB="*.{sgml,sgm,dtd}" />
 
 <MODE NAME="sip"		FILE="sip.xml" />
-<MODE NAME="sipp"		FILE="sipp.xml" />
 
 <MODE NAME="rcp" 		FILE="rcp.xml"
         FILE_NAME_GLOB="*.rcp" />
@@ -688,10 +685,7 @@
 <MODE NAME="vrml2"		FILE="vrml2.xml"
         FILE_NAME_GLOB="*.{wrl,wrz}"/>
 
-<MODE NAME="wellknowntext"		FILE="wellknowntext.xml"
-          FILE_NAME_GLOB="*.{wkt}"/>
-
-    <MODE NAME="xml"		FILE="xml.xml"
+<MODE NAME="xml"		FILE="xml.xml"
         FILE_NAME_GLOB="*.{xml,xhtml,xsd,qrc,ui,docbook}"
         FIRST_LINE_GLOB="&lt;\?xml*" />
 

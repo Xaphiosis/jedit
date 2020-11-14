@@ -50,7 +50,7 @@ import org.gjt.sp.util.Log;
  * @see TextArea
  *
  * @author Mike Dillon and Slava Pestov
- * @version $Id: Gutter.java 25033 2020-03-25 23:22:26Z kpouer $
+ * @version $Id: Gutter.java 24165 2015-11-28 21:49:32Z daleanson $
  */
 public class Gutter extends JComponent implements SwingConstants
 {
@@ -117,13 +117,11 @@ public class Gutter extends JComponent implements SwingConstants
 
 		bufferListener = new BufferAdapter()
 		{
-			@Override
 			public void bufferLoaded(JEditBuffer buffer)
 			{
 				updateLineNumberWidth();
 			}
 
-			@Override
 			public void contentInserted(JEditBuffer buffer, int startLine,
 					int offset, int numLines, int length)
 			{
@@ -131,7 +129,6 @@ public class Gutter extends JComponent implements SwingConstants
 					updateLineNumberWidth();
 			}
 
-			@Override
 			public void contentRemoved(JEditBuffer buffer, int startLine,
 					int offset, int numLines, int length) 
 			{
@@ -145,7 +142,6 @@ public class Gutter extends JComponent implements SwingConstants
 	} //}}}
 
 	//{{{ paintComponent() method
-	@Override
 	public void paintComponent(Graphics _gfx)
 	{
 		Graphics2D gfx = (Graphics2D)_gfx;
@@ -257,7 +253,6 @@ public class Gutter extends JComponent implements SwingConstants
 	 * Returns the tool tip to display at the specified location.
 	 * @param evt The mouse event
 	 */
-	@Override
 	public String getToolTipText(MouseEvent evt)
 	{
 		if(textArea.getBuffer().isLoading())
@@ -304,7 +299,6 @@ public class Gutter extends JComponent implements SwingConstants
 	 * inset of the border (if any) to avoid having to fetch it during every
 	 * repaint.
 	 */
-	@Override
 	public void setBorder(Border border)
 	{
 		super.setBorder(border);
@@ -395,7 +389,6 @@ public class Gutter extends JComponent implements SwingConstants
 	 * metrics for the font. This avoids having to get the font metrics
 	 * during every repaint.
 	 */
-	@Override
 	public void setFont(Font font)
 	{
 		super.setFont(font);
@@ -501,7 +494,6 @@ public class Gutter extends JComponent implements SwingConstants
 	 * Component.getPreferredSize() is overridden here to support the
 	 * collapsing behavior.
 	 */
-	@Override
 	public Dimension getPreferredSize()
 	{
 		if (! enabled)
@@ -513,7 +505,6 @@ public class Gutter extends JComponent implements SwingConstants
 	} //}}}
 
 	//{{{ getMinimumSize() method
-	@Override
 	public Dimension getMinimumSize()
 	{
 		return getPreferredSize();
@@ -688,13 +679,13 @@ public class Gutter extends JComponent implements SwingConstants
 
 	private boolean enabled;
 	private final TextArea textArea;
-	private final MouseHandler mouseHandler;
-	private final ExtensionManager extensionMgr;
+	private MouseHandler mouseHandler;
+	private ExtensionManager extensionMgr;
 
-	private final Dimension gutterSize = new Dimension(0,0);
-	private final Dimension collapsedSize = new Dimension(0,0);
+	private Dimension gutterSize = new Dimension(0,0);
+	private Dimension collapsedSize = new Dimension(0,0);
 	private int lineNumberWidth;
-	private final Dimension disabledSize = new Dimension(0,0);
+	private Dimension disabledSize = new Dimension(0,0);
 
 	private Color intervalHighlight;
 	private Color currentLineHighlight;
@@ -718,7 +709,7 @@ public class Gutter extends JComponent implements SwingConstants
 	
 	private FoldPainter foldPainter;
 	private JEditBuffer buffer;
-	private final BufferListener bufferListener;
+	private BufferListener bufferListener;
 	private int minLineNumberDigits;
 	private int selectionAreaWidth;
 	//}}}
@@ -900,7 +891,6 @@ public class Gutter extends JComponent implements SwingConstants
 		GutterPopupHandler selectionPopupHandler;
 
 		//{{{ mouseEntered() method
-		@Override
 		public void mouseEntered(MouseEvent e)
 		{
 			ToolTipManager ttm = ToolTipManager.sharedInstance();
@@ -911,7 +901,6 @@ public class Gutter extends JComponent implements SwingConstants
 		} //}}}
 
 		//{{{ mouseExited() method
-		@Override
 		public void mouseExited(MouseEvent evt)
 		{
 			ToolTipManager ttm = ToolTipManager.sharedInstance();
@@ -920,7 +909,6 @@ public class Gutter extends JComponent implements SwingConstants
 		} //}}}
 
 		//{{{ mousePressed() method
-		@Override
 		public void mousePressed(MouseEvent e)
 		{
 			textArea.requestFocus();
@@ -1070,7 +1058,6 @@ public class Gutter extends JComponent implements SwingConstants
 		} //}}}
 
 		//{{{ mouseDragged() method
-		@Override
 		public void mouseDragged(MouseEvent e)
 		{
 			if(drag /* && e.getX() >= getWidth() - borderWidth * 2 */)
@@ -1137,7 +1124,6 @@ public class Gutter extends JComponent implements SwingConstants
 		} //}}}
 
 		//{{{ mouseReleased() method
-		@Override
 		public void mouseReleased(MouseEvent e)
 		{
 			if(drag && e.getX() >= getWidth() - borderWidth * 2)

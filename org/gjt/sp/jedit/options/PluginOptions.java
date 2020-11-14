@@ -60,7 +60,6 @@ public class PluginOptions extends OptionsDialog
 	} //}}}
 
 	//{{{ createOptionTreeModel() method
-	@Override
 	protected OptionTreeModel createOptionTreeModel()
 	{
 		OptionTreeModel paneTreeModel = new OptionTreeModel();
@@ -105,7 +104,6 @@ public class PluginOptions extends OptionsDialog
 	} //}}}
 
 	//{{{ getDefaultGroup() method
-	@Override
 	protected OptionGroup getDefaultGroup()
 	{
 		return pluginsGroup;

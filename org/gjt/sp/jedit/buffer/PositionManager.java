@@ -23,7 +23,6 @@
 package org.gjt.sp.jedit.buffer;
 
 //{{{ Imports
-import javax.annotation.Nonnull;
 import javax.swing.text.Position;
 import java.util.*;
 import org.gjt.sp.util.Log;
@@ -38,7 +37,7 @@ import org.gjt.sp.util.Log;
  * of the position are implemented separately.
  *
  * @author Slava Pestov
- * @version $Id: PositionManager.java 25195 2020-04-11 17:07:09Z kpouer $
+ * @version $Id: PositionManager.java 24859 2018-04-10 23:06:33Z daleanson $
  * @since jEdit 4.2pre3
  */
 class PositionManager
@@ -104,8 +103,8 @@ class PositionManager
 	boolean iteration;
 
 	//{{{ Private members
-	private final JEditBuffer buffer;
-	private final SortedMap<PosBottomHalf, PosBottomHalf> positions = new TreeMap<>();
+	private JEditBuffer buffer;
+	private SortedMap<PosBottomHalf, PosBottomHalf> positions = new TreeMap<PosBottomHalf, PosBottomHalf>();
 	//}}}
 
 	//{{{ Inner classes
@@ -129,7 +128,6 @@ class PositionManager
 		} //}}}
 
 		//{{{ getOffset() method
-		@Override
 		public int getOffset()
 		{
 			return bh.offset;
@@ -208,8 +206,7 @@ class PositionManager
 		} //}}}
 
 		//{{{ compareTo() method
-		@Override
-		public int compareTo(@Nonnull PosBottomHalf posBottomHalf)
+		public int compareTo(PosBottomHalf posBottomHalf)
 		{
 			if(iteration)
 				Log.log(Log.ERROR,this,"Consistency failure");

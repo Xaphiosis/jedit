@@ -47,7 +47,7 @@ public class HelpTOCPanel extends JPanel
 		super(new BorderLayout());
 
 		this.helpViewer = helpViewer;
-		nodes = new HashMap<>();
+		nodes = new HashMap<String,DefaultMutableTreeNode>();
 
 		toc = new TOCTree();
 
@@ -77,12 +77,15 @@ public class HelpTOCPanel extends JPanel
 		if(node == null)
 			return;
 
-		EventQueue.invokeLater(() ->
+		EventQueue.invokeLater(new Runnable()
 		{
-			TreePath path = new TreePath(tocModel.getPathToRoot(node));
-			toc.expandPath(path);
-			toc.setSelectionPath(path);
-			toc.scrollPathToVisible(path);
+			public void run()
+			{
+				TreePath path = new TreePath(tocModel.getPathToRoot(node));
+				toc.expandPath(path);
+				toc.setSelectionPath(path);
+				toc.scrollPathToVisible(path);
+			}
 		});
 	} //}}}
 
@@ -95,27 +98,33 @@ public class HelpTOCPanel extends JPanel
 		toc.setModel(empty);
 		toc.setRootVisible(true);
 
-		ThreadUtilities.runInBackground(() ->
+		ThreadUtilities.runInBackground(new Runnable()
 		{
-			DefaultMutableTreeNode tocRoot = new HelpTOCLoader(nodes, helpViewer.getBaseURL()).createTOC();
-			tocModel = new DefaultTreeModel(tocRoot);
-			toc.setModel(tocModel);
-			toc.setRootVisible(false);
-			for(int i = 0; i <tocRoot.getChildCount(); i++)
+			public void run()
 			{
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode) tocRoot.getChildAt(i);
-				toc.expandPath(new TreePath(node.getPath()));
+				DefaultMutableTreeNode tocRoot = new HelpTOCLoader(nodes, helpViewer.getBaseURL()).createTOC();
+				tocModel = new DefaultTreeModel(tocRoot);
+				toc.setModel(tocModel);
+				toc.setRootVisible(false);
+				for(int i = 0; i <tocRoot.getChildCount(); i++)
+				{
+					DefaultMutableTreeNode node =
+						(DefaultMutableTreeNode)
+						tocRoot.getChildAt(i);
+					toc.expandPath(new TreePath(
+						node.getPath()));
+				}
+				if(helpViewer.getShortURL() != null)
+					selectNode(helpViewer.getShortURL());
 			}
-			if(helpViewer.getShortURL() != null)
-				selectNode(helpViewer.getShortURL());
 		});
 	} //}}}
 
 	//{{{ Private members
-	private final HelpViewerInterface helpViewer;
+	private HelpViewerInterface helpViewer;
 	private DefaultTreeModel tocModel;
-	private final JTree toc;
-	private final Map<String, DefaultMutableTreeNode> nodes;
+	private JTree toc;
+	private Map<String, DefaultMutableTreeNode> nodes;
 	//}}}
 
 	//{{{ TOCTree class
@@ -129,7 +138,6 @@ public class HelpTOCPanel extends JPanel
 		} //}}}
 
 		//{{{ getToolTipText() method
-		@Override
 		public final String getToolTipText(MouseEvent evt)
 		{
 			TreePath path = getPathForLocation(evt.getX(), evt.getY());
@@ -142,8 +150,22 @@ public class HelpTOCPanel extends JPanel
 			return null;
 		} //}}}
 
+		//{{{ getToolTipLocation() method
+		/* public final Point getToolTipLocation(MouseEvent evt)
+		{
+			TreePath path = getPathForLocation(evt.getX(), evt.getY());
+			if(path != null)
+			{
+				Rectangle cellRect = getPathBounds(path);
+				if(cellRect != null && !cellRectIsVisible(cellRect))
+				{
+					return new Point(cellRect.x + 14, cellRect.y);
+				}
+			}
+			return null;
+		} */ //}}}
+
 		//{{{ processKeyEvent() method
-		@Override
 		public void processKeyEvent(KeyEvent evt)
 		{
 			if ((KeyEvent.KEY_PRESSED == evt.getID()) &&
@@ -161,11 +183,24 @@ public class HelpTOCPanel extends JPanel
 		} //}}}
 
 		//{{{ processMouseEvent() method
-		@Override
 		protected void processMouseEvent(MouseEvent evt)
 		{
+			//ToolTipManager ttm = ToolTipManager.sharedInstance();
+
 			switch(evt.getID())
 			{
+			/* case MouseEvent.MOUSE_ENTERED:
+				toolTipInitialDelay = ttm.getInitialDelay();
+				toolTipReshowDelay = ttm.getReshowDelay();
+				ttm.setInitialDelay(200);
+				ttm.setReshowDelay(0);
+				super.processMouseEvent(evt);
+				break;
+			case MouseEvent.MOUSE_EXITED:
+				ttm.setInitialDelay(toolTipInitialDelay);
+				ttm.setReshowDelay(toolTipReshowDelay);
+				super.processMouseEvent(evt);
+				break; */
 			case MouseEvent.MOUSE_CLICKED:
 				TreePath path = getPathForLocation(evt.getX(),evt.getY());
 				

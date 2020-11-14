@@ -55,8 +55,7 @@ import org.gjt.sp.jedit.jEdit;
 public class MemoryStatusWidgetFactory implements StatusWidgetFactory
 {
 	//{{{ getWidget() constructor
-	@Override
-	public Widget getWidget(View view)
+	public Widget getWidget(View view) 
 	{
 		Widget memory = new MemoryStatusWidget(view);
 		return memory;
@@ -66,24 +65,29 @@ public class MemoryStatusWidgetFactory implements StatusWidgetFactory
 	private static class MemoryStatusWidget implements Widget
 	{
 		private final MemoryStatus memoryStatus;
-
-		MemoryStatusWidget(View view)
+		public MemoryStatusWidget(View view) 
 		{
 			memoryStatus = new MemoryStatus(view);
 		}
 		
-		@Override
-		public JComponent getComponent()
+		public JComponent getComponent() 
 		{
 			return memoryStatus;
+		}
+		
+		public void update() 
+		{
+		}
+		
+		public void propertiesChanged()
+		{
 		}
 	} //}}}
 
 	//{{{ MemoryStatus class
 	private static class MemoryStatus extends JComponent implements ActionListener
 	{
-		private final View view;
-
+		private View view;
 		//{{{ MemoryStatus constructor
 		MemoryStatus(View view)
 		{
@@ -153,7 +157,6 @@ public class MemoryStatusWidgetFactory implements StatusWidgetFactory
 		} //}}}
 
 		//{{{ actionPerformed() method
-		@Override
 		public void actionPerformed(ActionEvent evt)
 		{
 			MemoryStatus.this.repaint();

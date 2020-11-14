@@ -36,29 +36,30 @@ import org.gjt.sp.jedit.*;
 public class RecentDirectoriesProvider implements DynamicMenuProvider
 {
 	//{{{ updateEveryTime() method
-	@Override
 	public boolean updateEveryTime()
 	{
 		return true;
 	} //}}}
 
 	//{{{ update() method
-	@Override
 	public void update(JMenu menu)
 	{
 		final View view = GUIUtilities.getView(menu);
 
 		//{{{ ActionListener...
-		ActionListener actionListener = evt ->
+		ActionListener actionListener = new ActionListener()
 		{
-			VFSBrowser.browseDirectory(view,evt.getActionCommand());
-			view.getStatus().setMessage(null);
+			public void actionPerformed(ActionEvent evt)
+			{
+				VFSBrowser.browseDirectory(view,evt.getActionCommand());
+
+				view.getStatus().setMessage(null);
+			}
 		}; //}}}
 
 		//{{{ MouseListener...
 		MouseListener mouseListener = new MouseAdapter()
 		{
-			@Override
 			public void mouseEntered(MouseEvent evt)
 			{
 				view.getStatus().setMessage(
@@ -66,7 +67,6 @@ public class RecentDirectoriesProvider implements DynamicMenuProvider
 					.getActionCommand());
 			}
 
-			@Override
 			public void mouseExited(MouseEvent evt)
 			{
 				view.getStatus().setMessage(null);
@@ -87,7 +87,7 @@ public class RecentDirectoriesProvider implements DynamicMenuProvider
 
 		int maxItems = jEdit.getIntegerProperty("menu.spillover",20);
 
-		Vector<JMenuItem> menuItems = new Vector<>();
+		Vector<JMenuItem> menuItems = new Vector<JMenuItem>();
 
 		for(int i = 0; i < model.getSize(); i++)
 		{
@@ -117,7 +117,8 @@ public class RecentDirectoriesProvider implements DynamicMenuProvider
 
 		if(sort)
 		{
-			menuItems.sort(new MenuItemTextComparator());
+			Collections.sort(menuItems,
+					new MenuItemTextComparator());
 			for(int i = 0; i < menuItems.size(); i++)
 			{
 				if(menu.getMenuComponentCount() >= maxItems

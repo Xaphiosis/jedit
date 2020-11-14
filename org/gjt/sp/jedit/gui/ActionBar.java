@@ -56,13 +56,13 @@ public class ActionBar extends JToolBar
 		Dimension max = action.getPreferredSize();
 		max.width = Integer.MAX_VALUE;
 		action.setMaximumSize(max);
-		action.addActionListener(e -> invoke());
+		action.addActionListener(new ActionHandler());
 		action.getDocument().addDocumentListener(new DocumentHandler());
 
 		if(temp)
 		{
-			RolloverButton close = new RolloverButton(GUIUtilities.loadIcon("closebox.gif"));
-			close.addActionListener(e -> view.removeToolBar(this));
+			close = new RolloverButton(GUIUtilities.loadIcon("closebox.gif"));
+			close.addActionListener(new ActionHandler());
 			close.setToolTipText(jEdit.getProperty(
 				"view.action.close-tooltip"));
 			add(close);
@@ -88,15 +88,16 @@ public class ActionBar extends JToolBar
 
 	//{{{ Private members
 
-	private static final NameSpace namespace = new NameSpace(
+	private static NameSpace namespace = new NameSpace(
 		BeanShell.getNameSpace(),"action bar namespace");
 
 	//{{{ Instance variables
-	private final View view;
+	private View view;
 	private boolean temp;
 	private int repeatCount;
-	private final HistoryTextField action;
+	private HistoryTextField action;
 	private CompletionPopup popup;
+	private RolloverButton close;
 	//}}}
 
 	//{{{ invoke() method
@@ -104,7 +105,7 @@ public class ActionBar extends JToolBar
 	{
 		String cmd;
 		if(popup != null)
-			cmd = popup.list.getSelectedValue();
+			cmd = popup.list.getSelectedValue().toString();
 		else
 		{
 			cmd = action.getText().trim();
@@ -160,7 +161,7 @@ public class ActionBar extends JToolBar
 				BeanShell.eval(view, namespace, code.toString());
 				cmd = null;
 			}
-			else if(!cmd.isEmpty())
+			else if(cmd.length() != 0)
 			{
 				String[] completions = getCompletions(cmd);
 				if(completions.length != 0)
@@ -183,22 +184,25 @@ public class ActionBar extends JToolBar
 		if(temp)
 			view.removeToolBar(this);
 
-		SwingUtilities.invokeLater(() ->
+		SwingUtilities.invokeLater(new Runnable()
 		{
-			view.getTextArea().requestFocus();
-			if(act == null)
+			public void run()
 			{
-				if(finalCmd != null)
+				view.getTextArea().requestFocus();
+				if(act == null)
 				{
-					view.getStatus().setMessageAndClear(
-						jEdit.getProperty(
-						"view.action.no-completions"));
+					if(finalCmd != null)
+					{
+						view.getStatus().setMessageAndClear(
+							jEdit.getProperty(
+							"view.action.no-completions"));
+					}
 				}
-			}
-			else
-			{
-				view.getInputHandler().setRepeatCount(repeatCount);
-				view.getInputHandler().invokeAction(act);
+				else
+				{
+					view.getInputHandler().setRepeatCount(repeatCount);
+					view.getInputHandler().invokeAction(act);
+				}
 			}
 		});
 	} //}}}
@@ -208,14 +212,14 @@ public class ActionBar extends JToolBar
 	{
 		str = str.toLowerCase();
 		String[] actions = jEdit.getActionNames();
-		ArrayList<String> returnValue = new ArrayList<>(actions.length);
+		ArrayList<String> returnValue = new ArrayList<String>(actions.length);
 		for (String act : actions)
 		{
 			if (act.toLowerCase().contains(str))
 				returnValue.add(act);
 		}
 
-		return returnValue.toArray(StandardUtilities.EMPTY_STRING_ARRAY);
+		return returnValue.toArray(new String[returnValue.size()]);
 	} //}}}
 
 	//{{{ complete() method
@@ -255,11 +259,23 @@ public class ActionBar extends JToolBar
 	//}}}
 
 	//{{{ Inner classes
+
+	//{{{ ActionHandler class
+	private class ActionHandler implements ActionListener
+	{
+		public void actionPerformed(ActionEvent evt)
+		{
+			if(evt.getSource() == close)
+				view.removeToolBar(ActionBar.this);
+			else
+				invoke();
+		}
+	} //}}}
+
 	//{{{ DocumentHandler class
 	private class DocumentHandler implements DocumentListener
 	{
 		//{{{ insertUpdate() method
-		@Override
 		public void insertUpdate(DocumentEvent evt)
 		{
 			if(popup != null)
@@ -267,7 +283,6 @@ public class ActionBar extends JToolBar
 		} //}}}
 
 		//{{{ removeUpdate() method
-		@Override
 		public void removeUpdate(DocumentEvent evt)
 		{
 			if(popup != null)
@@ -275,7 +290,6 @@ public class ActionBar extends JToolBar
 		} //}}}
 
 		//{{{ changedUpdate() method
-		@Override
 		public void changedUpdate(DocumentEvent evt) {}
 		//}}}
 	} //}}}
@@ -384,12 +398,15 @@ public class ActionBar extends JToolBar
 			if(temp)
 				view.removeToolBar(ActionBar.this);
 			view.getTextArea().requestFocus();
-			SwingUtilities.invokeLater(() ->
+			SwingUtilities.invokeLater(new Runnable()
 			{
-				view.getTextArea().requestFocus();
-				view.getInputHandler().setRepeatCount(repeatCount);
-				view.getInputHandler().processKeyEvent(evt,
-					View.ACTION_BAR, false);
+				public void run()
+				{
+					view.getTextArea().requestFocus();
+					view.getInputHandler().setRepeatCount(repeatCount);
+					view.getInputHandler().processKeyEvent(evt,
+						View.ACTION_BAR, false);
+				}
 			});
 		}
 
@@ -445,7 +462,7 @@ public class ActionBar extends JToolBar
 			setLocation(p);
 			setVisible(true);
 
-			KeyListener keyHandler = new KeyHandler();
+			KeyHandler keyHandler = new KeyHandler();
 			addKeyListener(keyHandler);
 			list.addKeyListener(keyHandler);
 		} //}}}

@@ -24,7 +24,6 @@
 package org.gjt.sp.jedit.syntax;
 
 //{{{ Imports
-import javax.annotation.Nonnull;
 import javax.swing.text.Segment;
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -40,16 +39,13 @@ import org.gjt.sp.util.SegmentCharSequence;
  * or font style for painting that token.
  *
  * @author Slava Pestov, mike dillon
- * @version $Id: TokenMarker.java 25295 2020-04-26 13:17:03Z kpouer $
+ * @version $Id: TokenMarker.java 23381 2013-12-09 12:43:14Z kpouer $
  *
  * @see org.gjt.sp.jedit.syntax.Token
  * @see org.gjt.sp.jedit.syntax.TokenHandler
  */
 public class TokenMarker
 {
-
-	public static final ParserRuleSet[] EMPTY_PARSER_RULE_SETS_ARRAY = new ParserRuleSet[0];
-
 	//{{{ TokenMarker constructor
 	public TokenMarker()
 	{} //}}}
@@ -81,7 +77,7 @@ public class TokenMarker
 	 */
 	public ParserRuleSet[] getRuleSets()
 	{
-		return ruleSets.values().toArray(EMPTY_PARSER_RULE_SETS_ARRAY);
+		return ruleSets.values().toArray(new ParserRuleSet[ruleSets.size()]);
 	} //}}}
 
 	//{{{ markTokens() method
@@ -159,7 +155,7 @@ main_loop:	for(pos = line.offset; pos < lineLength; pos++)
 			} //}}}
 
 			//{{{ check every rule
-			char ch = line.array[pos];
+			Character ch = Character.valueOf(line.array[pos]);
 			List<ParserRule> rules = context.rules.getRules(ch);
 			for (ParserRule rule : rules)
 			{
@@ -268,7 +264,7 @@ unwind:		while(context.parent != null)
 	//{{{ Private members
 
 	//{{{ Instance variables
-	private final Map<String, ParserRuleSet> ruleSets = new Hashtable<>(64);
+	private final Map<String, ParserRuleSet> ruleSets = new Hashtable<String, ParserRuleSet>(64);
 	private ParserRuleSet mainRuleSet;
 
 	// Instead of passing these around to each method, we just store them
@@ -373,8 +369,8 @@ unwind:		while(context.parent != null)
 		if (null == checkRule.upHashChars)
 		{
 			if (checkRule.upHashChar != null &&
-				pos + checkRule.upHashChar.length < line.array.length &&
-				!checkHashString(checkRule.upHashChar))
+			    (pos + checkRule.upHashChar.length < line.array.length) &&
+			    !checkHashString(checkRule))
 			{
 				return false;
 			}
@@ -885,11 +881,11 @@ unwind:		while(context.parent != null)
 	} //}}}
 
 	//{{{ checkHashString() method
-	private boolean checkHashString(@Nonnull char[] upHashChar)
+	private boolean checkHashString(ParserRule rule)
 	{
-		for (int i = 0; i < upHashChar.length; i++)
+		for (int i = 0; i < rule.upHashChar.length; i++)
 		{
-			if (Character.toUpperCase(line.array[pos+i]) != upHashChar[i])
+			if (Character.toUpperCase(line.array[pos+i]) != rule.upHashChar[i])
 			{
 				return false;
 			}
@@ -905,7 +901,8 @@ unwind:		while(context.parent != null)
 	 */
 	public static class LineContext
 	{
-		private static final WeakHashMap<LineContext, WeakReference<LineContext>> intern = new WeakHashMap<>();
+		private static final WeakHashMap<LineContext, WeakReference<LineContext>> intern =
+			new WeakHashMap<LineContext, WeakReference<LineContext>>();
 
 		public LineContext parent;
 		public ParserRule inRule;

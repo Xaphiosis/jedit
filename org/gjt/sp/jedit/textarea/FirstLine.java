@@ -29,10 +29,11 @@ import org.gjt.sp.util.Log;
  * This Anchor is the first visible line of the textarea.
  *
  * @author Slava Pestov
- * @version $Id: FirstLine.java 25197 2020-04-11 17:14:27Z kpouer $
+ * @version $Id: FirstLine.java 23224 2013-09-30 20:51:42Z shlomy $
  */
 class FirstLine extends Anchor
 {
+
 	// scrollLine + skew = vertical scroll bar position
 
 	/**
@@ -78,7 +79,6 @@ class FirstLine extends Anchor
 	 * @param startLine the start of the insert
 	 * @param numLines the number of inserted lines
 	 */
-	@Override
 	void contentInserted(int startLine, int numLines)
 	{
 		if(Debug.SCROLL_DEBUG)
@@ -147,7 +147,6 @@ class FirstLine extends Anchor
 	 * @param startOffset the offset in the start line
 	 * @param numLines the number of removed lines
 	 */
-	@Override
 	void contentRemoved(int startLine, int startOffset, int numLines)
 	{
 		if(Debug.SCROLL_DEBUG)
@@ -301,7 +300,7 @@ class FirstLine extends Anchor
 
 		currentPhysicalLine = getPhysicalLine();
 		int scrollLines = 0;
-		while (true)
+		for(;;)
 		{
 			int nextPhysicalLine = getDisplayManager().getNextVisibleLine(currentPhysicalLine);
 
@@ -360,7 +359,7 @@ class FirstLine extends Anchor
 
 		currentPhysicalLine = getPhysicalLine();
 		int scrollLines = 0;
-		while (true)
+		for(;;)
 		{
 			int prevPhysicalLine = getDisplayManager().getPrevVisibleLine(currentPhysicalLine);
 			if(prevPhysicalLine == -1)

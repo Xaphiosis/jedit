@@ -35,14 +35,10 @@ import java.util.List;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.Log;
-
-import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 //}}}
-
-/**
- * "About jEdit" dialog
- */
-public class AboutDialog extends JDialog
+/** "About jEdit" dialog
+*/
+public class AboutDialog extends JDialog implements ActionListener
 {
 	//{{{ AboutDialog constructor
 	public AboutDialog(View view)
@@ -57,12 +53,11 @@ public class AboutDialog extends JDialog
 		p.add(aboutPanel);
 		
 		JButton closeBtn = new JButton(jEdit.getProperty("common.close"));
-		closeBtn.addActionListener(e -> closeDialog());
+		closeBtn.addActionListener(this);
 		getRootPane().setDefaultButton(closeBtn);
 		closeBtn.setToolTipText(jEdit.getProperty("about.navigate"));
 		closeBtn.addKeyListener(new KeyAdapter()
 		{
-			@Override
 			public void keyPressed(KeyEvent e)
 			{
 				aboutPanel.handleKeyEvent(e);
@@ -90,6 +85,12 @@ public class AboutDialog extends JDialog
 		setVisible(true);
 	} //}}}
 
+	//{{{ actionPerformed() method
+	public void actionPerformed(ActionEvent e)
+	{
+		closeDialog();
+	} //}}}
+
 	//{{{ closeDialog() method
 	private void closeDialog()
 	{
@@ -111,22 +112,16 @@ public class AboutDialog extends JDialog
 		private static boolean doWork;
 		private Thread th;
 		private final FontMetrics fm;
-		private final int iLineHeight;
-		private final int iListHeight;
-		private final int iLineCount;
-		private int iBottomLineXOffset;
-		private final int iBottomLineYOffset;
-		private int iPipeLineCount;
-		private final int w;
-		private final int h;
-		private int y;
+		private int iLineHeight = 0, iListHeight, iLineCount = 0,
+			iBottomLineXOffset = 0, iBottomLineYOffset = 0,
+			iPipeLineCount = 0, w = 0, h = 0, y = 0;
 		private static final int
 			SLEEP_TIME = 30,
 			iBottomPadding = 36,
 			iTopPadding = 120;
 		private static Rectangle2D.Float rectangle;
 		private static GradientPaint gradientPaint;
-		private boolean skipDrain;
+		private boolean skipDrain = false;
 
 		AboutPanel()
 		{
@@ -164,7 +159,6 @@ public class AboutDialog extends JDialog
 			setPreferredSize(d);
 			w = d.width;
 			h = d.height;
-			iBottomLineXOffset = 0;
 			iBottomLineXOffset = (w / 2) - (fmBottom.stringWidth(sBottomLine) / 2);
 			iBottomLineYOffset = h - fmBottom.getHeight() / 2;
 
@@ -297,7 +291,6 @@ public class AboutDialog extends JDialog
 			}
 		}
 
-		@Override
 		public void run()
 		{
 			try
@@ -335,7 +328,7 @@ public class AboutDialog extends JDialog
 		public static void tell(Object obj)
 		{
 			String str = obj == null ? "NULL" : obj.toString();
-			JOptionPane.showMessageDialog(jEdit.getActiveView(), str, "Title", INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(jEdit.getActiveView(), str, "Title", 1);
 		}
 	} //}}}
 }

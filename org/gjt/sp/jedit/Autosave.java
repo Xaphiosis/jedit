@@ -31,7 +31,7 @@ import org.gjt.sp.util.Log;
 
 /**
  * @author Slava Pestov
- * @version $Id: Autosave.java 25239 2020-04-14 20:00:17Z kpouer $
+ * @version $Id: Autosave.java 23221 2013-09-29 20:03:32Z shlomy $
  */
 class Autosave implements ActionListener
 {
@@ -68,7 +68,6 @@ class Autosave implements ActionListener
 	} //}}}
 
 	//{{{ actionPerformed() method
-	@Override
 	public void actionPerformed(ActionEvent evt)
 	{
 		if (jEdit.getIntegerProperty("autosave",0) == 0)
@@ -91,11 +90,12 @@ class Autosave implements ActionListener
 			PerspectiveManager.savePerspective(true);
 		}
 		boolean autosaveUntitled = jEdit.getBooleanProperty("autosaveUntitled");
-		jEdit.getBufferManager()
-			.getBuffers()
-			.stream()
-			.filter(buffer -> autosaveUntitled || !buffer.isUntitled())
-			.forEach(Buffer::autosave);
+		Buffer[] bufferArray = jEdit.getBuffers();
+		for (Buffer buffer : bufferArray)
+		{
+			if (autosaveUntitled || !buffer.isUntitled())
+				buffer.autosave();
+		}
 
 		// flush log
 		Log.flushStream();

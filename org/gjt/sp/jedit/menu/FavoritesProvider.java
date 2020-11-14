@@ -24,6 +24,7 @@ package org.gjt.sp.jedit.menu;
 
 //{{{ Imports
 import javax.swing.*;
+import java.awt.event.*;
 import java.util.Arrays;
 
 import org.gjt.sp.jedit.browser.*;
@@ -34,17 +35,33 @@ import org.gjt.sp.jedit.*;
 public class FavoritesProvider implements DynamicMenuProvider
 {
 	//{{{ updateEveryTime() method
-	@Override
 	public boolean updateEveryTime()
 	{
 		return false;
 	} //}}}
 
 	//{{{ update() method
-	@Override
 	public void update(JMenu menu)
 	{
 		final View view = GUIUtilities.getView(menu);
+
+		//{{{ ActionListeners
+		ActionListener fileListener = new ActionListener()
+		{
+			public void actionPerformed(ActionEvent evt)
+			{
+				jEdit.openFile(view,evt.getActionCommand());
+			}
+		};
+
+		ActionListener dirListener = new ActionListener()
+		{
+			public void actionPerformed(ActionEvent evt)
+			{
+				VFSBrowser.browseDirectory(view,
+					evt.getActionCommand());
+			}
+		}; //}}}
 
 		VFSFile[] favorites = FavoritesVFS.getFavorites();
 		if(favorites.length == 0)
@@ -69,9 +86,9 @@ public class FavoritesProvider implements DynamicMenuProvider
 				mi.setActionCommand(favorite.getPath());
 				mi.setIcon(FileCellRenderer.getIconForFile(favorite, false));
 				if (favorite.getType() == VFSFile.FILE)
-					mi.addActionListener(evt -> jEdit.openFile(view,evt.getActionCommand()));
+					mi.addActionListener(fileListener);
 				else
-					mi.addActionListener(evt -> VFSBrowser.browseDirectory(view, evt.getActionCommand()));
+					mi.addActionListener(dirListener);
 				menu.add(mi);
 			}
 		}

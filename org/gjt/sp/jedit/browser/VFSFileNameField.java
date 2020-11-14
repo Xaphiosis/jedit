@@ -26,8 +26,6 @@ package org.gjt.sp.jedit.browser;
 import java.util.HashSet;
 import java.awt.event.*;
 import java.awt.*;
-import java.util.Set;
-
 import org.gjt.sp.jedit.gui.HistoryTextField;
 import org.gjt.sp.jedit.io.*;
 import org.gjt.sp.jedit.MiscUtilities;
@@ -38,7 +36,7 @@ import org.gjt.sp.util.TaskManager;
 
 /**
  * @author Slava Pestov
- * @version $Id: VFSFileNameField.java 25187 2020-04-11 16:46:01Z kpouer $
+ * @version $Id: VFSFileNameField.java 24859 2018-04-10 23:06:33Z daleanson $
  * @since jEdit 4.2pre1 (public since 4.5pre1)
  */
 public class VFSFileNameField extends HistoryTextField
@@ -58,13 +56,13 @@ public class VFSFileNameField extends HistoryTextField
 		// Enable TAB pressed for completion instead of
 		// focas traversal.
 		final int FORWARD = KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS;
-		Set<AWTKeyStroke> keys = new HashSet<>(getFocusTraversalKeys(FORWARD));
+		HashSet<AWTKeyStroke> keys = new HashSet<AWTKeyStroke>(
+				getFocusTraversalKeys(FORWARD));
 		keys.remove(AWTKeyStroke.getAWTKeyStroke("pressed TAB"));
 		setFocusTraversalKeys(FORWARD, keys);
 	} //}}}
 
 	//{{{ processKeyEvent() method
-	@Override
 	public void processKeyEvent(KeyEvent evt)
 	{
 		if(evt.getID() == KeyEvent.KEY_PRESSED)
@@ -77,7 +75,7 @@ public class VFSFileNameField extends HistoryTextField
 				doComplete(path);
 				break;
 			case KeyEvent.VK_LEFT:
-				if ((evt.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == InputEvent.ALT_DOWN_MASK)
+				if ((evt.getModifiersEx() & KeyEvent.ALT_DOWN_MASK) == KeyEvent.ALT_DOWN_MASK)
 				{
 					browser.previousDirectory();
 					evt.consume();
@@ -89,7 +87,7 @@ public class VFSFileNameField extends HistoryTextField
 				}
 				break;
 			case KeyEvent.VK_UP:
-				if ((evt.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == InputEvent.ALT_DOWN_MASK)
+				if ((evt.getModifiersEx() & KeyEvent.ALT_DOWN_MASK) == KeyEvent.ALT_DOWN_MASK)
 				{
 					String p = browser.getDirectory();
 					browser.setDirectory(MiscUtilities.getParentOfPath(p));
@@ -102,7 +100,7 @@ public class VFSFileNameField extends HistoryTextField
 				}
 				break;
 			case KeyEvent.VK_RIGHT:
-				if ((evt.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == InputEvent.ALT_DOWN_MASK)
+				if ((evt.getModifiersEx() & KeyEvent.ALT_DOWN_MASK) == KeyEvent.ALT_DOWN_MASK)
 				{
 					evt.consume();
 					browser.nextDirectory();
@@ -160,7 +158,7 @@ public class VFSFileNameField extends HistoryTextField
 	} //}}}
 
 	//{{{ Private members
-	private final VFSBrowser browser;
+	private VFSBrowser browser;
 
 	//{{{ doComplete() method
 	public String doComplete(String path, String complete, boolean dirsOnly)
@@ -171,7 +169,7 @@ public class VFSFileNameField extends HistoryTextField
 
 		for(;;)
 		{
-			if(complete.isEmpty())
+			if(complete.length() == 0)
 				return path;
 			int index = MiscUtilities.getFirstSeparatorIndex(complete);
 			if(index == -1)
@@ -219,7 +217,7 @@ public class VFSFileNameField extends HistoryTextField
 		}
 		else
 		{
-			if(!dir.isEmpty())
+			if(dir.length() != 0)
 			{
 				dir = doComplete(browser.getDirectory(),dir,false);
 				if(dir == null)

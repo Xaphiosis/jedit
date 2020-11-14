@@ -24,18 +24,18 @@ package org.gjt.sp.jedit.options;
 
 //{{{ Imports
 import javax.swing.*;
+import java.awt.event.*;
 import java.awt.*;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.gui.NumericTextField;
 import org.gjt.sp.jedit.browser.VFSBrowser;
-import org.gjt.sp.jedit.manager.BufferManager;
 //}}}
 
 /**
  * The Save and Backup option panel.
  *
  * @author Slava Pestov
- * @author $Id: SaveBackupOptionPane.java 25239 2020-04-14 20:00:17Z kpouer $
+ * @author $Id: SaveBackupOptionPane.java 24843 2018-03-19 00:04:03Z ezust $
  */
 public class SaveBackupOptionPane extends AbstractOptionPane
 {
@@ -49,6 +49,7 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 	@Override
 	protected void _init()
 	{
+
 		/* Save-As Uses FSB */
 
 		saveAsUsesFSB = new JCheckBox(jEdit.getProperty(
@@ -103,14 +104,7 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 			jEdit.getProperty("options.save-back.backupDirectory.tooltip"));
 
 		JButton browseAutosaveDirectory = new JButton("...");
-		browseAutosaveDirectory.addActionListener(e ->
-		{
-			String[] choosenFolder =
-				GUIUtilities.showVFSFileDialog(null, autosaveDirectory.getText(),
-					VFSBrowser.CHOOSE_DIRECTORY_DIALOG, false);
-			if (choosenFolder.length > 0)
-				autosaveDirectory.setText(choosenFolder[0]);
-		});
+		browseAutosaveDirectory.addActionListener(new MyActionListener2());
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.add(autosaveDirectory);
 		panel.add(browseAutosaveDirectory, BorderLayout.EAST);
@@ -140,14 +134,7 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 			jEdit.getProperty("options.save-back.backupDirectory.tooltip"));
 
 		JButton browseBackupDirectory = new JButton("...");
-		browseBackupDirectory.addActionListener(e ->
-		{
-			String[] choosenFolder =
-				GUIUtilities.showVFSFileDialog(null, backupDirectory.getText(),
-					VFSBrowser.CHOOSE_DIRECTORY_DIALOG, false);
-			if (choosenFolder.length > 0)
-				backupDirectory.setText(choosenFolder[0]);
-		});
+		browseBackupDirectory.addActionListener(new MyActionListener());
 		panel = new JPanel(new BorderLayout());
 		panel.add(backupDirectory);
 		panel.add(browseBackupDirectory, BorderLayout.EAST);
@@ -202,18 +189,30 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 
 		jEdit.setBooleanProperty("useMD5forDirtyCalculation",
 				useMD5forDirtyCalculation.isSelected());
-		BufferManager bufferManager = jEdit.getBufferManager();
 		if ((!newAutosave || jEdit.getIntegerProperty("autosave",0) == 0) && oldAutosave)
 		{
-			bufferManager.getUntitledBuffers().forEach(Buffer::removeAutosaveFile);
+			Buffer[] buffers = jEdit.getBuffers();
+			for (Buffer buffer : buffers)
+			{
+				if (buffer.isUntitled())
+				{
+					buffer.removeAutosaveFile();
+				}
+			}
 		}
 
 		// if autosave dir changed, we should issue to perform an autosave for all dirty and all untitled buffers
 		// to have the autosaves at the new location
-		if (!autosaveDirectoryOriginal.equals(autosaveDirectory.getText()))
-		{
-			bufferManager.getDirtyBuffers().forEach(buffer -> buffer.autosave(true));
+		if (!autosaveDirectoryOriginal.equals(autosaveDirectory.getText())) {
+			Buffer[] buffers = jEdit.getBuffers();
+			for (Buffer buffer : buffers) {
+				// save dirty
+				if ( buffer.isDirty() ) {
+					buffer.autosave(true);
+				}
+			}
 		}
+
 	} //}}}
 
 	//{{{ Private members
@@ -232,4 +231,32 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 	private JTextField backupSuffix;
 	private JCheckBox backupEverySave;
 	//}}}
+
+	//{{{ MyActionListener class
+	private class MyActionListener implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			String[] choosenFolder =
+				GUIUtilities.showVFSFileDialog(null, backupDirectory.getText(),
+	   			       	VFSBrowser.CHOOSE_DIRECTORY_DIALOG, false);
+			if (choosenFolder != null)
+				backupDirectory.setText(choosenFolder[0]);
+
+		}
+	} //}}}
+
+	//{{{ MyActionListener class
+	private class MyActionListener2 implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			String[] choosenFolder =
+				GUIUtilities.showVFSFileDialog(null, autosaveDirectory.getText(),
+	   			       	VFSBrowser.CHOOSE_DIRECTORY_DIALOG, false);
+			if (choosenFolder != null)
+				autosaveDirectory.setText(choosenFolder[0]);
+
+		}
+	} //}}}
 }

@@ -32,10 +32,13 @@ import org.gjt.sp.util.ThreadUtilities;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 //}}}
 
@@ -46,6 +49,7 @@ import java.util.ArrayList;
 public class TaskMonitor extends JPanel implements TaskListener
 {
 	private final TaskTableModel model;
+	private final JTable table;
 	private final JLabel remainingCount;
 
 	//{{{ TaskMonitor constructor
@@ -57,11 +61,18 @@ public class TaskMonitor extends JPanel implements TaskListener
 		panel.add(remainingCount, BorderLayout.NORTH);
 
 		model = new TaskTableModel();
-		model.addTableModelListener(e ->
+		model.addTableModelListener(new TableModelListener()
 		{
-			if (e.getType() == TableModelEvent.INSERT || e.getType() == TableModelEvent.DELETE) updateTasksCount();
+			public void tableChanged(TableModelEvent e)
+			{
+				if (e.getType() == TableModelEvent.INSERT ||
+					e.getType() == TableModelEvent.DELETE)
+				{
+					updateTasksCount();
+				}
+			}
 		});
-		JTable table = new JTable(model);
+		table = new JTable(model);
 		table.setRowHeight(GenericGUIUtilities.defaultRowHeight());
 		table.setDefaultRenderer(Object.class, new TaskCellRenderer());
 		table.getTableHeader().setVisible(false);
@@ -79,7 +90,13 @@ public class TaskMonitor extends JPanel implements TaskListener
 	@Override
 	public void addNotify()
 	{
-		TaskManager.instance.visit(model::addTask);
+		TaskManager.instance.visit(new TaskManager.TaskVisitor()
+		{
+			public void visit(Task task)
+			{
+				model.addTask(task);
+			}
+		});
 		TaskManager.instance.addTaskListener(this);
 		super.addNotify();
 	} //}}}
@@ -94,42 +111,36 @@ public class TaskMonitor extends JPanel implements TaskListener
 	} //}}}
 
 	//{{{ waiting() method
-	@Override
 	public void waiting(Task task)
 	{
 		model.addTask(task);
 	} //}}}
 
 	//{{{ running() method
-	@Override
 	public void running(Task task)
 	{
 		repaint();
 	} //}}}
 
 	//{{{ done() method
-	@Override
 	public void done(Task task)
 	{
 		model.removeTask(task);
 	} //}}}
 
 	//{{{ statusUpdated() method
-	@Override
 	public void statusUpdated(Task task)
 	{
 		repaint();
 	} //}}}
 
 	//{{{ maximumUpdated() method
-	@Override
 	public void maximumUpdated(Task task)
 	{
 		repaint();
 	} //}}}
 
 	//{{{ valueUpdated() method
-	@Override
 	public void valueUpdated(Task task)
 	{
 		repaint();
@@ -157,7 +168,6 @@ public class TaskMonitor extends JPanel implements TaskListener
 		} //}}}
 
 		//{{{ getTableCellRendererComponent
-		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 							       boolean hasFocus, int row, int column)
 		{
@@ -192,7 +202,7 @@ public class TaskMonitor extends JPanel implements TaskListener
 	} //}}}
 
 	//{{{ TaskTableEditor class
-	private static class TaskTableEditor extends AbstractCellEditor implements TableCellEditor
+	private class TaskTableEditor extends AbstractCellEditor implements TableCellEditor
 	{
 		private final JButton button;
 
@@ -202,22 +212,23 @@ public class TaskMonitor extends JPanel implements TaskListener
 		private TaskTableEditor()
 		{
 			button = new JButton(GUIUtilities.loadIcon(jEdit.getProperty("close-buffer.icon")));
-			button.addActionListener(e ->
+			button.addActionListener(new ActionListener()
 			{
-				task.cancel();
-				stopCellEditing();
+				public void actionPerformed(ActionEvent e)
+				{
+					task.cancel();
+					stopCellEditing();
+				}
 			});
 		} //}}}
 
 		//{{{ getCellEditorValue() method
-		@Override
 		public Object getCellEditorValue()
 		{
 			return null;
 		} //}}}
 
 		//{{{ getTableCellEditorComponent() method
-		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column)
 		{
 			task = (Task) value;
@@ -237,14 +248,12 @@ public class TaskMonitor extends JPanel implements TaskListener
 		} //}}}
 
 		//{{{ getRowCount() method
-		@Override
 		public int getRowCount()
 		{
 			return tasks.size();
 		} //}}}
 
 		//{{{ getColumnCount() method
-		@Override
 		public int getColumnCount()
 		{
 			return 2;
@@ -258,32 +267,37 @@ public class TaskMonitor extends JPanel implements TaskListener
 		} //}}}
 
 		//{{{ getValueAt() method
-		@Override
 		public Object getValueAt(int rowIndex, int columnIndex)
 		{
 			return tasks.get(rowIndex);
 		} //}}}
 
 		//{{{ addTask() method
-		void addTask(Task task)
+		void addTask(final Task task)
 		{
-			ThreadUtilities.runInDispatchThread(() ->
+			ThreadUtilities.runInDispatchThread(new Runnable()
 			{
-				tasks.add(task);
-				fireTableRowsInserted(tasks.size()-1, tasks.size()-1);
+				public void run()
+				{
+					tasks.add(task);
+					fireTableRowsInserted(tasks.size()-1, tasks.size()-1);
+				}
 			});
 		} //}}}
 
 		//{{{ removeTask() method
-		void removeTask(Task task)
+		void removeTask(final Task task)
 		{
-			ThreadUtilities.runInDispatchThread(() ->
+			ThreadUtilities.runInDispatchThread(new Runnable()
 			{
-				int index = tasks.indexOf(task);
-				if (index != -1)
+				public void run()
 				{
-					tasks.remove(index);
-					fireTableRowsDeleted(index,index);
+					int index = tasks.indexOf(task);
+					if (index != -1)
+					{
+						tasks.remove(index);
+						fireTableRowsDeleted(index,index);
+					}
 				}
 			});
 		} //}}}

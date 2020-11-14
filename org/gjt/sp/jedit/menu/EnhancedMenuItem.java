@@ -23,7 +23,6 @@
 package org.gjt.sp.jedit.menu;
 
 //{{{ Imports
-import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import org.gjt.sp.jedit.*;
@@ -48,7 +47,7 @@ public class EnhancedMenuItem extends JMenuItem
 	 */
 	public EnhancedMenuItem(String label, String action, ActionContext context)
 	{
-		shortcut = GUIUtilities.getShortcutLabel(action, true);
+		this.shortcut = GUIUtilities.getShortcutLabel(action, true);
 		String toolTip = jEdit.getProperty(action+ ".tooltip");
 		if (toolTip != null) {
 			setToolTipText(toolTip);
@@ -87,7 +86,6 @@ public class EnhancedMenuItem extends JMenuItem
 	} //}}}
 
 	//{{{ getPreferredSize() method
-	@Override
 	public Dimension getPreferredSize()
 	{
 		Dimension d = super.getPreferredSize();
@@ -101,7 +99,6 @@ public class EnhancedMenuItem extends JMenuItem
 	} //}}}
 
 	//{{{ paint() method
-	@Override
 	public void paint(Graphics g)
 	{
 		super.paint(g);
@@ -131,7 +128,6 @@ public class EnhancedMenuItem extends JMenuItem
 	//{{{ Private members
 
 	//{{{ Instance variables
-	@Nullable
 	private String shortcut;
 	//}}}
 
@@ -156,4 +152,6 @@ public class EnhancedMenuItem extends JMenuItem
 	} //}}}
 
 	//}}}
+
+	
 }

@@ -28,6 +28,7 @@ import java.awt.*;
 import java.util.*;
 
 import org.gjt.sp.jedit.*;
+import org.gjt.sp.jedit.browser.VFSBrowser;
 import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.StandardUtilities;
 
@@ -38,7 +39,7 @@ import org.gjt.sp.util.StandardUtilities;
  *
  * @author Slava Pestov
  * @author Marcelo Vanzin
- * @version $Id: AbstractContextOptionPane.java 25314 2020-05-04 22:20:12Z kpouer $
+ * @version $Id: AbstractContextOptionPane.java 24428 2016-06-23 02:49:29Z daleanson $
  * @since jEdit 4.3pre13
  */
 public abstract class AbstractContextOptionPane extends AbstractOptionPane
@@ -187,7 +188,7 @@ public abstract class AbstractContextOptionPane extends AbstractOptionPane
 	private JButton remove;
 	private JButton moveUp, moveDown;
 	private JButton reset;
-	private final JLabel caption;
+	private JLabel caption;
 	private JPanel buttons;
 
 	private void updateButtons()

@@ -33,7 +33,7 @@ import org.gjt.sp.jedit.TextUtilities;
  * for matching XML tags.
  *
  * @author Slava Pestov
- * @version $Id: StructureMatcher.java 25255 2020-04-15 22:19:42Z kpouer $
+ * @version $Id: StructureMatcher.java 23710 2014-11-01 23:35:36Z ezust $
  * @since jEdit 4.2pre3
  */
 public interface StructureMatcher
@@ -57,9 +57,8 @@ public interface StructureMatcher
 	//}}}
 
 	//{{{ BracketMatcher class
-	class BracketMatcher implements StructureMatcher
+	static class BracketMatcher implements StructureMatcher
 	{
-		@Override
 		public Match getMatch(TextArea textArea)
 		{
 			int offset = textArea.getCaretPosition()
@@ -88,7 +87,6 @@ public interface StructureMatcher
 			return null;
 		}
 
-		@Override
 		public void selectMatch(TextArea textArea)
 		{
 			textArea.selectToMatchingBracket();
@@ -100,7 +98,7 @@ public interface StructureMatcher
 	 * A structure match, denoted by a start and end position.
 	 * @since jEdit 4.2pre3
 	 */
-	class Match
+	public static class Match
 	{
 		public StructureMatcher matcher;
 		public int startLine;
@@ -130,14 +128,13 @@ public interface StructureMatcher
 	/**
 	 * Paints the structure match highlight.
 	 */
-	class Highlight extends TextAreaExtension
+	static class Highlight extends TextAreaExtension
 	{
 		Highlight(TextArea textArea)
 		{
 			this.textArea = textArea;
 		}
 
-		@Override
 		public void paintValidLine(Graphics2D gfx, int screenLine,
 			int physicalLine, int start, int end, int y)
 		{
@@ -238,6 +235,6 @@ public interface StructureMatcher
 			}
 		}
 
-		private final TextArea textArea;
+		private TextArea textArea;
 	} //}}}
 }

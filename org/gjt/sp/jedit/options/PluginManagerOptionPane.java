@@ -25,8 +25,10 @@ package org.gjt.sp.jedit.options;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import java.io.*;
 
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.pluginmgr.*;
@@ -35,7 +37,7 @@ import org.gjt.sp.util.*;
 /**
  * The plugin manager option pane.
  * 
- * @version $Id: PluginManagerOptionPane.java 25233 2020-04-13 15:32:00Z kpouer $
+ * @version $Id: PluginManagerOptionPane.java 24428 2016-06-23 02:49:29Z daleanson $
  */
 public class PluginManagerOptionPane extends AbstractOptionPane
 {
@@ -51,6 +53,7 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 	{
 		setLayout(new BorderLayout());
 
+
 		mirrorLabel = new JLabel();
 		updateMirrorLabel();
 		JPanel buttonPanel = new JPanel();
@@ -64,7 +67,7 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 				jEdit.getSettingsDirectory(),"jars"));
 			int delay = jEdit.getIntegerProperty("plugin-manager.list-cache.minutes", 10);
 			spinnerModel = new SpinnerNumberModel(delay, 0, 240, 5);
-			JSpinner cacheForSpinner = new JSpinner(spinnerModel);
+			cacheForSpinner = new JSpinner(spinnerModel);
 			spinnerPanel = new JPanel();
 			spinnerPanel.setLayout(new BoxLayout(spinnerPanel, BoxLayout.X_AXIS));
 			spinnerPanel.add(new JLabel(jEdit.getProperty("options.plugin-manager.list-cache.minutes")));
@@ -90,12 +93,7 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 		/* Update mirror list */
 		updateMirrors = new JButton(jEdit.getProperty(
 			"options.plugin-manager.updateMirrors"));
-		updateMirrors.addActionListener(e ->
-		{
-			updateMirrors.setEnabled(false);
-			updateStatus.setText(jEdit.getProperty("options.plugin-manager.workthread"));
-			ThreadUtilities.runInBackground(new UpdateMirrorsThread(true));
-		});
+		updateMirrors.addActionListener(new ActionHandler());
 		updateMirrors.setEnabled(false);
 		ThreadUtilities.runInBackground(new UpdateMirrorsThread(false));
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -161,7 +159,6 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 	} //}}}
 
 	//{{{ _save() method
-	@Override
 	protected void _save()
 	{
 		jEdit.setBooleanProperty("plugin-manager.installUser",
@@ -194,6 +191,7 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 	private JRadioButton settingsDir;
 	private JCheckBox downloadSource;
 	private JCheckBox deleteDownloads;
+	private JSpinner cacheForSpinner;
 	private SpinnerNumberModel spinnerModel;
 
 	private MirrorModel miraModel;
@@ -231,7 +229,7 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 
 		MirrorModel()
 		{
-			mirrors = new ArrayList<>();
+			mirrors = new ArrayList<MirrorList.Mirror>();
 		}
 
 		public String getID(int index)
@@ -239,13 +237,11 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 			return mirrors.get(index).id;
 		}
 
-		@Override
 		public int getSize()
 		{
 			return mirrors.size();
 		}
 
-		@Override
 		public String getElementAt(int index)
 		{
 			MirrorList.Mirror mirror = mirrors.get(index);
@@ -272,6 +268,17 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 
 		@Override
 		public void removeSelectionInterval(int index0, int index1) {}
+	} //}}}
+
+	//{{{ ActionHandler class
+	class ActionHandler implements ActionListener
+	{
+		public void actionPerformed(ActionEvent evt)
+		{
+			updateMirrors.setEnabled(false);
+			updateStatus.setText(jEdit.getProperty("options.plugin-manager.workthread"));
+			ThreadUtilities.runInBackground(new UpdateMirrorsThread(true));
+		}
 	} //}}}
 
 	//{{{ UpdateMirrorsThread class
@@ -303,17 +310,12 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 				setMaximum(3L);
 				setValue(0L);
 
-				final List<MirrorList.Mirror> mirrors = new ArrayList<>();
+				final List<MirrorList.Mirror> mirrors = new ArrayList<MirrorList.Mirror>();
 				try
 				{
-					MirrorList mirrorList;
+					MirrorList mirrorList = new MirrorList(download, this);
 					if (download)
-					{
-						mirrorList = MirrorList.mirrorListFromInternet(this);
-						mirrorList.saveXml();
-					}
-					else
-						mirrorList = MirrorList.mirrorListFromDisk(this);
+						saveMirrorList(mirrorList.getXml());
 
 					mirrors.addAll(mirrorList.getMirrors());
 				}
@@ -322,30 +324,38 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 					if (download)
 					{
 						Log.log(Log.ERROR,this,ex);
-						ThreadUtilities.runInDispatchThread(() ->
-							GUIUtilities.error(PluginManagerOptionPane.this, "ioerror",new String[] { ex.toString() })
-						);
+						ThreadUtilities.runInDispatchThread(new Runnable()
+						{
+							public void run()
+							{
+								GUIUtilities.error(PluginManagerOptionPane.this,
+								"ioerror",new String[] { ex.toString() });
+							}
+						});
 
 					}
 				}
 
-				ThreadUtilities.runInDispatchThread(() ->
+				ThreadUtilities.runInDispatchThread(new Runnable()
 				{
-					miraModel.setList(mirrors);
+					public void run()
+					{
+						miraModel.setList(mirrors);
 
-					String id = jEdit.getProperty("plugin-manager.mirror.id");
-					int size = miraModel.getSize();
-					for (int i=0; i < size; i++)
-					{
-						if (size == 1 || miraModel.getID(i).equals(id))
+						String id = jEdit.getProperty("plugin-manager.mirror.id");
+						int size = miraModel.getSize();
+						for (int i=0; i < size; i++)
 						{
-							miraList.setSelectedIndex(i);
-							break;
+							if (size == 1 || miraModel.getID(i).equals(id))
+							{
+								miraList.setSelectedIndex(i);
+								break;
+							}
 						}
-					}
-					if (size == 0)
-					{
-						miraList.clearSelection();
+						if (size == 0)
+						{
+							miraList.clearSelection();
+						}
 					}
 				});
 
@@ -353,11 +363,40 @@ public class PluginManagerOptionPane extends AbstractOptionPane
 			}
 			finally
 			{
-				ThreadUtilities.runInDispatchThread(() ->
+				ThreadUtilities.runInDispatchThread(new Runnable()
 				{
-					updateMirrors.setEnabled(true);
-					updateStatus.setText(null);
+					public void run()
+					{
+						updateMirrors.setEnabled(true);
+						updateStatus.setText(null);
+					}
 				});
+			}
+		} //}}}
+
+		//{{{ saveMirrorList() method
+		private void saveMirrorList(String xml)
+		{
+			String settingsDirectory = jEdit.getSettingsDirectory();
+			if(settingsDirectory == null)
+				return;
+
+			File mirrorList = new File(MiscUtilities.constructPath(
+				settingsDirectory,"mirrorList.xml"));
+			OutputStream out = null;
+
+			try
+			{
+				out = new BufferedOutputStream(new FileOutputStream(mirrorList));
+				IOUtilities.copyStream(null, new ByteArrayInputStream(xml.getBytes()), out, false);
+			}
+			catch (IOException e)
+			{
+				Log.log(Log.ERROR,this, "Unable to write cached mirror list : " + mirrorList);
+			}
+			finally
+			{
+				IOUtilities.closeQuietly((Closeable)out);
 			}
 		} //}}}
 	} //}}}

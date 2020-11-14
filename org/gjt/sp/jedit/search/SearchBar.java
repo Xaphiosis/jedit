@@ -37,7 +37,7 @@ import org.gjt.sp.util.SyntaxUtilities;
 
 /**
  * Incremental search tool bar.
- * @version $Id: SearchBar.java 25207 2020-04-12 14:36:56Z kpouer $
+ * @version $Id: SearchBar.java 24411 2016-06-19 11:02:53Z kerik-sf $
  */
 public class SearchBar extends JToolBar
 {
@@ -67,8 +67,9 @@ public class SearchBar extends JToolBar
 		Dimension max = find.getPreferredSize();
 		max.width = Integer.MAX_VALUE;
 		find.setMaximumSize(max);
+		ActionHandler actionHandler = new ActionHandler();
 		find.addKeyListener(new KeyHandler());
-		find.addActionListener(e -> find(false));
+		find.addActionListener(actionHandler);
 		find.getDocument().addDocumentListener(new DocumentHandler());
 
 		Insets margin = new Insets(1,1,1,1);
@@ -77,7 +78,7 @@ public class SearchBar extends JToolBar
 		
 		add(ignoreCase = new JCheckBox(jEdit.getProperty(
 			"search.case")));
-		ignoreCase.addActionListener(e -> SearchAndReplace.setIgnoreCase(ignoreCase.isSelected()));
+		ignoreCase.addActionListener(actionHandler);
 		ignoreCase.setMargin(margin);
 		ignoreCase.setOpaque(false);
 		ignoreCase.setRequestFocusEnabled(false);
@@ -85,7 +86,7 @@ public class SearchBar extends JToolBar
 		
 		add(regexp = new JCheckBox(jEdit.getProperty(
 			"search.regexp")));
-		regexp.addActionListener(e -> SearchAndReplace.setRegexp(regexp.isSelected()));
+		regexp.addActionListener(actionHandler);
 		regexp.setMargin(margin);
 		regexp.setOpaque(false);
 		regexp.setRequestFocusEnabled(false);
@@ -93,18 +94,14 @@ public class SearchBar extends JToolBar
 		
 		add(hyperSearch = new JCheckBox(jEdit.getProperty(
 			"search.hypersearch")));
-		hyperSearch.addActionListener(e ->
-		{
-			jEdit.setBooleanProperty("view.search.hypersearch.toggle", hyperSearch.isSelected());
-			update();
-		});
+		hyperSearch.addActionListener(actionHandler);
 		hyperSearch.setMargin(margin);
 		hyperSearch.setOpaque(false);
 		hyperSearch.setRequestFocusEnabled(false);
 
 		add(wholeWord = new JCheckBox(jEdit.getProperty(
 			"search.word.bar")));
-		wholeWord.addActionListener(e -> SearchAndReplace.setWholeWord(wholeWord.isSelected()));
+		wholeWord.addActionListener(actionHandler);
 		wholeWord.setMargin(margin);
 		wholeWord.setOpaque(false);
 		wholeWord.setRequestFocusEnabled(false);
@@ -203,7 +200,7 @@ public class SearchBar extends JToolBar
 
 		String text = find.getText();
 		//{{{ If nothing entered, show search and replace dialog box
-		if(text.isEmpty())
+		if(text.length() == 0)
 		{
 			jEdit.setBooleanProperty("search.hypersearch.toggle",
 				hyperSearch.isSelected());
@@ -337,11 +334,7 @@ public class SearchBar extends JToolBar
 			if(close == null)
 			{
 				close = new RolloverButton(GUIUtilities.loadIcon("closebox.gif"));
-				close.addActionListener(e ->
-				{
-					view.removeToolBar(this);
-					view.getEditPane().focusOnTextArea();
-				});
+				close.addActionListener(new ActionHandler());
 				close.setToolTipText(jEdit.getProperty(
 					"view.search.close-tooltip"));
 			}
@@ -355,6 +348,45 @@ public class SearchBar extends JToolBar
 	//}}}
 
 	//{{{ Inner classes
+
+	//{{{ ActionHandler class
+	class ActionHandler implements ActionListener
+	{
+		//{{{ actionPerformed() method
+		@Override
+		public void actionPerformed(ActionEvent evt)
+		{
+			Object source = evt.getSource();
+			if(source == find)
+				find(false);
+			else if(source == hyperSearch)
+			{
+				jEdit.setBooleanProperty("view.search.hypersearch.toggle",
+					hyperSearch.isSelected());
+				update();
+			}
+			else if(source == ignoreCase)
+			{
+				SearchAndReplace.setIgnoreCase(ignoreCase
+					.isSelected());
+			}
+			else if(source == regexp)
+			{
+				SearchAndReplace.setRegexp(regexp
+					.isSelected());
+			}
+			else if (source == wholeWord)
+			{
+				SearchAndReplace.setWholeWord(wholeWord
+					.isSelected());
+			}
+			else if(source == close)
+			{
+				view.removeToolBar(SearchBar.this);
+				view.getEditPane().focusOnTextArea();
+			}
+		} //}}}
+	} //}}}
 
 	//{{{ DocumentHandler class
 	class DocumentHandler implements DocumentListener
@@ -389,7 +421,7 @@ public class SearchBar extends JToolBar
 			if(!hyperSearch.isSelected())
 			{
 				String text = find.getText();
-				if(!text.isEmpty())
+				if(text.length() != 0)
 				{
 					// don't beep if not found.
 					// subsequent beeps are very
@@ -450,5 +482,16 @@ public class SearchBar extends JToolBar
 			}
 		}
 	} //}}}
+
+	//{{{ FocusHandler class
+	class FocusHandler extends FocusAdapter
+	{
+		@Override
+		public void focusLost(FocusEvent e)
+		{
+			getField().addCurrentToHistory();
+		}
+	} //}}}
+
 	//}}}
 }

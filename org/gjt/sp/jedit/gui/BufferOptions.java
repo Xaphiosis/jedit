@@ -19,26 +19,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
+
 package org.gjt.sp.jedit.gui;
 
+
 //{{{ Imports
+
 import javax.swing.border.EmptyBorder;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 import org.gjt.sp.jedit.options.BufferOptionPane;
 
 import org.gjt.sp.jedit.*;
+
 //}}}
 
-/**
- * Buffer-specific options dialog.
+/** Buffer-specific options dialog.
  * @author Slava Pestov
- * @version $Id: BufferOptions.java 25313 2020-05-04 22:18:59Z kpouer $
+ * @version $Id: BufferOptions.java 24251 2015-12-23 00:49:59Z daleanson $
+ *
  */
+
 public class BufferOptions extends EnhancedDialog
 {
 	//{{{ BufferOptions constructor
+
 	public BufferOptions(View view, Buffer buffer)
 	{
 		super(view,jEdit.getProperty("buffer-options.title"),true);
@@ -47,22 +54,24 @@ public class BufferOptions extends EnhancedDialog
 		content.setBorder(new EmptyBorder(12,12,12,12));
 		setContentPane(content);
 
+		ActionHandler actionListener = new ActionHandler();
 		panel = new BufferOptionPane();
 
 		content.add(BorderLayout.NORTH,panel);
 
 		//{{{ Buttons
+
 		JPanel buttons = new JPanel();
 		buttons.setLayout(new BoxLayout(buttons,BoxLayout.X_AXIS));
 		buttons.setBorder(new EmptyBorder(12,0,0,0));
 		buttons.add(Box.createGlue());
-
-		JButton ok = new JButton(jEdit.getProperty("common.ok"));
-		ok.addActionListener(e -> ok());
+		
+		ok = new JButton(jEdit.getProperty("common.ok"));
+		ok.addActionListener(actionListener);
 		getRootPane().setDefaultButton(ok);
 
-		JButton cancel = new JButton(jEdit.getProperty("common.cancel"));
-		cancel.addActionListener(e -> cancel());
+		cancel = new JButton(jEdit.getProperty("common.cancel"));
+		cancel.addActionListener(actionListener);
 		ok.setPreferredSize(cancel.getPreferredSize());
 		
 		buttons.add(ok);
@@ -71,6 +80,7 @@ public class BufferOptions extends EnhancedDialog
 		
 		//buttons.add(Box.createGlue());
 		content.add(BorderLayout.SOUTH,buttons);
+
 		//}}}
 
 		pack();
@@ -78,8 +88,10 @@ public class BufferOptions extends EnhancedDialog
 		setVisible(true);
 	} //}}}
 
+
+
 	//{{{ ok() method
-	@Override
+
 	public void ok()
 	{
 		panel.save();
@@ -87,14 +99,34 @@ public class BufferOptions extends EnhancedDialog
 	} //}}}
 
 	//{{{ cancel() method
-	@Override
+
 	public void cancel()
 	{
 		dispose();
 	} //}}}
 
 	//{{{ Private members
-	private final BufferOptionPane panel;
+
+	private BufferOptionPane panel;
+	private JButton ok;
+	private JButton cancel;
+
+	//{{{ ActionHandler class
+
+	class ActionHandler implements ActionListener
+	{
+		//{{{ actionPerformed() method
+		public void actionPerformed(ActionEvent evt)
+		{
+			Object source = evt.getSource();
+			if(source == ok)
+				ok();
+			else if(source == cancel)
+				cancel();
+		} //}}}
+
+	} //}}}
+
 	//}}}
 }
 

@@ -44,6 +44,6 @@ public class VFSPathSelected extends EBMessage
 	}
 
 	private final String path;
-	private final boolean isDir;
+	private boolean isDir;
 }
 

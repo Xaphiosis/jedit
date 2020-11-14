@@ -32,7 +32,9 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.swing.*;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import org.gjt.sp.jedit.EditBus.EBHandler;
 import org.gjt.sp.jedit.buffer.JEditBuffer;
@@ -49,6 +51,7 @@ import org.gjt.sp.jedit.options.GutterOptionPane;
 import org.gjt.sp.jedit.syntax.SyntaxStyle;
 import org.gjt.sp.jedit.textarea.AntiAlias;
 import org.gjt.sp.jedit.textarea.Gutter;
+import org.gjt.sp.jedit.textarea.GutterPopupHandler;
 import org.gjt.sp.jedit.textarea.JEditTextArea;
 import org.gjt.sp.jedit.textarea.MouseHandler;
 import org.gjt.sp.jedit.textarea.Selection;
@@ -87,7 +90,7 @@ import org.gjt.sp.util.ThreadUtilities;
  * @see View#getEditPanes()
  *
  * @author Slava Pestov
- * @version $Id: EditPane.java 25334 2020-05-10 09:51:15Z kpouer $
+ * @version $Id: EditPane.java 24820 2018-01-25 20:19:28Z daleanson $
  */
 public class EditPane extends JPanel implements BufferSetListener
 {
@@ -145,6 +148,9 @@ public class EditPane extends JPanel implements BufferSetListener
 	 */
 	public void setBuffer(@Nonnull final Buffer buffer, boolean requestFocus)
 	{
+		if(buffer == null)
+			throw new NullPointerException("The buffer cannot be null");
+
 		if(this.buffer == buffer)
 			return;
 
@@ -185,14 +191,17 @@ public class EditPane extends JPanel implements BufferSetListener
 
 		if (requestFocus)
 		{
-			SwingUtilities.invokeLater(() ->
+			SwingUtilities.invokeLater(new Runnable()
 			{
-				// only do this if we are the current edit pane
-				if(view.getEditPane() == EditPane.this
-					&& (bufferSwitcher == null
-					|| !bufferSwitcher.isPopupVisible()))
+				public void run()
 				{
-					textArea.requestFocus();
+					// only do this if we are the current edit pane
+					if(view.getEditPane() == EditPane.this
+						&& (bufferSwitcher == null
+						|| !bufferSwitcher.isPopupVisible()))
+					{
+						textArea.requestFocus();
+					}
 				}
 			});
 		}
@@ -201,17 +210,20 @@ public class EditPane extends JPanel implements BufferSetListener
 		// BufferUpdate.LOADED. Otherwise, we don't need to wait for IO.
 		if (!buffer.isLoading())
 		{
-			ThreadUtilities.runInDispatchThread(() ->
+			ThreadUtilities.runInDispatchThread(new Runnable()
 			{
-				// avoid a race condition
-				// see bug #834338
-				if(buffer == getBuffer())
-					loadCaretInfo();
-				// This must happen after loadCaretInfo.
-				// Otherwise caret is not restored properly.
-				int check = jEdit.getIntegerProperty("checkFileStatus");
-				if (jEdit.isStartupDone() && (check & GeneralOptionPane.checkFileStatus_focusBuffer) > 0)
-					jEdit.checkBufferStatus(view, true);
+				public void run()
+				{
+					// avoid a race condition
+					// see bug #834338
+					if(buffer == getBuffer())
+						loadCaretInfo();
+					// This must happen after loadCaretInfo.
+					// Otherwise caret is not restored properly.
+					int check = jEdit.getIntegerProperty("checkFileStatus");
+					if (jEdit.isStartupDone() && (check & GeneralOptionPane.checkFileStatus_focusBuffer) > 0)
+						jEdit.checkBufferStatus(view, true);
+				}
 			});
 		}
 	} //}}}
@@ -258,7 +270,13 @@ public class EditPane extends JPanel implements BufferSetListener
 	 */
 	public void focusOnTextArea()
 	{
-		SwingUtilities.invokeLater(textArea::requestFocus);
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				textArea.requestFocus();
+			}
+		});
 	} //}}}
 
 	//{{{ getTextArea() method
@@ -295,10 +313,14 @@ public class EditPane extends JPanel implements BufferSetListener
 			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 		else
 		{
-			SwingUtilities.invokeLater(() ->
+			SwingUtilities.invokeLater(new Runnable()
 			{
-				bufferSwitcher.requestFocus();
-				bufferSwitcher.showPopup();
+				public void run()
+				{
+					bufferSwitcher.requestFocus();
+					bufferSwitcher.showPopup();
+				}
+
 			});
 		}
 	} //}}}
@@ -661,7 +683,6 @@ public class EditPane extends JPanel implements BufferSetListener
 	 * @param index the position where it was added
 	 * @since jEdit 4.3pre15
 	 */
-	@Override
 	public void bufferAdded(Buffer buffer, int index)
 	{
 		if (buffer == null)
@@ -683,7 +704,6 @@ public class EditPane extends JPanel implements BufferSetListener
 	 * @param index the position where it was before being removed
 	 * @since jEdit 4.3pre15
 	 */
-	@Override
 	public void bufferRemoved(Buffer buffer, int index)
 	{
 		if (buffer.isUntitled())
@@ -725,7 +745,6 @@ public class EditPane extends JPanel implements BufferSetListener
 	 * @param newIndex the new position
 	 * @since jEdit 4.3pre15
 	 */
-	@Override
 	public void bufferMoved(Buffer buffer, int oldIndex, int newIndex)
 	{
 		if (bufferSwitcher != null)
@@ -737,7 +756,6 @@ public class EditPane extends JPanel implements BufferSetListener
 	 * The bufferSet was sorted
 	 * @since jEdit 4.3pre16
 	 */
-	@Override
 	public void bufferSetSorted()
 	{
 		if (bufferSwitcher != null)
@@ -806,11 +824,15 @@ public class EditPane extends JPanel implements BufferSetListener
 		gutter.setMinLineNumberDigitCount(GutterOptionPane.getMinLineNumberDigits());
 		gutter.setSelectionAreaEnabled(GutterOptionPane.isSelectionAreaEnabled());
 		gutter.addExtension(markerHighlight);
-		gutter.setSelectionPopupHandler((x, y, line) ->
+		gutter.setSelectionPopupHandler(
+			new GutterPopupHandler()
 			{
-				Buffer buffer1 = getBuffer();
-				buffer1.addOrRemoveMarker('\0',
-					buffer1.getLineStartOffset(line));
+				public void handlePopup(int x, int y, int line)
+				{
+					Buffer buffer = getBuffer();
+					buffer.addOrRemoveMarker('\0',
+						buffer.getLineStartOffset(line));
+				}
 			});
 
 		textArea.addStatusListener(new StatusHandler());
@@ -866,7 +888,7 @@ public class EditPane extends JPanel implements BufferSetListener
 	// is switching between buffers.  We want to keep the caret in the
 	// right position in each EditPane, which won't be the case if we
 	// just use the buffer caret property.
-	private final Map<String, CaretInfo> caretsForPath = new HashMap<>();
+	private final Map<String, CaretInfo> caretsForPath = new HashMap<String, CaretInfo>();
 
 	//}}}
 
@@ -906,15 +928,15 @@ public class EditPane extends JPanel implements BufferSetListener
 			"view.gutter.numberAlignment");
 		if ("right".equals(alignment))
 		{
-			gutter.setLineNumberAlignment(SwingConstants.RIGHT);
+			gutter.setLineNumberAlignment(Gutter.RIGHT);
 		}
 		else if ("center".equals(alignment))
 		{
-			gutter.setLineNumberAlignment(SwingConstants.CENTER);
+			gutter.setLineNumberAlignment(Gutter.CENTER);
 		}
 		else // left == default case
 		{
-			gutter.setLineNumberAlignment(SwingConstants.LEFT);
+			gutter.setLineNumberAlignment(Gutter.LEFT);
 		}
 
 		gutter.setFont(jEdit.getFontProperty("view.gutter.font"));
@@ -1167,7 +1189,6 @@ public class EditPane extends JPanel implements BufferSetListener
 	//{{{ StatusHandler class
 	class StatusHandler implements StatusListener
 	{
-		@Override
 		public void statusChanged(org.gjt.sp.jedit.textarea.TextArea textArea, int flag, boolean value)
 		{
 			StatusBar status = view.getStatus();
@@ -1196,7 +1217,6 @@ public class EditPane extends JPanel implements BufferSetListener
 			status.updateMiscStatus();
 		}
 
-		@Override
 		public void bracketSelected(org.gjt.sp.jedit.textarea.TextArea textArea, int line, String text)
 		{
 			StatusBar status = view.getStatus();
@@ -1208,7 +1228,6 @@ public class EditPane extends JPanel implements BufferSetListener
 				line, text }));
 		}
 
-		@Override
 		public void narrowActive(org.gjt.sp.jedit.textarea.TextArea textArea)
 		{
 			StatusBar status = view.getStatus();

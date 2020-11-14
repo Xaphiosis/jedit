@@ -29,7 +29,6 @@ import org.gjt.sp.jedit.gui.EnhancedButton;
 import org.gjt.sp.jedit.gui.FloatingWindowContainer;
 import org.gjt.sp.jedit.gui.SplashScreen;
 import org.gjt.sp.jedit.gui.VariableGridLayout;
-import org.gjt.sp.jedit.textarea.TextAreaMouseHandler;
 import org.jedit.keymap.Keymap;
 import org.gjt.sp.jedit.menu.EnhancedCheckBoxMenuItem;
 import org.gjt.sp.jedit.menu.EnhancedMenu;
@@ -46,7 +45,6 @@ import java.util.*;
 import java.util.List;
 import java.lang.ref.SoftReference;
 
-import javax.annotation.Nonnull;
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -75,6 +73,7 @@ import java.awt.font.FontRenderContext;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 //}}}
@@ -96,7 +95,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </ul>
  *
  * @author Slava Pestov
- * @version $Id: GUIUtilities.java 25221 2020-04-12 16:00:17Z kpouer $
+ * @version $Id: GUIUtilities.java 24913 2019-07-28 18:32:11Z daleanson $
  */
 public class GUIUtilities
 {
@@ -127,7 +126,7 @@ public class GUIUtilities
 			return null;
 
 		// * Enable old icon naming scheme support
-		if(deprecatedIcons.containsKey(iconName))
+		if(deprecatedIcons != null && deprecatedIcons.containsKey(iconName))
 			iconName = deprecatedIcons.get(iconName);
 
 		// check if there is a cached version first
@@ -138,8 +137,8 @@ public class GUIUtilities
 		}
 		if(cache == null)
 		{
-			cache = new Hashtable<>();
-			iconCache = new SoftReference<>(cache);
+			cache = new Hashtable<String, Icon>();
+			iconCache = new SoftReference<Map<String, Icon>>(cache);
 		}
 		Icon icon = cache.get(iconName);
 		if(icon != null)
@@ -371,12 +370,12 @@ public class GUIUtilities
 	 */
 	public static List<JMenuItem> getServiceContextMenuItems(JEditTextArea textArea, MouseEvent evt)
 	{
-		List<JMenuItem> list = new ArrayList<>();
+		List<JMenuItem> list = new ArrayList<JMenuItem>();
 		String serviceClassName =  DynamicContextMenuService.class.getName();
 		String[] menuServiceList = ServiceManager.getServiceNames(serviceClassName);
 		for (String menuServiceName : menuServiceList)
 		{
-			if (menuServiceName != null && !menuServiceName.trim().isEmpty())
+			if (menuServiceName != null && menuServiceName.trim().length() > 0)
 			{
 				DynamicContextMenuService dcms = (DynamicContextMenuService)
 						ServiceManager.getService(serviceClassName, menuServiceName);
@@ -494,7 +493,8 @@ public class GUIUtilities
 				else
 				{
 					JButton b = loadToolButton(context,button);
-					toolB.add(b);
+					if(b != null)
+						toolB.add(b);
 				}
 			}
 		}
@@ -512,7 +512,6 @@ public class GUIUtilities
 	 * @param name The name of the button
 	 * @return a button
 	 */
-	@Nonnull
 	public static EnhancedButton loadToolButton(String name)
 	{
 		return loadToolButton(jEdit.getActionContext(),name);
@@ -532,7 +531,6 @@ public class GUIUtilities
 	 * @return the button
 	 * @since jEdit 4.2pre1
 	 */
-	@Nonnull
 	public static EnhancedButton loadToolButton(ActionContext context,
 		String name)
 	{
@@ -587,7 +585,7 @@ public class GUIUtilities
 	*/
 	public static String getPlatformShortcutLabel(String label)
 	{
-		if( !OperatingSystem.isMacOSLF() || label == null || label.isEmpty())
+		if( !OperatingSystem.isMacOSLF() || label == null || label.length() == 0)
 			return label;
 
 		String[] strokes = label.split(" +");
@@ -621,16 +619,16 @@ public class GUIUtilities
 			shortcut1 = platform ? getPlatformShortcutLabel(shortcut1) : shortcut1;
 			shortcut2 = platform ? getPlatformShortcutLabel(shortcut2) : shortcut2;
 
-			if(shortcut1 == null || shortcut1.isEmpty())
+			if(shortcut1 == null || shortcut1.length() == 0)
 			{
-				if(shortcut2 == null || shortcut2.isEmpty())
+				if(shortcut2 == null || shortcut2.length() == 0)
 					return null;
 				else
 					return shortcut2;
 			}
 			else
 			{
-				if(shortcut2 == null || shortcut2.isEmpty())
+				if(shortcut2 == null || shortcut2.length() == 0)
 					return shortcut1;
 				else
 					return shortcut1 + " or " + shortcut2;
@@ -684,7 +682,14 @@ public class GUIUtilities
                 {
                         try
                         {
-                            EventQueue.invokeAndWait(() -> message(comp, name, args));
+                            EventQueue.invokeAndWait(new Runnable()
+                            {
+                                    @Override
+                                    public void run()
+                                    {
+                                            message(comp, name, args);
+                                    }
+                            });
                         }
                         catch (Exception e)		// NOPMD
                         {
@@ -721,7 +726,14 @@ public class GUIUtilities
                 {
                         try
                         {
-                                EventQueue.invokeAndWait(() -> error(comp, name, args));
+                                EventQueue.invokeAndWait(new Runnable()
+                                {
+                                        @Override
+                                        public void run()
+                                        {
+                                                error(comp, name, args);
+                                        }
+                                });
                         }
                         catch (Exception e)		// NOPMD
                         {
@@ -838,7 +850,14 @@ public class GUIUtilities
 		final String[] retValue = new String[1];
 		try
 		{
-			EventQueue.invokeAndWait(() -> retValue[0] = inputProperty(comp, name, args, def));
+			EventQueue.invokeAndWait(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					retValue[0] = inputProperty(comp, name, args, def);
+				}
+			});
 		}
 		catch (Exception e)
 		{
@@ -878,7 +897,14 @@ public class GUIUtilities
 		final int [] retValue = new int[1];
 		try
 		{
-			EventQueue.invokeAndWait(() -> retValue[0] = confirm(comp, name, args, buttons, type));
+			EventQueue.invokeAndWait(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					retValue[0] = confirm(comp, name, args, buttons, type);
+				}
+			});
 		}
 		catch (Exception e)
 		{
@@ -919,7 +945,14 @@ public class GUIUtilities
 		final int[] retValue = new int[1];
 		try
 		{
-			EventQueue.invokeAndWait(() -> retValue[0] = option(comp, name, args, type, options, initialValue));
+			EventQueue.invokeAndWait(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					retValue[0] = option(comp, name, args, type, options, initialValue);
+				}
+			});
 		}
 		catch (Exception e)
 		{
@@ -948,7 +981,7 @@ public class GUIUtilities
 	{
 		if (EventQueue.isDispatchThread())
 		{
-			JList<Object> list = new JList<>(listModel);
+			JList<Object> list = new JList<Object>(listModel);
 			list.setVisibleRowCount(8);
 
 			Object[] message = {
@@ -965,7 +998,14 @@ public class GUIUtilities
 		final int [] retValue = new int[1];
 		try
 		{
-			EventQueue.invokeAndWait(() -> retValue[0] = listConfirm(comp, name, args, listModel));
+			EventQueue.invokeAndWait(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					retValue[0] = listConfirm(comp, name, args, listModel);
+				}
+			});
 		}
 		catch (Exception e)
 		{
@@ -1019,7 +1059,14 @@ public class GUIUtilities
 		final int [] retValue = new int[1];
 		try
 		{
-			EventQueue.invokeAndWait(() -> retValue[0] = listConfirm(comp, name, args, listModel, selectedItems));
+			EventQueue.invokeAndWait(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					retValue[0] = listConfirm(comp, name, args, listModel, selectedItems);
+				}
+			});
 		}
 		catch (Exception e)
 		{
@@ -1042,7 +1089,6 @@ public class GUIUtilities
 	 * @return The selected file(s)
 	 * @since jEdit 2.6pre2
 	 */
-	@Nonnull
 	public static String[] showVFSFileDialog(View view, String path,
 		int type, boolean multipleSelection)
 	{
@@ -1075,7 +1121,6 @@ public class GUIUtilities
 	 * @return The selected file(s)
 	 * @since jEdit 4.3pre10
 	 */
-	@Nonnull
 	public static String[] showVFSFileDialog(Dialog parent, View view,
 		String path, int type, boolean multipleSelection)
 	{
@@ -1101,7 +1146,6 @@ public class GUIUtilities
 	 * @return The selected file(s)
 	 * @since jEdit 4.3pre10
 	 */
-	@Nonnull
 	public static String[] showVFSFileDialog(Frame parent, View view,
 		String path, int type, boolean multipleSelection)
 	{
@@ -1130,13 +1174,11 @@ public class GUIUtilities
 				return new Font("Monospaced", Font.PLAIN, 12);
 			}
 			else {
-				Font font2 =
-					new Font(OperatingSystem.isWindows() ? "Lucida Console" : "Monospaced",
-						Font.PLAIN, font1.getSize());
+				Font font2 = new Font("Lucida Sans Typewriter", Font.PLAIN, font1.getSize());
 				FontRenderContext frc = new FontRenderContext(null, true, false);
 				float scale =
 					font1.getLineMetrics("", frc).getHeight() / font2.getLineMetrics("", frc).getHeight();
-				return new Font(font2.getFamily(), font2.getStyle(), (int)(scale * font1.getSize() * 0.85));
+				return new Font(font2.getFamily(), font2.getStyle(), (int)(scale * font1.getSize()));
 			}
 		}
 	} //}}}
@@ -1562,24 +1604,24 @@ public class GUIUtilities
 	/**
 	 * @param modifiers The modifiers flag from a mouse event
 	 * @since jEdit 4.1pre9
-	 * @deprecated use {@link TextAreaMouseHandler#isMiddleButton(MouseEvent)}
+	 * @deprecated use {@link GenericGUIUtilities#isMiddleButton(int)}
 	 */
 	@Deprecated
 	public static boolean isMiddleButton(int modifiers)
 	{
-		return TextAreaMouseHandler.isMiddleButton(modifiers);
+		return GenericGUIUtilities.isMiddleButton(modifiers);
 	} //}}}
 
 	//{{{ isRightButton() method
 	/**
 	 * @param modifiers The modifiers flag from a mouse event
 	 * @since jEdit 4.1pre9
-	 * @deprecated use {@link TextAreaMouseHandler#isRightButton(MouseEvent)}
+	 * @deprecated use {@link GenericGUIUtilities#isRightButton(int)}
 	 */
 	@Deprecated
 	public static boolean isRightButton(int modifiers)
 	{
-		return TextAreaMouseHandler.isRightButton(modifiers);
+		return GenericGUIUtilities.isRightButton(modifiers);
 	} //}}}
 
 	//{{{ getScreenBounds() method
@@ -1802,7 +1844,7 @@ public class GUIUtilities
 	 * @since jEdit 4.3pre6
 	 * @see #saveGeometry(Window,String)
 	 */
-	public static void addSizeSaver(@Nonnull Frame frame, @Nonnull String name)
+	public static void addSizeSaver(Frame frame, String name)
 	{
 		addSizeSaver(frame,frame.getParent(),name);
 	} //}}}
@@ -1817,7 +1859,7 @@ public class GUIUtilities
 	 * @since jEdit 4.3pre7
 	 * @see #saveGeometry(Window,Container,String)
 	 */
-	public static void addSizeSaver(@Nonnull Frame frame, Container parent, @Nonnull String name)
+	public static void addSizeSaver(Frame frame, Container parent, String name)
 	{
 		SizeSaver ss = new SizeSaver(frame,parent,name);
 		frame.addWindowStateListener(ss);
@@ -1932,7 +1974,13 @@ public class GUIUtilities
 		// Have to do it in the EDT, since it creates gui components
 		try
 		{
-			SwingUtilities.invokeAndWait(() -> splash = new SplashScreen());
+			SwingUtilities.invokeAndWait(new Runnable()
+			{
+				public void run()
+				{
+					splash = new SplashScreen();
+				}
+			});
 		}
 		catch (Exception e)
 		{
@@ -1962,7 +2010,7 @@ public class GUIUtilities
 	private static SoftReference<Map<String, Icon>> iconCache;
 	private static String iconPath = "jeditresource:/org/gjt/sp/jedit/icons/themes/";
 	private static final String defaultIconPath = "jeditresource:/org/gjt/sp/jedit/icons/themes/";
-	private static final HashMap<String, String> deprecatedIcons = new HashMap<>();
+	private static final HashMap<String, String> deprecatedIcons = new HashMap<String, String>();
 
 	//{{{ _loadMenuItem() method
 	private static JMenuItem _loadMenuItem(String name, ActionContext context, boolean setMnemonic)
@@ -2099,15 +2147,21 @@ public class GUIUtilities
 	//{{{ Inner classes
 
 	private static final AtomicLong executorThreadsCounter = new AtomicLong();
-	private static final ScheduledExecutorService schedExecutor =
-		Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "SizeSaver-" + executorThreadsCounter.incrementAndGet()));
+	private static final ScheduledExecutorService schedExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory()
+	{
+		@Override
+		public Thread newThread(Runnable r)
+		{
+			return new Thread(r, "SizeSaver-" + executorThreadsCounter.incrementAndGet());
+		}
+	});
 	//{{{ SizeSaver class
 	/**
 	 * A combined ComponentListener and WindowStateListener to continually save a Frames size.<br />
 	 * For non-Frame's use {@link GUIUtilities#saveGeometry(Window,String)}
 	 *
 	 * @author Björn Kautler
-	 * @version $Id: GUIUtilities.java 25221 2020-04-12 16:00:17Z kpouer $
+	 * @version $Id: GUIUtilities.java 24913 2019-07-28 18:32:11Z daleanson $
 	 * @since jEdit 4.3pre6
 	 * @see GUIUtilities#saveGeometry(Window,Container,String)
 	 */
@@ -2126,10 +2180,12 @@ public class GUIUtilities
 		 * @param parent The parent to be relative to.
 		 * @param name The prefix for the settings
 		 */
-		SizeSaver(@Nonnull Frame frame, Container parent, @Nonnull String name)
+		SizeSaver(Frame frame, Container parent, String name)
 		{
-			Objects.requireNonNull(frame);
-			Objects.requireNonNull(name);
+			if (frame == null || name == null)
+			{
+				throw new NullPointerException();
+			}
 			this.frame = frame;
 			this.parent = parent;
 			this.name = name;
@@ -2190,7 +2246,21 @@ public class GUIUtilities
 		public void componentMoved(ComponentEvent ce)
 		{
 			final Rectangle bounds = frame.getBounds();
-			final Runnable sizeSaver = () -> EventQueue.invokeLater(() -> save(frame.getExtendedState(), bounds));
+			final Runnable sizeSaver = new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					EventQueue.invokeLater(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							save(frame.getExtendedState(), bounds);
+						}
+					});
+				}
+			};
 
 			cancelResizeSave();
 			resizeDelayFuture = schedExecutor.schedule(sizeSaver, 500, TimeUnit.MILLISECONDS);

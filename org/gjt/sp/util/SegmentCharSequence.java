@@ -21,7 +21,6 @@
 package org.gjt.sp.util;
 
 import java.io.Serializable;
-import javax.annotation.Nonnull;
 import javax.swing.text.Segment;
 
 /**
@@ -43,32 +42,28 @@ public class SegmentCharSequence implements CharSequence, Serializable
 		this.seg = seg;
 	}
 
-	@Override
 	public char charAt(int index)
 	{
 		return seg.array[seg.offset + offset + index];
 	}
 
-	@Override
 	public int length()
 	{
 		return length;
 	}
 
-	@Override
 	public CharSequence subSequence(int start, int end)
 	{
 		return new SegmentCharSequence(seg, offset + start, end - start);
 	}
 
-	@Nonnull
 	public String toString()
 	{
 		return new String(seg.array, offset+seg.offset, length);
 	}
 
-	private final int offset;
-	private final int length;
-	private final Segment seg;
+	private int 	offset;
+	private int 	length;
+	private Segment seg;
 }
 

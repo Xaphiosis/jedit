@@ -24,13 +24,15 @@
 package org.gjt.sp.jedit.textarea;
 
 //{{{ Imports
-import java.util.*;
+import java.util.EventObject;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.TooManyListenersException;
 import java.text.BreakIterator;
 import java.text.CharacterIterator;
 
 import javax.annotation.Nonnull;
 import javax.swing.*;
-import javax.swing.Timer;
 import javax.swing.event.*;
 import java.awt.event.*;
 import java.awt.*;
@@ -70,7 +72,7 @@ import org.gjt.sp.util.ThreadUtilities;
  *
  * @author Slava Pestov
  * @author kpouer (rafactoring into standalone text area)
- * @version $Id: TextArea.java 25322 2020-05-08 17:26:24Z kpouer $
+ * @version $Id: TextArea.java 24913 2019-07-28 18:32:11Z daleanson $
  */
 public abstract class TextArea extends JPanel
 {
@@ -89,7 +91,6 @@ public abstract class TextArea extends JPanel
 		selectionManager = new SelectionManager(this);
 		chunkCache = new ChunkCache(this);
 		painter = new TextAreaPainter(this);
-		elasticTabstopsExpander = new ElasticTabstopsTabExpander(this);
 		gutter = new Gutter(this);
 		gutter.setMouseActionsProvider(new MouseActions(propertyManager, "gutter"));
 		listenerList = new EventListenerList();
@@ -108,7 +109,8 @@ public abstract class TextArea extends JPanel
 		// some plugins add stuff in a "right-hand" gutter
 		RequestFocusLayerUI reqFocus = new RequestFocusLayerUI();
 		verticalBox = new Box(BoxLayout.X_AXIS);
-		verticalBox.add(new JLayer<>(vertical = new JScrollBar(Adjustable.VERTICAL), reqFocus));
+		verticalBox.add(new JLayer<JComponent>(
+			vertical = new JScrollBar(Adjustable.VERTICAL), reqFocus));
 		vertical.setRequestFocusEnabled(false);
 		add(ScrollLayout.RIGHT,verticalBox);
 		add(ScrollLayout.BOTTOM, new JLayer<JComponent>(
@@ -164,7 +166,7 @@ public abstract class TextArea extends JPanel
 	 */
 	public void initInputHandler()
 	{
-		actionContext = new JEditActionContext<>()
+		actionContext = new JEditActionContext<JEditBeanShellAction, JEditActionSet<JEditBeanShellAction>>()
 		{
 			@Override
 			public void invokeAction(EventObject evt, JEditBeanShellAction action)
@@ -255,6 +257,7 @@ public abstract class TextArea extends JPanel
 	 */
 	public AbstractInputHandler getInputHandler()
 	{
+
 		return inputHandlerProvider.getInputHandler();
 	} //}}}
 
@@ -633,7 +636,7 @@ public abstract class TextArea extends JPanel
 	 * Returns the number of lines visible in this text area.
 	 * @return the number of visible lines in the textarea
 	 */
-	public int getVisibleLines()
+	public final int getVisibleLines()
 	{
 		return visibleLines;
 	} //}}}
@@ -1622,8 +1625,8 @@ public abstract class TextArea extends JPanel
 		}
 
 		// Scan backwards, trying to find a bracket
-		String openBrackets = "([{«‹⟨⌈⌊⦇⟦⦃⟪";
-		String closeBrackets = ")]}»›⟩⌉⌋⦈⟧⦄⟫";
+		String openBrackets = "([{«‹⟨⌈⌊⦇⟦⦃";
+		String closeBrackets = ")]}»›⟩⌉⌋⦈⟧⦄";
 		int count = 1;
 		char openBracket = '\0';
 		char closeBracket = '\0';
@@ -4122,7 +4125,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 			return;
 		}
 		String comment = buffer.getContextSensitiveProperty(caret,"lineComment");
-		if(comment == null || comment.isEmpty())
+		if(comment == null || comment.length() == 0)
 		{
 			rangeLineComment();
 			return;
@@ -4162,7 +4165,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		String commentStart = buffer.getContextSensitiveProperty(caret,"commentStart");
 		String commentEnd = buffer.getContextSensitiveProperty(caret,"commentEnd");
 		if(!buffer.isEditable() || commentStart == null || commentEnd == null
-			|| commentStart.isEmpty() || commentEnd.isEmpty())
+			|| commentStart.length() == 0 || commentEnd.length() == 0)
 		{
 			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return;
@@ -4282,7 +4285,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 					text,maxLineLen,buffer.getTabSize());
 				buffer.insert(start,text);
 				int caretPos = start;
-				if (!text.isEmpty())
+				if (text.length() != 0)
 				{
 					caretPos += Math.min(text.length(),
 					TextUtilities.ignoringWhitespaceIndex(
@@ -4876,15 +4879,18 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 
 		int _tabSize = buffer.getTabSize();
 		char[] foo = new char[_tabSize];
-		Arrays.fill(foo, ' ');
+		for(int i = 0; i < foo.length; i++)
+			foo[i] = ' ';
 		tabSize = painter.getStringWidth(new String(foo));
 
 		// Calculate an average to use a reasonable value for
 		// propotional fonts.
 		String charWidthSample = "mix";
-		charWidthDouble = painter.getFont().getStringBounds(charWidthSample,
-			painter.getFontRenderContext()).getWidth() / charWidthSample.length();
-		charWidth = (int)Math.round(charWidthDouble);
+		charWidthDouble =
+			painter.getFont().getStringBounds(charWidthSample,
+				painter.getFontRenderContext()).getWidth() / charWidthSample.length();
+	    charWidth = (int)Math.round(charWidthDouble);
+
 
 		String oldWrap = wrap;
 		wrap = buffer.getStringProperty("wrap");
@@ -5097,12 +5103,17 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 			final int firstLine = getFirstLine();
 			final int visible = visibleLines - (lastLinePartial ? 1 : 0);
 
-			ThreadUtilities.runInDispatchThread(() ->
+			Runnable runnable = new Runnable()
 			{
-				vertical.setValues(firstLine,visible,0,lineCount);
-				vertical.setUnitIncrement(2);
-				vertical.setBlockIncrement(visible);
-			});
+				@Override
+				public void run()
+				{
+					vertical.setValues(firstLine,visible,0,lineCount);
+					vertical.setUnitIncrement(2);
+					vertical.setBlockIncrement(visible);
+				}
+			};
+			ThreadUtilities.runInDispatchThread(runnable);
 		}
 	} //}}}
 
@@ -5241,7 +5252,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 	private final MutableCaretEvent caretEvent;
 
 	private boolean caretBlinks;
-	private final ElasticTabstopsTabExpander elasticTabstopsExpander;
+	private final ElasticTabstopsTabExpander elasticTabstopsExpander = new ElasticTabstopsTabExpander(this);
 	protected InputHandlerProvider inputHandlerProvider;
 
 	private InputMethodSupport inputMethodSupport;
@@ -6138,7 +6149,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		String commentStart = buffer.getContextSensitiveProperty(caret,"commentStart");
 		String commentEnd = buffer.getContextSensitiveProperty(caret,"commentEnd");
 		if(!buffer.isEditable() || commentStart == null || commentEnd == null
-			|| commentStart.isEmpty() || commentEnd.isEmpty())
+			|| commentStart.length() == 0 || commentEnd.length() == 0)
 		{
 			javax.swing.UIManager.getLookAndFeel().provideErrorFeedback(null); 
 			return;
@@ -6155,7 +6166,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 			for (int line : lines)
 			{
 				String text = getLineText(line);
-				if (text.trim().isEmpty())
+				if (text.trim().length() == 0)
 					continue;
 				buffer.insert(getLineEndOffset(line) - 1, commentEnd);
 				buffer.insert(getLineStartOffset(line) +
@@ -6319,7 +6330,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		private final BreakIterator charBreaker;
 		private final int index0Offset;
 
-		LineCharacterBreaker(TextArea textArea, int offset)
+		public LineCharacterBreaker(TextArea textArea, int offset)
 		{
 			final int line = textArea.getLineOfOffset(offset);
 			charBreaker = BreakIterator.getCharacterInstance();
@@ -6373,7 +6384,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 			private final CharSequence sequence;
 			private int index;
 
-			CharIterator(CharSequence sequence)
+			public CharIterator(CharSequence sequence)
 			{
 				this.sequence = sequence;
 				index = 0;
@@ -6407,7 +6418,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 				int length = sequence.length();
 				if (index < length)
 				{
-					index += 1;
+					index = index + 1;
 					return current();
 				}
 				else
@@ -6421,7 +6432,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 			{
 				if (index > 0)
 				{
-					index -= 1;
+					index = index - 1;
 					return current();
 				}
 				else
@@ -6597,14 +6608,14 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent e)
 		{
-			/* **************************************************
+			/****************************************************
 			 * move caret depending on pressed control-keys:
 			 * - Alt: move cursor, do not select
 			 * - Alt+(shift or control): move cursor, select
 			 * - shift: scroll horizontally
 			 * - control: scroll single line
 			 * - <else>: scroll 3 lines
-			 * **************************************************/
+			 ****************************************************/
 			if(e.isAltDown())
 			{
 				boolean select = e.isShiftDown()

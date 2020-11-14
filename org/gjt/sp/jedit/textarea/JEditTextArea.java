@@ -25,6 +25,8 @@ package org.gjt.sp.jedit.textarea;
 
 //{{{ Imports
 import java.awt.AWTEvent;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.regex.Pattern;
 
@@ -55,7 +57,7 @@ import org.gjt.sp.jedit.print.PageBreakExtension;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: JEditTextArea.java 25032 2020-03-25 23:17:29Z kpouer $
+ * @version $Id: JEditTextArea.java 24492 2016-08-10 21:34:50Z daleanson $
  */
 public class JEditTextArea extends TextArea
 {
@@ -209,7 +211,6 @@ public class JEditTextArea extends TextArea
 	// }}}
 
 	// {{{ overrides from the base class that are EditBus  aware
-	@Override
 	public void goToBufferEnd(boolean select)
 	{
 		EditBus.send(new PositionChanging(this));
@@ -222,7 +223,6 @@ public class JEditTextArea extends TextArea
 	 * Also sends PositionChanging if it goes somewhere.
 	 * @since jEdit 4.3pre18
 	 */
-	@Override
 	public void goToMatchingBracket()
 	{
 		if(getLineLength(caretLine) != 0)
@@ -243,7 +243,6 @@ public class JEditTextArea extends TextArea
 	} //}}}
 
 
-	@Override
 	public void goToBufferStart(boolean select)
 	{
 		EditBus.send(new PositionChanging(this));
@@ -267,14 +266,14 @@ public class JEditTextArea extends TextArea
 	 */
 	public void showGoToLineDialog()
 	{
-		int maxLine = buffer.getLineCount();
+		int maxLine = Integer.valueOf(buffer.getLineCount());
 		String line = GUIUtilities.input(view,"goto-line",new Integer[] {1, maxLine},null);
 		if(line == null)
 			return;
 
 		try
 		{
-			int lineNumber;
+			int lineNumber = 0;
 			if (Pattern.matches("-\\d+", line) || Pattern.matches("\\+\\d+", line))
 			{
 				int offset = Integer.parseInt(line);
@@ -428,7 +427,7 @@ public class JEditTextArea extends TextArea
 	//{{{ Private members
 
 	//{{{ Instance variables
-	private final View view;
+	private View view;
 	//}}}
 	//}}}
 
@@ -480,7 +479,13 @@ public class JEditTextArea extends TextArea
 			return;
 		JMenuItem customize = new JMenuItem(jEdit.getProperty(
 			"view.context.customize"));
-		customize.addActionListener(evt1 -> new GlobalOptions(view,"context"));
+		customize.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent evt)
+			{
+				new GlobalOptions(view,"context");
+			}
+		});
 		popup.addSeparator();
 		popup.add(customize);
 	} //}}}

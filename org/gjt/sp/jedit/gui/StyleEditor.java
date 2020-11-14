@@ -27,6 +27,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -49,8 +51,9 @@ import org.gjt.sp.util.GenericGUIUtilities;
 import org.gjt.sp.util.SyntaxUtilities;
 import org.gjt.sp.jedit.buffer.JEditBuffer;
 
+//{{{ StyleEditor class
 /** Style editor dialog */
-public class StyleEditor extends EnhancedDialog
+public class StyleEditor extends EnhancedDialog implements ActionListener
 {
 	//{{{ invokeForCaret() method
 	/**
@@ -106,14 +109,11 @@ public class StyleEditor extends EnhancedDialog
 		super(parent, jEdit.getProperty("style-editor.title"),true);
 		initialize(parent, style, styleName);
 	}
-
 	public StyleEditor(JFrame parent, SyntaxStyle style, String styleName)
 	{
 		super(parent, jEdit.getProperty("style-editor.title"),true);
 		initialize(parent, style, styleName);
-	} //}}}
-
-	//{{{ initialize() method
+	}
 	private void initialize(Component comp, SyntaxStyle style, String styleName)
 	{
 		JPanel content = new JPanel(new BorderLayout(12, 12));
@@ -143,7 +143,7 @@ public class StyleEditor extends EnhancedDialog
 		}
 		fgColorCheckBox = new JCheckBox(jEdit.getProperty("style-editor.fgColor"));
 		fgColorCheckBox.setSelected(fg != null);
-		fgColorCheckBox.addActionListener(e -> fgColor.setEnabled(fgColorCheckBox.isSelected()));
+		fgColorCheckBox.addActionListener(this);
 		panel.add(fgColorCheckBox);
 
 		fgColor = new ColorWellButton(fg);
@@ -157,7 +157,7 @@ public class StyleEditor extends EnhancedDialog
 		}
 		bgColorCheckBox = new JCheckBox(jEdit.getProperty("style-editor.bgColor"));
 		bgColorCheckBox.setSelected(bg != null);
-		bgColorCheckBox.addActionListener(e -> bgColorCheckBox.isSelected());
+		bgColorCheckBox.addActionListener(this);
 		panel.add(bgColorCheckBox);
 
 		bgColor = new ColorWellButton(bg);
@@ -168,11 +168,11 @@ public class StyleEditor extends EnhancedDialog
 
 		Box box = new Box(BoxLayout.X_AXIS);
 		box.setBorder(BorderFactory.createEmptyBorder(17, 0, 0, 0));
-		JButton ok = new JButton(jEdit.getProperty("common.ok"));
+		ok = new JButton(jEdit.getProperty("common.ok"));
 		getRootPane().setDefaultButton(ok);
-		ok.addActionListener(e -> ok());
-		JButton cancel = new JButton(jEdit.getProperty("common.cancel"));
-		cancel.addActionListener(e -> cancel());
+		ok.addActionListener(this);
+		cancel = new JButton(jEdit.getProperty("common.cancel"));
+		cancel.addActionListener(this);
 		
 		GenericGUIUtilities.makeSameSize(ok, cancel);
 		
@@ -190,8 +190,21 @@ public class StyleEditor extends EnhancedDialog
 		setVisible(true);
 	} //}}}
 
+	//{{{ actionPerformed() method
+	public void actionPerformed(ActionEvent evt)
+	{
+		Object source = evt.getSource();
+		if(source == ok)
+			ok();
+		else if(source == cancel)
+			cancel();
+		else if(source == fgColorCheckBox)
+			fgColor.setEnabled(fgColorCheckBox.isSelected());
+		else if(source == bgColorCheckBox)
+			bgColor.setEnabled(bgColorCheckBox.isSelected());
+	} //}}}
+
 	//{{{ ok() method
-	@Override
 	public void ok()
 	{
 		okClicked = true;
@@ -199,7 +212,6 @@ public class StyleEditor extends EnhancedDialog
 	} //}}}
 
 	//{{{ cancel() method
-	@Override
 	public void cancel()
 	{
 		dispose();
@@ -211,8 +223,13 @@ public class StyleEditor extends EnhancedDialog
 		if(!okClicked)
 			return null;
 
-		Color foreground = fgColorCheckBox.isSelected() ? fgColor.getSelectedColor() : null;
-		Color background = bgColorCheckBox.isSelected() ? bgColor.getSelectedColor() : null;
+		Color foreground = (fgColorCheckBox.isSelected()
+			? fgColor.getSelectedColor()
+			: null);
+
+		Color background = (bgColorCheckBox.isSelected()
+			? bgColor.getSelectedColor()
+			: null);
 
 		Font font = new JLabel().getFont();
 		return new SyntaxStyle(foreground,background,
@@ -229,6 +246,8 @@ public class StyleEditor extends EnhancedDialog
 	private ColorWellButton fgColor;
 	private JCheckBox bgColorCheckBox;
 	private ColorWellButton bgColor;
+	private JButton ok;
+	private JButton cancel;
 	private boolean okClicked;
 	//}}}
-}
+} //}}}

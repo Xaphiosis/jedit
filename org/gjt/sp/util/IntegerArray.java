@@ -22,8 +22,6 @@
 
 package org.gjt.sp.util;
 
-import java.util.Arrays;
-
 /**
  * A simple collection that stores integers and grows automatically.
  */
@@ -46,7 +44,9 @@ public class IntegerArray
 	{
 		if(len >= array.length)
 		{
-			array = Arrays.copyOf(array, Math.max(len * 2, 10));
+			int[] arrayN = new int[len * 2];
+			System.arraycopy(array,0,arrayN,0,len);
+			array = arrayN;
 		}
 
 		array[len++] = num;

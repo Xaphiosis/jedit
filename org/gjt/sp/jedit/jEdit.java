@@ -24,11 +24,11 @@ package org.gjt.sp.jedit;
 //{{{ Imports
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import org.gjt.sp.jedit.datatransfer.JEditTransferableService;
 import org.gjt.sp.jedit.gui.tray.JTrayIconManager;
-import org.gjt.sp.jedit.manager.*;
-import org.gjt.sp.util.*;
+import org.gjt.sp.util.StringList;
 import org.jedit.core.MigrationService;
 import org.jedit.migration.OneTimeMigrationService;
 import org.jedit.keymap.KeymapManager;
@@ -46,15 +46,10 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
 import java.lang.reflect.InvocationTargetException;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import org.xml.sax.SAXParseException;
 
@@ -76,6 +71,14 @@ import org.gjt.sp.jedit.textarea.*;
 import org.gjt.sp.jedit.visitors.SaveCaretInfoVisitor;
 import org.gjt.sp.jedit.bufferset.BufferSetManager;
 import org.gjt.sp.jedit.bufferset.BufferSet;
+import org.gjt.sp.util.AwtRunnableQueue;
+import org.gjt.sp.util.GenericGUIUtilities;
+import org.gjt.sp.util.Log;
+import org.gjt.sp.util.StandardUtilities;
+import org.gjt.sp.util.TaskManager;
+import org.gjt.sp.util.XMLUtilities;
+import org.gjt.sp.util.IOUtilities;
+import org.gjt.sp.util.SyntaxUtilities;
 
 import static java.lang.Integer.parseInt;
 //}}}
@@ -83,7 +86,7 @@ import static java.lang.Integer.parseInt;
 /**
  * The main class of the jEdit text editor.
  * @author Slava Pestov
- * @version $Id: jEdit.java 25361 2020-09-03 09:40:01Z vampire0 $
+ * @version $Id: jEdit.java 24948 2019-08-23 09:14:12Z vampire0 $
  */
 public class jEdit
 {
@@ -104,7 +107,7 @@ public class jEdit
 	public static String getBuild()
 	{
 		// (major).(minor).(<99 = preX, 99 = "final").(bug fix)
-		return "05.07.01.00";
+		return "05.06.01.00";
 	} //}}}
 
 	//{{{ main() method
@@ -115,16 +118,10 @@ public class jEdit
 	 */
 	public static void main(String[] args)
 	{
-		// doing a copy to log it later as original args array is modified
-		String[] _args = args.clone();
+		StringList slargs = new StringList(args);
 		//{{{ Check for Java 11 or later
 		String javaVersion = System.getProperty("java.version");
-		String majorVersion = javaVersion.split("\\.", 2)[0];
-		if (majorVersion.endsWith("-ea"))
-		{
-			majorVersion = majorVersion.substring(0, majorVersion.length() - 3);
-		}
-		int javaMajorVersion = parseInt(majorVersion);
+		int javaMajorVersion = parseInt(javaVersion.split("\\.", 2)[0]);
 		if(javaMajorVersion < 11)
 		{
 			System.err.println("You are running Java version "
@@ -179,9 +176,8 @@ public class jEdit
 		{
 			String arg = args[i];
 			if(arg == null)
-			{
-			}
-			else if(arg.isEmpty())
+				continue;
+			else if(arg.length() == 0)
 				args[i] = null;
 			else if(arg.startsWith("-") && !endOpts)
 			{
@@ -285,7 +281,7 @@ public class jEdit
 
 		Log.init(true,level);
 
-		Log.log(Log.MESSAGE,jEdit.class, "starting with command line arguments: " + String.join(" ", _args));
+		Log.log(Log.MESSAGE,jEdit.class, "starting with command line arguments: " + slargs.join(" "));
 		//}}}
 
 		//{{{ Try connecting to another running jEdit instance
@@ -347,8 +343,19 @@ public class jEdit
 			}
 			finally
 			{
-				IOUtilities.closeQuietly(in);
-				IOUtilities.closeQuietly(out);
+				if(in != null)
+					try
+					{
+						in.close();
+					}
+					catch (IOException e) {}
+
+				if(out != null)
+					try
+					{
+						out.close();
+					}
+					catch (IOException e) {}
 			}
 		}
 
@@ -516,8 +523,8 @@ public class jEdit
 		GUIUtilities.advanceSplashProgress("init modes");
 
 		// Buffer sort
-		bufferManager.setSortBuffers(getBooleanProperty("sortBuffers"));
-		bufferManager.setSortByName(getBooleanProperty("sortByName"));
+		sortBuffers = getBooleanProperty("sortBuffers");
+		sortByName = getBooleanProperty("sortByName");
 
 		reloadModes();
 
@@ -1057,11 +1064,13 @@ public class jEdit
 		initProxy();
 
 		// we do this here instead of adding buffers to the bus.
-		bufferManager.forEach(buffer ->
+		Buffer buffer = buffersFirst;
+		while(buffer != null)
 		{
 			buffer.resetCachedProperties();
 			buffer.propertiesChanged();
-		});
+			buffer = buffer.next;
+		}
 
 		HistoryModel.setDefaultMax(getIntegerProperty("history",25));
 		HistoryModel.setDefaultMaxSize(getIntegerProperty("historyMaxSize", 5000000));
@@ -1071,7 +1080,14 @@ public class jEdit
 
 		if (getBooleanProperty("systrayicon"))
 		{
-			EventQueue.invokeLater(JTrayIconManager::addTrayIcon);
+			EventQueue.invokeLater(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					JTrayIconManager.addTrayIcon();
+				}
+			});
 		}
 		else
 		{
@@ -1092,7 +1108,7 @@ public class jEdit
 	 */
 	public static String[] getNotLoadedPluginJARs()
 	{
-		Collection<String> returnValue = new ArrayList<>();
+		List<String> returnValue = new ArrayList<String>();
 
 		if(jEditHome != null)
 		{
@@ -1116,7 +1132,8 @@ public class jEdit
 			}
 		}
 
-		String[] _returnValue = returnValue.toArray(StandardUtilities.EMPTY_STRING_ARRAY);
+		String[] _returnValue = new String[returnValue.size()];
+		returnValue.toArray(_returnValue);
 		return _returnValue;
 	} //}}}
 
@@ -1440,51 +1457,48 @@ public class jEdit
 				"modes","catalog"), false, false);
 		} //}}}
 
-		//Load user catalog second so user modes override global modes.
-		loadUserModeCatalog();
-
-		// This reloads the token marker and sends a message
-		// which causes edit panes to repaint their text areas
-		bufferManager.getBuffers().forEach(Buffer::setMode);
-	} //}}}
-
-	//{{{ loadUserModeCatalog() method
-	private static void loadUserModeCatalog()
-	{
-		if (settingsDirectory == null)
-			return;
-
-		Log.log(Log.DEBUG, jEdit.class, "Loading user mode catalog");
-		Path userModeDir = Path.of(MiscUtilities.constructPath(settingsDirectory,"modes"));
-		if(Files.notExists(userModeDir))
+		//{{{ Load user catalog second so user modes override global modes.
+		if(settingsDirectory != null)
 		{
-			Log.log(Log.DEBUG, jEdit.class, "The user mode path doesn't exist, creating it");
-			try
-			{
-				Files.createDirectories(userModeDir);
-			}
-			catch (IOException e)
-			{
-				Log.log(Log.DEBUG, jEdit.class, e, e);
-				return;
-			}
-		}
+			File userModeDir = new File(MiscUtilities.constructPath(
+				settingsDirectory,"modes"));
+			if(!userModeDir.exists())
+				userModeDir.mkdirs();
 
-		Path userCatalog = Path.of(MiscUtilities.constructPath(settingsDirectory,"modes","catalog"));
-		if (Files.notExists(userCatalog))
-		{
-			try
+			File userCatalog = new File(MiscUtilities.constructPath(
+				settingsDirectory,"modes","catalog"));
+			if(!userCatalog.exists())
 			{
 				// create dummy catalog
-				Files.writeString(userCatalog, jEdit.getProperty("defaultCatalog"));
+				BufferedWriter out = null;
+				try
+				{
+
+					out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(userCatalog), "UTF-8"));
+					out.write(jEdit.getProperty("defaultCatalog"));
+				}
+				catch(IOException io)
+				{
+					Log.log(Log.ERROR,jEdit.class,io);
+				}
+				finally
+				{
+					IOUtilities.closeQuietly((Closeable)out);
+				}
 			}
-			catch (IOException io)
-			{
-				Log.log(Log.ERROR,jEdit.class,io);
-			}
+
+			loadModeCatalog(userCatalog.getPath(), false, true);
+		} //}}}
+
+		Buffer buffer = buffersFirst;
+		while(buffer != null)
+		{
+			// This reloads the token marker and sends a message
+			// which causes edit panes to repaint their text areas
+			buffer.setMode();
+
+			buffer = buffer.next;
 		}
-		else
-			loadModeCatalog(userCatalog.toString(), false, true);
 	} //}}}
 
 	//{{{ getMode() method
@@ -1505,16 +1519,15 @@ public class jEdit
 	public static Mode[] getModes()
 	{
 		Mode[] modes = ModeProvider.instance.getModes();
-		Set<Mode> selected = new HashSet<>();
-		for (Mode mode : modes)
-		{
+		Set<Mode> selected = new HashSet<Mode>();
+		for (Mode mode : modes) {
 			if (!jEdit.getBooleanProperty("mode.opt-out." + mode.getName(), false))
 			{
 				selected.add(mode);
 			}
 		}
-		modes = selected.toArray(new Mode[0]);
-		Arrays.sort(modes, new StandardUtilities.StringCompare<>(true));
+		modes = selected.toArray(new Mode[selected.size()]);
+		Arrays.sort( modes, new StandardUtilities.StringCompare<Mode>( true ) );
 		return modes;
 	} //}}}
 
@@ -1526,7 +1539,7 @@ public class jEdit
 	public static Mode[] getAllModes()
 	{
 		Mode[] modes = ModeProvider.instance.getModes();
-		Arrays.sort(modes, new StandardUtilities.StringCompare<>(true));
+		Arrays.sort( modes, new StandardUtilities.StringCompare<Mode>( true ) );
 		return modes;
 	} //}}}
 
@@ -1685,7 +1698,13 @@ public class jEdit
 		{
 			URL u = new URL(path);
 			if ("file".equals(u.getProtocol()))
-				path = URLDecoder.decode(u.getPath(), StandardCharsets.UTF_8);
+			{
+				path = URLDecoder.decode(u.getPath(), "UTF-8");
+			}
+		}
+		catch(UnsupportedEncodingException e)
+		{
+			path = MiscUtilities.constructPath(parent,path);
 		}
 		catch (MalformedURLException e)
 		{
@@ -1694,7 +1713,7 @@ public class jEdit
 
 
 		if(props == null)
-			props = new Hashtable<>();
+			props = new Hashtable<String,Object>();
 		composeBufferPropsFromHistory(props, path);
 
 		Buffer newBuffer;
@@ -1702,12 +1721,11 @@ public class jEdit
 		synchronized (editBusOrderingLock)
 		{
 			View view = editPane == null ? null : editPane.getView();
-			synchronized(bufferManager.getBufferListLock())
+			synchronized(bufferListLock)
 			{
-				Optional<Buffer> optionalBuffer = bufferManager.getBuffer(path);
-				if (optionalBuffer.isPresent())
+				Buffer buffer = getBuffer(path);
+				if(buffer != null)
 				{
-					Buffer buffer = optionalBuffer.get();
 					if(editPane != null)
 						editPane.setBuffer(buffer,true);
 
@@ -1736,7 +1754,7 @@ public class jEdit
 
 				if(!newBuffer.load(view,false))
 					return null;
-				bufferManager.addBufferToList(newBuffer);
+				addBufferToList(newBuffer);
 				if (editPane != null)
 					bufferSetManager.addBuffer(editPane, newBuffer);
 				else
@@ -1855,17 +1873,16 @@ public class jEdit
 		path = MiscUtilities.constructPath(parent,path);
 
 		if(props == null)
-			props = new Hashtable<>();
+			props = new Hashtable<String, Object>();
 		composeBufferPropsFromHistory(props, path);
 
-		synchronized(bufferManager.getBufferListLock())
+		synchronized(bufferListLock)
 		{
-			Optional<Buffer> bufferOptional = bufferManager.getBuffer(path);
+			Buffer buffer = getBuffer(path);
+			if(buffer != null)
+				return buffer;
 
-			if(bufferOptional.isPresent())
-				return bufferOptional.get();
-
-			Buffer buffer = new Buffer(path,newFile,true,props,untitled);
+			buffer = new Buffer(path,newFile,true,props,untitled);
 			buffer.setBooleanProperty(Buffer.ENCODING_AUTODETECT, true);
 			if(!buffer.load(view,false))
 				return null;
@@ -1888,7 +1905,7 @@ public class jEdit
 
 		PerspectiveManager.setPerspectiveDirty(true);
 
-		bufferManager.addBufferToList(buffer);
+		addBufferToList(buffer);
 		buffer.commitTemporary();
 
 		// send full range of events to avoid breaking plugins
@@ -1985,6 +2002,7 @@ public class jEdit
 			{
 				if (buf.isUntitled() && !buf.isDirty())
 				{
+
 					if (!MiscUtilities.getParentOfPath(buf.getPath()).equals(dir))
 					{
 						// Find the highest Untitled-n file
@@ -2037,10 +2055,8 @@ public class jEdit
 		}
 
 		boolean doNotSave = false;
-		if(buffer.isDirty())
-		{
-			if (buffer.isUntitled() && jEdit.getBooleanProperty("suppressNotSavedConfirmUntitled"))
-			{
+		if(buffer.isDirty()) {
+			if (buffer.isUntitled() && jEdit.getBooleanProperty("suppressNotSavedConfirmUntitled")) {
 				_closeBuffer(view, buffer, true);
 				return true;
 			}
@@ -2063,7 +2079,7 @@ public class jEdit
 			else if(result != JOptionPane.NO_OPTION) {
 				// cancel
 				return false;
-			}
+		}
 			else if(result == JOptionPane.NO_OPTION) {
 				// when we close an untitled buffer, cos we do not want to save it by answering No,
 				// mark to delete the autosave file
@@ -2094,7 +2110,7 @@ public class jEdit
 				closeBuffer(editPane.getView(), buffer);
 				break;
 			case view:
-				List<View> views = viewManager.getViews();
+				View[] views = jEdit.getViews();
 				int viewOwner = 0;
 				for (View view : views)
 				{
@@ -2180,7 +2196,7 @@ public class jEdit
 			if(view != null)
 				view.getEditPane().saveCaretInfo();
 			Integer _caret = (Integer)buffer.getProperty(Buffer.CARET);
-			int caret = _caret == null ? 0 : _caret;
+			int caret = _caret == null ? 0 : _caret.intValue();
 
 			BufferHistory.setEntry(buffer.getPath(),caret,
 				(Selection[])buffer.getProperty(Buffer.SELECTION),
@@ -2190,7 +2206,16 @@ public class jEdit
 
 		EditBus.send(new BufferUpdate(buffer,view,BufferUpdate.CLOSING));
 
-		bufferManager.removeBuffer(buffer);
+		//FIXME: Duplicate code? Same is done in removeBufferFromList(buffer);
+		String path = buffer.getSymlinkPath();
+		if((VFSManager.getVFSForPath(path).getCapabilities()
+			& VFS.CASE_INSENSITIVE_CAP) != 0)
+		{
+			path = path.toLowerCase();
+		}
+		bufferHash.remove(path);
+
+		removeBufferFromList(buffer);
 
 		buffer.close(doNotSave);
 		DisplayManager.bufferClosed(buffer);
@@ -2224,20 +2249,26 @@ public class jEdit
 		if(view != null)
 			view.getEditPane().saveCaretInfo();
 
+		boolean dirty = false;
+
 		boolean saveRecent = !(isExiting && jEdit.getBooleanProperty("restore"));
 
 		boolean autosaveUntitled = jEdit.getBooleanProperty("autosaveUntitled");
 
 		boolean suppressNotSavedConfirmUntitled = jEdit.getBooleanProperty("suppressNotSavedConfirmUntitled") || autosaveUntitled;
 
-		Optional<Buffer> firstDirty = bufferManager
-			.getBuffers(Buffer::isDirty)
-			.stream()
-			.filter(buffer -> !(buffer.isUntitled() && suppressNotSavedConfirmUntitled))
-			.findFirst();
-
-		if (firstDirty.isPresent())
+		Buffer buffer = buffersFirst;
+		while(buffer != null)
 		{
+			if(buffer.isDirty() && !( buffer.isUntitled() && suppressNotSavedConfirmUntitled ) )
+			{
+				dirty = true;
+				break;
+			}
+			buffer = buffer.next;
+		}
+
+		if(dirty) {
 			boolean ok = new CloseDialog(view).isOK();
 			if(!ok)
 				return false;
@@ -2248,11 +2279,47 @@ public class jEdit
 		if(VFSManager.errorOccurred())
 			return false;
 
-		bufferManager.closeAllBuffers(view,
-			isExiting,
-			autosaveUntitled,
-			saveRecent,
-			jEdit.getBooleanProperty("persistentMarkers"));
+		// close remaining buffers (the close dialog only deals with
+		// dirty ones)
+
+		buffer = buffersFirst;
+
+		// zero it here so that BufferTabs doesn't have any problems
+		buffersFirst = buffersLast = null;
+		bufferHash.clear();
+		bufferCount = 0;
+
+		while(buffer != null)
+		{
+			if((!buffer.isNewFile() || (buffer.isUntitled() && autosaveUntitled)) && saveRecent)
+			{
+				Integer _caret = (Integer)buffer.getProperty(Buffer.CARET);
+				int caret = _caret == null ? 0 : _caret.intValue();
+				BufferHistory.setEntry(buffer.getPath(),caret,
+					(Selection[])buffer.getProperty(Buffer.SELECTION),
+					buffer.getStringProperty(JEditBuffer.ENCODING),
+					buffer.getMode().getName());
+			}
+
+			// do not delete untitled buffer when started with background
+			if(!isExiting && !(buffer.isUntitled() && autosaveUntitled))
+			{
+				EditBus.send(new BufferUpdate(buffer,view,BufferUpdate.CLOSING));
+			}
+
+			buffer.close();
+			DisplayManager.bufferClosed(buffer);
+			// do not delete untitled buffer when started with background
+			if(!isExiting && !(buffer.isUntitled() && autosaveUntitled))
+			{
+				bufferSetManager.removeBuffer(buffer);
+				EditBus.send(new BufferUpdate(buffer,view,
+					BufferUpdate.CLOSED));
+			}
+			if(jEdit.getBooleanProperty("persistentMarkers"))
+				buffer.updateMarkersFile(view);
+			buffer = buffer.next;
+		}
 
 		PerspectiveManager.setPerspectiveDirty(true);
 
@@ -2279,20 +2346,26 @@ public class jEdit
 	 */
 	public static void saveAllBuffers(View view, boolean confirm)
 	{
-		Collection<Buffer> dirtyBuffers = bufferManager.getBuffers(Buffer::isDirty);
+		List<Buffer> buffers = new ArrayList<Buffer>();
+		List<String> selectedBuffers = new ArrayList<String>();
 
-		Buffer current = view.getBuffer();
-
-		Stream<Buffer> toSaveBufferStream;
-		if (confirm && !dirtyBuffers.isEmpty())
 		{
-			DefaultListModel<String> listModel = new DefaultListModel<>();
-			dirtyBuffers
-				.stream()
-				.map(Buffer::getPath)
-				.forEach(listModel::addElement);
+			Buffer buffer = buffersFirst;
+			while (buffer != null) {
+				if (buffer.isDirty()) {
+					buffers.add(buffer);
+					selectedBuffers.add(buffer.getPath());
+				}
+				buffer = buffer.next;
+			}
+		}
 
-			JList<String> bufferList = new JList<>(listModel);
+		if (confirm && !buffers.isEmpty())
+		{
+			DefaultListModel<String> listModel = new DefaultListModel<String>();
+			for (Buffer buffer : buffers) listModel.addElement(buffer.getPath());
+
+			JList<String> bufferList = new JList<String>(listModel);
 			bufferList.setVisibleRowCount(Math.min(listModel.getSize(), 10));
 			bufferList.setSelectionInterval(0, listModel.getSize() - 1);
 
@@ -2304,21 +2377,16 @@ public class jEdit
 			if(result != JOptionPane.YES_OPTION)
 				return;
 
-			List<String> dirtySelectedBuffers = bufferList.getSelectedValuesList();
-			toSaveBufferStream = dirtyBuffers
-				.stream()
-				.filter(buffer -> dirtySelectedBuffers.contains(buffer.getPath()));
+			selectedBuffers = bufferList.getSelectedValuesList();
 		}
-		else
-		{
-			toSaveBufferStream = dirtyBuffers.stream();
-		}
-		toSaveBufferStream.forEach(buffer ->
-		{
-			if (buffer.isNewFile()) view.setBuffer(buffer);
-			buffer.save(view, null, true, true);
-		});
 
+		Buffer current = view.getBuffer();
+		for (Buffer buffer : buffers) {
+			if (selectedBuffers.contains(buffer.getPath())) {
+				if (buffer.isNewFile()) view.setBuffer(buffer);
+				buffer.save(view, null, true, true);
+			}
+		}
 		view.setBuffer(current);
 	} //}}}
 
@@ -2332,29 +2400,30 @@ public class jEdit
 	 */
 	public static void reloadAllBuffers(View view, boolean confirm)
 	{
-		List<Buffer> titledBuffers = jEdit.getBufferManager().getTitledBuffers();
+		boolean hasDirty = false;
+		Buffer[] buffers = jEdit.getBuffers();
 
-		if (confirm)
+		for(int i = 0; i < buffers.length && !hasDirty; i++)
+			hasDirty = !buffers[i].isUntitled() && buffers[i].isDirty();
+
+		if(confirm && hasDirty)
 		{
-			// Find a dirty buffer that is not untitled
-			Optional<Buffer> dirtyBuffer = titledBuffers
-				.stream()
-				.filter(JEditBuffer::isDirty)
-				.findFirst();
-			if (dirtyBuffer.isPresent())
-			{
-				int result = GUIUtilities.confirm(view,"reload-all",null,
-					JOptionPane.YES_NO_OPTION,
-					JOptionPane.QUESTION_MESSAGE);
-				if(result != JOptionPane.YES_OPTION)
-					return;
-			}
+			int result = GUIUtilities.confirm(view,"reload-all",null,
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.QUESTION_MESSAGE);
+			if(result != JOptionPane.YES_OPTION)
+				return;
 		}
 
 		// save caret info. Buffer.load() will load it.
 		visit(new SaveCaretInfoVisitor());
 
-		titledBuffers.forEach(buffer -> buffer.load(view, true));
+		for (Buffer buffer : buffers)
+		{
+			if (buffer.isUntitled())
+				continue;
+			buffer.load(view, true);
+		}
 	} //}}}
 
 	//{{{ _getBuffer() method
@@ -2368,14 +2437,25 @@ public class jEdit
 	 *
 	 * @see MiscUtilities#constructPath(String,String)
 	 * @see MiscUtilities#resolveSymlinks(String)
-	 * @see BufferManager#getBuffer(String)
+	 * @see #getBuffer(String)
 	 *
 	 * @since jEdit 4.2pre7
 	 */
-	@Deprecated(since = "5.6pre1")
 	public static Buffer _getBuffer(String path)
 	{
-		return bufferManager._getBuffer(path).orElse(null);
+		// paths on case-insensitive filesystems are stored as lower
+		// case in the hash.
+		if((VFSManager.getVFSForPath(path).getCapabilities()
+			& VFS.CASE_INSENSITIVE_CAP) != 0)
+		{
+			path = path.toLowerCase();
+		}
+
+		// TODO: danson, this causes ProjectViewer to block, not sure why yet
+		synchronized(bufferListLock)
+		{
+			return bufferHash.get(path);
+		}
 	} //}}}
 
 	//{{{ getBuffer() method
@@ -2383,7 +2463,7 @@ public class jEdit
 	 * Returns the buffer with the specified path name. The path name
 	 * must be an absolute path. This method automatically resolves
 	 * symbolic links. If performance is critical, cache the canonical
-	 * path and call {@link BufferManager#getBuffer(String)} instead.
+	 * path and call {@link #_getBuffer(String)} instead.
 	 *
 	 * @param path The path name
 	 *
@@ -2392,10 +2472,9 @@ public class jEdit
 	 * @see MiscUtilities#constructPath(String,String)
 	 * @see MiscUtilities#resolveSymlinks(String)
 	 */
-	@Deprecated(since = "5.6pre1")
 	public static Buffer getBuffer(String path)
 	{
-		return bufferManager.getBuffer(path).orElse(null);
+		return _getBuffer(MiscUtilities.resolveSymlinks(path));
 	} //}}}
 
 	//{{{ getBuffers() method
@@ -2404,10 +2483,19 @@ public class jEdit
 	 * @return  an array of all open buffers
 	 * @see View#getBuffers()
 	 */
-	@Deprecated(since = "5.6pre1")
 	public static Buffer[] getBuffers()
 	{
-		return bufferManager.getBuffers().toArray(BufferManagerImpl.EMPTY_BUFFER_ARRAY);
+		synchronized(bufferListLock)
+		{
+			Buffer[] buffers = new Buffer[bufferCount];
+			Buffer buffer = buffersFirst;
+			for(int i = 0; i < bufferCount; i++)
+			{
+				buffers[i] = buffer;
+				buffer = buffer.next;
+			}
+			return buffers;
+		}
 	} //}}}
 
 	//{{{ getBufferCount() method
@@ -2416,7 +2504,7 @@ public class jEdit
 	 */
 	public static int getBufferCount()
 	{
-		return bufferManager.size();
+		return bufferCount;
 	} //}}}
 
 	//{{{ getFirstBuffer() method
@@ -2425,7 +2513,7 @@ public class jEdit
 	 */
 	public static Buffer getFirstBuffer()
 	{
-		return bufferManager.getFirst();
+		return buffersFirst;
 	} //}}}
 
 	//{{{ getLastBuffer() method
@@ -2435,7 +2523,7 @@ public class jEdit
 	 */
 	public static Buffer getLastBuffer()
 	{
-		return bufferManager.getLast();
+		return buffersLast;
 	} //}}}
 
 	//{{{ moveBuffer() method
@@ -2461,39 +2549,6 @@ public class jEdit
 	public static BufferSetManager getBufferSetManager()
 	{
 		return bufferSetManager;
-	} //}}}
-
-	//{{{ getBufferManager() method
-	/**
-	 * Returns the buffer manager
-	 * @return the buffer manager
-	 * @since jEdit 5.6pre1
-	 */
-	public static BufferManager getBufferManager()
-	{
-		return bufferManager;
-	} //}}}
-
-	//{{{ getEditPaneManager() method
-	/**
-	 * Returns the Edit Pane manger
-	 * @return the edit pane manager
-	 * @since jEdit 5.6pre1
-	 */
-	public static EditPaneManager getEditPaneManager()
-	{
-		return editPaneManager;
-	} //}}}
-
-	//{{{ getViewManager() method
-	/**
-	 * Returns the view manager
-	 * @return the view manager
-	 * @since jEdit 5.6pre1
-	 */
-	public static ViewManager getViewManager()
-	{
-		return viewManager;
 	} //}}}
 
 	//{{{ getPropertyManager() method
@@ -2529,8 +2584,75 @@ public class jEdit
 	{
 		Log.log(Log.DEBUG, jEdit.class, "checkBufferStatus for " +
 			(currentBuffer ? "current buffer: " + view.getBuffer() : "all buffers"));
+
+		// still need to call the status check even if the option is
+		// off, so that the write protection is updated if it changes
+		// on disk
+
+		// auto reload changed buffers?
+		boolean autoReload = getBooleanProperty("autoReload");
+
+		// the problem with this is that if we have two edit panes
+		// looking at the same buffer and the file is reloaded both
+		// will jump to the same location
 		visit(new SaveCaretInfoVisitor());
-		bufferManager.checkBufferStatus(view, currentBuffer, getBooleanProperty("autoReload"));
+
+		Buffer buffer = buffersFirst;
+
+		int[] states = new int[bufferCount];
+		int i = 0;
+		boolean notifyFileChanged = false;
+		while(buffer != null)
+		{
+			if(currentBuffer && buffer != view.getBuffer())
+			{
+				buffer = buffer.next;
+				i++;
+				continue;
+			}
+
+			states[i] = buffer.checkFileStatus(view);
+
+			switch(states[i])
+			{
+			case Buffer.FILE_CHANGED:
+				if(buffer.getAutoReload())
+				{
+					if(buffer.isDirty())
+						notifyFileChanged = true;
+					else
+					{
+						buffer.load(view,true);
+						// File can be changed into link on disk or vice versa, so update
+						// file-path,buffer key value pair in bufferHash
+						final Buffer b = buffer;
+						Runnable runnable = new Runnable()
+						{
+							public void run()
+							{
+								updateBufferHash(b);
+							}
+						};
+						AwtRunnableQueue.INSTANCE.runAfterIoTasks(runnable);
+					}
+				}
+				else	// no automatic reload even if general setting is true
+					autoReload = false;
+				// don't notify user if "do nothing" was chosen
+				if(buffer.getAutoReloadDialog())
+					notifyFileChanged = true;
+				break;
+			case Buffer.FILE_DELETED:
+				notifyFileChanged = true;
+				break;
+			}
+
+			buffer = buffer.next;
+			i++;
+		}
+
+		if(notifyFileChanged)
+			new FilesChangedDialog(view,states,autoReload);
 	} //}}}
 
 	//}}}
@@ -2546,6 +2668,18 @@ public class jEdit
 	{
 		return inputHandler;
 	} //}}}
+
+	/* public static void newViewTest()
+	{
+		long time = System.currentTimeMillis();
+		for(int i = 0; i < 30; i++)
+		{
+			Buffer b = newFile(null);
+			b.insert(0,"x");
+			new View(b,null,false);
+		}
+		System.err.println(System.currentTimeMillis() - time);
+	} */
 
 	//{{{ newView() methods
 	/**
@@ -2615,7 +2749,7 @@ public class jEdit
 			}
 
 			View newView = new View(buffer,config);
-			viewManager.addViewToList(newView);
+			addViewToList(newView);
 
 			EditBus.send(new ViewUpdate(newView,ViewUpdate.CREATED));
 
@@ -2636,7 +2770,7 @@ public class jEdit
 			}
 
 			// show tip of the day
-			if(newView == viewManager.getFirst())
+			if(newView == viewsFirst)
 			{
 				newView.getTextArea().requestFocus();
 
@@ -2676,10 +2810,16 @@ public class jEdit
 	/**
 	 * Returns an array of all open views.
 	 */
-	@Deprecated(since = "5.6pre1")
 	public static View[] getViews()
 	{
-		return viewManager.getViews().toArray(ViewManagerImpl.EMPTY_VIEW_ARRAY);
+		View[] views = new View[viewCount];
+		View view = viewsFirst;
+		for(int i = 0; i < viewCount; i++)
+		{
+			views[i] = view;
+			view = view.next;
+		}
+		return views;
 	} //}}}
 
 	//{{{ getViewCount() method
@@ -2688,7 +2828,7 @@ public class jEdit
 	 */
 	public static int getViewCount()
 	{
-		return viewManager.size();
+		return viewCount;
 	} //}}}
 
 	//{{{ getFirstView() method
@@ -2697,7 +2837,7 @@ public class jEdit
 	 */
 	public static View getFirstView()
 	{
-		return viewManager.getFirst();
+		return viewsFirst;
 	} //}}}
 
 	//{{{ getLastView() method
@@ -2706,7 +2846,7 @@ public class jEdit
 	 */
 	public static View getLastView()
 	{
-		return viewManager.getLast();
+		return viewsLast;
 	} //}}}
 
 	//{{{ getActiveView() method
@@ -2716,7 +2856,13 @@ public class jEdit
 	 */
 	public static View getActiveView()
 	{
-		return viewManager.getActiveView();
+		if(activeView == null)
+		{
+			// eg user just closed a view and didn't focus another
+			return viewsFirst;
+		}
+		else
+			return activeView;
 	} //}}}
 
 	//}}}
@@ -2941,7 +3087,7 @@ public class jEdit
 	{
 		// Close dialog, view.close() call need a view...
 		if(view == null)
-			view = viewManager.getActiveViewInternal();
+			view = activeView;
 
 		// Wait for pending I/O requests
 		TaskManager.instance.waitForIoTasks();
@@ -2986,7 +3132,12 @@ public class jEdit
 			// in this case, we can't directly call
 			// view.close(); we have to call closeView()
 			// for all open views
-			viewManager.forEach(v -> closeView(v, false));
+			view = viewsFirst;
+			while(view != null)
+			{
+				closeView(view,false);
+				view = view.next;
+			}
 
 			// Save settings in case user kills the backgrounded
 			// jEdit process
@@ -2994,11 +3145,17 @@ public class jEdit
 		}
 		else
 		{
+
 			// Send EditorExiting
 			EditBus.send(new EditorExiting(null));
 
 			// Save view properties here
-			viewManager.forEach(v -> closeView(v, false));
+			view = viewsFirst;
+			while(view != null)
+			{
+				closeView(view,false);
+				view = view.next;
+			}
 
 			// Stop autosave timer
 			Autosave.stop();
@@ -3037,20 +3194,18 @@ public class jEdit
 	//{{{ visit() method
 	/**
 	 * Visit the views, editpanes and textareas
-	 *
-	 * @see org.gjt.sp.jedit.manager.ViewManager#forEach(Consumer)
-	 * @see org.gjt.sp.jedit.manager.BufferManager#forEach(Consumer)
-	 *
 	 * @param visitor the visitor
 	 * @since jEdit 4.3pre13
 	 */
 	public static void visit(JEditVisitor visitor)
 	{
-		viewManager.forEach(view ->
+		View view = jEdit.getFirstView();
+		while (view != null)
 		{
 			visitor.visit(view);
 			view.visit(visitor);
-		});
+			view = view.getNext();
+		}
 	} //}}}
 
 	//{{{ getRegisterStatusPrompt() method
@@ -3093,8 +3248,29 @@ public class jEdit
 	 */
 	static void updatePosition(String oldPath, Buffer buffer)
 	{
-		bufferManager.updatePosition(oldPath, buffer);
-	}
+		if((VFSManager.getVFSForPath(oldPath).getCapabilities()
+			& VFS.CASE_INSENSITIVE_CAP) != 0)
+		{
+			oldPath = oldPath.toLowerCase();
+		}
+
+		bufferHash.remove(oldPath);
+
+		String path = buffer.getSymlinkPath();
+		if((VFSManager.getVFSForPath(path).getCapabilities()
+			& VFS.CASE_INSENSITIVE_CAP) != 0)
+		{
+			path = path.toLowerCase();
+		}
+
+		bufferHash.put(path,buffer);
+
+		if(sortBuffers)
+		{
+			removeBufferFromList(buffer);
+			addBufferToList(buffer);
+		}
+	} //}}}
 
 	//{{{ loadMode() method
 	/**
@@ -3179,7 +3355,7 @@ public class jEdit
 		synchronized(pluginErrorLock)
 		{
 			if(pluginErrors == null)
-				pluginErrors = new Vector<>();
+				pluginErrors = new Vector<ErrorListDialog.ErrorEntry>();
 
 			ErrorListDialog.ErrorEntry newEntry =
 				new ErrorListDialog.ErrorEntry(
@@ -3194,7 +3370,14 @@ public class jEdit
 
 			if(isStartupDone())
 			{
-				EventQueue.invokeLater(jEdit::showPluginErrorDialog);
+				EventQueue.invokeLater(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						showPluginErrorDialog();
+					}
+				});
 			}
 		}
 	} //}}}
@@ -3202,7 +3385,7 @@ public class jEdit
 	//{{{ setActiveView() method
 	static void setActiveView(View view)
 	{
-		viewManager.setActiveView(view);
+		jEdit.activeView = view;
 	} //}}}
 
 	//{{{ getActiveViewInternal() method
@@ -3211,11 +3394,40 @@ public class jEdit
 	 *
 	 * @since 4.3pre10
 	 */
-	@Nullable
 	public static View getActiveViewInternal()
 	{
-		return viewManager.getActiveViewInternal();
+		return activeView;
 	} //}}}
+
+		//{{{ updateBufferHash() method
+	/**
+	 * @since jEdit 5.3pre1
+	 */
+	static void updateBufferHash(Buffer buffer)
+	{
+		// Remove path,buffer key,value pair from bufferHash. We use iterator over values
+		// to find our buffer i.s.o. removing it with bufferHash.remove(oldPath), because
+		// path can be changed (e.g. file changed on disk into link.
+		for (Iterator<Buffer> iterator = bufferHash.values().iterator(); iterator.hasNext();)
+		{
+			Buffer b = (Buffer) iterator.next();
+			// Since values() is a Collection connected to bufferHash, removing buffer from the
+			// values() collection also removes it from bufferHash
+			if(buffer == b)
+				iterator.remove();
+        }
+
+		String path = buffer.getSymlinkPath();
+		if((VFSManager.getVFSForPath(path).getCapabilities()
+			& VFS.CASE_INSENSITIVE_CAP) != 0)
+		{
+			path = path.toLowerCase();
+		}
+
+		bufferHash.put(path,buffer);
+
+	} //}}}
+
 	//}}}
 
 	//{{{ Private members
@@ -3225,7 +3437,7 @@ public class jEdit
 	private static String settingsDirectory;
 	private static String jarCacheDirectory;
 	private static long propsModTime;
-	private static PropertyManager propMgr = new PropertyManager();
+	private static PropertyManager propMgr;
 	private static EditServer server;
 	private static boolean background;
 	private static ActionContext actionContext;
@@ -3235,21 +3447,35 @@ public class jEdit
 	private static Vector<PluginJAR> jars;
 	private static final JEditPropertyManager propertyManager =
 	                     new JEditPropertyManager();
-	private static final long startupTime = System.currentTimeMillis();
+	private static long startupTime = System.currentTimeMillis();
 
 	private static boolean saveCaret;
 	private static InputHandler inputHandler;
 	private static KeymapManager keymapManager;
 
 	private static BufferSetManager bufferSetManager;
-	private static BufferManagerImpl bufferManager = new BufferManagerImpl();
-	private static ViewManagerImpl viewManager = new ViewManagerImpl();
-	private static EditPaneManager editPaneManager = new EditPaneManagerImpl(viewManager);
+
+	// buffer link list
+	private static boolean sortBuffers;
+	private static boolean sortByName;
+	private static int bufferCount;
+	private static Buffer buffersFirst;
+	private static Buffer buffersLast;
+	private static Map<String, Buffer> bufferHash;
+
+	// makes openTemporary() thread-safe
+	private static final Object bufferListLock = new Object();
 
 	private static final Object editBusOrderingLock	= new Object();
 
-	private static final List<Boolean> startupDone = new Vector<>();
-	private static final Vector<String> additionalFiles = new Vector<>();
+	// view link list
+	private static int viewCount;
+	private static View viewsFirst;
+	private static View viewsLast;
+	private static View activeView;
+
+	private static final List<Boolean> startupDone = new Vector<Boolean>();
+	private static Vector<String> additionalFiles = new Vector<String>();
 
 	private static Thread mainThread;
 	//}}}
@@ -3393,7 +3619,7 @@ public class jEdit
 				}
 			}
 		};
-		jars = new Vector<>();
+		jars = new Vector<PluginJAR>();
 		FoldHandler.foldHandlerProvider = new ServiceManager.ServiceFoldHandlerProvider();
 		actionContext = new ActionContext()
 		{
@@ -3426,6 +3652,8 @@ public class jEdit
 				}
 			}
 		};
+
+		bufferHash = new HashMap<String, Buffer>();
 
 		File userKeymapFolder = null;
 		if (settingsDirectory != null)
@@ -3519,7 +3747,15 @@ public class jEdit
 		Thread.currentThread().setContextClassLoader(new JARClassLoader());
 		// Perhaps if Xerces wasn't slightly brain-damaged, we would
 		// not need this
-		EventQueue.invokeLater(() -> Thread.currentThread().setContextClassLoader(new JARClassLoader()));
+		EventQueue.invokeLater(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				Thread.currentThread().setContextClassLoader(
+					new JARClassLoader());
+			}
+		});
 	} //}}}
 
 	//{{{ getResourceAsUTF8Text() method
@@ -3534,8 +3770,9 @@ public class jEdit
 		Reader text = null;
 		try
 		{
-			// Using our CharsetEncoding to reliably detect encoding errors.
-			Encoding utf8 = new CharsetEncoding(StandardCharsets.UTF_8);
+			// Using our CharsetEncoding to reliably detect
+			// encoding errors.
+			CharsetEncoding utf8 = new CharsetEncoding("UTF-8");
 			text = utf8.getTextReader(bytes);
 		}
 		finally
@@ -3554,6 +3791,8 @@ public class jEdit
 	 */
 	private static void initSystemProperties()
 	{
+		propMgr = new PropertyManager();
+
 		try
 		{
 			propMgr.loadSystemProps(getResourceAsUTF8Text(
@@ -3832,16 +4071,20 @@ public class jEdit
 		{
 			try
 			{
-				EventQueue.invokeAndWait(() ->
+				EventQueue.invokeAndWait(
+					new Runnable()
 					{
-						try
+						public void run()
 						{
-							UIManager.setLookAndFeel(sLf);
-						}
-						catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException e)
-						{
-							// same as above, there really isn't anything to do and this may be
-							// bogus, the lnf may be from the Look And Feel plugin
+							try
+							{
+								UIManager.setLookAndFeel(sLf);
+							}
+							catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException e)
+							{
+								// same as above, there really isn't anything to do and this may be
+								// bogus, the lnf may be from the Look And Feel plugin
+							}
 						}
 					}
 				);
@@ -3942,7 +4185,7 @@ public class jEdit
 	@Nonnull
 	private static String getPLAFClassName(@Nullable String lf)
 	{
-		if (lf != null && !lf.isEmpty())
+		if (lf != null && lf.length() != 0)
 		{
 			return lf;
 		}
@@ -3959,7 +4202,25 @@ public class jEdit
 	//{{{ getNextUntitledBufferId() method
 	public static int getNextUntitledBufferId()
 	{
-		return bufferManager.getNextUntitledBufferId();
+		int untitledCount = 0;
+		Buffer buffer = buffersFirst;
+		while(buffer != null)
+		{
+			if(buffer.getName().startsWith("Untitled-"))
+			{
+				try
+				{
+					untitledCount = Math.max(untitledCount,
+						parseInt(buffer.getName()
+						.substring(9)));
+				}
+				catch(NumberFormatException nf)
+				{
+				}
+			}
+			buffer = buffer.next;
+		}
+		return untitledCount + 1;
 	} //}}}
 
 	//{{{ runStartupScripts() method
@@ -3976,7 +4237,7 @@ public class jEdit
 			return;
 
 		Arrays.sort(snippets,
-			new StandardUtilities.StringCompare<>(true));
+			new StandardUtilities.StringCompare<File>(true));
 
 		/*
 		 * Force the default encoding to UTF-8 temporarily.
@@ -4073,7 +4334,7 @@ public class jEdit
 			if(password == null)
 				password = "";
 
-			if(username == null || username.isEmpty())
+			if(username == null || username.length()==0)
 			{
 				Log.log(Log.DEBUG, jEdit.class, "HTTP proxy without user");
 				Authenticator.setDefault(new FirewallAuthenticator(null));
@@ -4115,7 +4376,7 @@ public class jEdit
 			@Override
 			public void run()
 			{
-				int count = bufferManager.size();
+				int count = getBufferCount();
 
 				boolean restoreFiles = restore
 					&& jEdit.getBooleanProperty("restore")
@@ -4206,7 +4467,7 @@ public class jEdit
 			? "-1" : ""));
 
 		Frame frame = (PluginManager.getInstance() == null
-			? viewManager.getFirst()
+			? viewsFirst
 			: PluginManager.getInstance());
 
 		new ErrorListDialog(frame,
@@ -4308,6 +4569,177 @@ loop:
 		});
 	} //}}}
 
+	//{{{ addBufferToList() method
+	private static void addBufferToList(Buffer buffer)
+	{
+		synchronized(bufferListLock)
+		{
+			String symlinkPath = buffer.getSymlinkPath();
+			if((VFSManager.getVFSForPath(symlinkPath).getCapabilities()
+				& VFS.CASE_INSENSITIVE_CAP) != 0)
+			{
+				symlinkPath = symlinkPath.toLowerCase();
+			}
+
+			bufferCount++;
+
+			bufferHash.put(symlinkPath,buffer);
+
+			if(buffersFirst == null)
+			{
+				buffersFirst = buffersLast = buffer;
+				return;
+			}
+			//{{{ Sort buffer list
+			else if(sortBuffers)
+			{
+				String str11, str12;
+				if(sortByName)
+				{
+					str11 = buffer.getName();
+					str12 = buffer.getDirectory();
+				}
+				else
+				{
+					str11 = buffer.getDirectory();
+					str12 = buffer.getName();
+				}
+
+				Buffer _buffer = buffersFirst;
+				while(_buffer != null)
+				{
+					String str21, str22;
+					if(sortByName)
+					{
+						str21 = _buffer.getName();
+						str22 = _buffer.getDirectory();
+					}
+					else
+					{
+						str21 = _buffer.getDirectory();
+						str22 = _buffer.getName();
+					}
+
+					int comp = StandardUtilities.compareStrings(str11,str21,true);
+					if(comp < 0 || (comp == 0 && StandardUtilities.compareStrings(str12,str22,true) < 0))
+					{
+						buffer.next = _buffer;
+						buffer.prev = _buffer.prev;
+						_buffer.prev = buffer;
+						if(_buffer != buffersFirst)
+							buffer.prev.next = buffer;
+						else
+							buffersFirst = buffer;
+						return;
+					}
+
+					_buffer = _buffer.next;
+				}
+			} //}}}
+
+			buffer.prev = buffersLast;
+			// fixes the hang that can occur if we 'save as' to a
+			// new filename which requires re-sorting
+			buffer.next = null;
+			buffersLast.next = buffer;
+			buffersLast = buffer;
+		}
+	} //}}}
+
+	//{{{ removeBufferFromList() method
+	private static void removeBufferFromList(Buffer buffer)
+	{
+		synchronized(bufferListLock)
+		{
+			bufferCount--;
+
+			String path = buffer.getPath();
+			if(OperatingSystem.isCaseInsensitiveFS())
+				path = path.toLowerCase();
+
+			bufferHash.remove(path);
+
+			if(buffer == buffersFirst && buffer == buffersLast)
+			{
+				buffersFirst = buffersLast = null;
+				return;
+			}
+
+			if(buffer == buffersFirst)
+			{
+				buffersFirst = buffer.next;
+				buffer.next.prev = null;
+			}
+			else
+			{
+				if (buffer.prev != null)
+					buffer.prev.next = buffer.next;
+			}
+
+			if(buffer == buffersLast)
+			{
+				buffersLast = buffersLast.prev;
+				buffer.prev.next = null;
+			}
+			else
+			{
+				if (buffer.next != null)
+					buffer.next.prev = buffer.prev;
+			}
+
+			// fixes the hang that can occur if we 'save as' to a new
+			// filename which requires re-sorting
+			buffer.next = buffer.prev = null;
+		}
+	} //}}}
+
+	//{{{ addViewToList() method
+	private static void addViewToList(View view)
+	{
+		viewCount++;
+
+		if(viewsFirst == null)
+			viewsFirst = viewsLast = view;
+		else
+		{
+			view.prev = viewsLast;
+			viewsLast.next = view;
+			viewsLast = view;
+		}
+	} //}}}
+
+	//{{{ removeViewFromList() method
+	private static void removeViewFromList(View view)
+	{
+		viewCount--;
+
+		if(viewsFirst == viewsLast)
+		{
+			viewsFirst = viewsLast = null;
+			return;
+		}
+
+		if(view == viewsFirst)
+		{
+			viewsFirst = view.next;
+			view.next.prev = null;
+		}
+		else
+		{
+			view.prev.next = view.next;
+		}
+
+		if(view == viewsLast)
+		{
+			viewsLast = viewsLast.prev;
+			view.prev.next = null;
+		}
+		else
+		{
+			view.next.prev = view.prev;
+		}
+	} //}}}
+
 	//{{{ closeView() method
 	/**
 	 * closeView() used by exit().
@@ -4316,7 +4748,7 @@ loop:
 	{
 		PerspectiveManager.setPerspectiveDirty(true);
 
-		if(viewManager.getFirst() == viewManager.getLast() && callExit)
+		if(viewsFirst == viewsLast && callExit)
 		{
 			exit(view,false); /* exit does editor event & save */
 			// Coming here means the request has been canceled.
@@ -4329,15 +4761,12 @@ loop:
 
 			// move the dirty untitled buffers to the next open view's current editpane bufferset (first or last)
 			boolean moveUntitled = jEdit.getBooleanProperty("autosaveUntitled");
-			if (moveUntitled && getBufferSetManager().getScope() != BufferSet.Scope.global) {
+			if (moveUntitled && !getBufferSetManager().getScope().equals(BufferSet.Scope.global)) {
 				View targetView;
-				if (view.equals(viewManager.getFirst()))
-				{
-					targetView = viewManager.getLast();
-				}
-				else
-				{
-					targetView = viewManager.getFirst();
+				if ( view.equals(viewsFirst) ) {
+					targetView = viewsLast;
+				} else {
+					targetView = viewsFirst;
 				}
 				BufferSet bufferSet = targetView.getEditPane().getBufferSet();
 				for (Buffer buffer : view.getBuffers()) {
@@ -4349,10 +4778,10 @@ loop:
 
 			view.close();
 			view.dispose();
-			viewManager.remove(view);
+			removeViewFromList(view);
 
-			if(view == viewManager.getActiveViewInternal())
-				viewManager.setActiveView(null);
+			if(view == activeView)
+				activeView = null;
 
 			return true;
 		}
@@ -4519,4 +4948,5 @@ loop:
 			startupDone.set(startupDoneIndex, true);
 		}
 	} //}}}
+
 }

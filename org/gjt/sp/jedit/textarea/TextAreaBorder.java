@@ -29,7 +29,6 @@ import javax.swing.plaf.metal.MetalLookAndFeel;
 public class TextAreaBorder extends AbstractBorder
 {
 	//{{{ paintBorder() method
-	@Override
 	public void paintBorder(Component c, Graphics g, int x, int y,
 		int width, int height)
 	{
@@ -50,7 +49,6 @@ public class TextAreaBorder extends AbstractBorder
 	} //}}}
 
 	//{{{ getBorderInsets() method
-	@Override
 	public Insets getBorderInsets(Component c)
 	{
 		return new Insets(1,1,2,2);

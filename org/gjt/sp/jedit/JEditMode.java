@@ -80,21 +80,25 @@ class JEditMode extends Mode
 	@Override
 	public Object getProperty(String key)
 	{
-		String prefix = "mode." + name + '.';
-		String property = jEdit.getProperty(prefix + key);
-		if(property != null)
-		{
-			Object value;
-			try
+
+		//if(jEdit.getBooleanProperty(prefix + "customSettings"))
+		//{
+			String prefix = "mode." + name + '.';
+			String property = jEdit.getProperty(prefix + key);
+			if(property != null)
 			{
-				value = Integer.valueOf(property);
+				Object value;
+				try
+				{
+					value = Integer.valueOf(property);
+				}
+				catch(NumberFormatException nf)
+				{
+					value = property;
+				}
+				return value;
 			}
-			catch(NumberFormatException nf)
-			{
-				value = property;
-			}
-			return value;
-		}
+		//}
 
 		Object value = props.get(key);
 		if(value != null)

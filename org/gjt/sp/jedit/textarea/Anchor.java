@@ -25,7 +25,7 @@ package org.gjt.sp.jedit.textarea;
 /**
  * A base point for physical line/screen line conversion.
  * @author Slava Pestov
- * @version $Id: Anchor.java 25336 2020-05-16 07:07:28Z kpouer $
+ * @version $Id: Anchor.java 22361 2012-10-13 12:07:28Z thomasmey $
  */
 abstract class Anchor
 {
@@ -105,7 +105,7 @@ abstract class Anchor
 
 	//{{{ preContentInserted() method
 	/**
-	 * Some content will be inserted.
+	 * Some content is inserted.
 	 *
 	 * @param startLine the start of the insert
 	 * @param numLines the number of inserted lines
@@ -186,8 +186,7 @@ abstract class Anchor
 		this.callChanged = callChanged;
 	}
 
-	boolean isCallReset()
-	{
+	boolean isCallReset() {
 		return callReset;
 	}
 

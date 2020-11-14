@@ -27,7 +27,7 @@ package org.gjt.sp.jedit.search;
 
 /**
  * Implements literal search using the Boyer-Moore algorithm.
- * @version $Id: BoyerMooreSearchMatcher.java 25302 2020-05-02 16:53:25Z kpouer $
+ * @version $Id: BoyerMooreSearchMatcher.java 23332 2013-11-13 14:24:31Z kpouer $
  */
 public class BoyerMooreSearchMatcher extends SearchMatcher
 {
@@ -125,7 +125,7 @@ public class BoyerMooreSearchMatcher extends SearchMatcher
 		int[] skip, suffix;
 		if(reverse)
 		{
-			if(back_suffix == null)
+			if(back_skip == null)
 			{
 				back_skip = generateSkipArray(true);
 				back_suffix = generateSuffixArray(true);
@@ -135,7 +135,7 @@ public class BoyerMooreSearchMatcher extends SearchMatcher
 		}
 		else
 		{
-			if(fwd_suffix == null)
+			if(fwd_skip == null)
 			{
 				fwd_skip = generateSkipArray(false);
 				fwd_suffix = generateSuffixArray(false);
@@ -157,7 +157,7 @@ public class BoyerMooreSearchMatcher extends SearchMatcher
 		//	? offset + pattern.length - 1
 		//	: length - pattern.length;
 
-		char ch;
+		char ch = 0;
 
 		int bad_char;
 		int good_suffix;
@@ -221,9 +221,9 @@ public class BoyerMooreSearchMatcher extends SearchMatcher
 	} //}}}
 
 	//{{{ Private members
-	private final char[] pattern;
-	private final int pattern_end;
-	private final boolean ignoreCase;
+	private char[] pattern;
+	private int pattern_end;
+	private boolean ignoreCase;
 
 	// Boyer-Moore member fields
 	private int[] fwd_skip;

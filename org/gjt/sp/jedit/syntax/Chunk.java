@@ -24,15 +24,15 @@
 package org.gjt.sp.jedit.syntax;
 
 //{{{ Imports
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.swing.text.*;
 import java.awt.font.*;
 import java.awt.geom.*;
 import java.awt.*;
-import java.util.*;
-import java.lang.ref.SoftReference;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.lang.ref.SoftReference;
 
 import org.gjt.sp.jedit.Debug;
 import org.gjt.sp.jedit.IPropertyManager;
@@ -45,9 +45,6 @@ import org.gjt.sp.jedit.IPropertyManager;
  */
 public class Chunk extends Token
 {
-	public static final Font[] EMPTY_FONT_ARRAY = new Font[0];
-	public static final GlyphVector[] EMPTY_GLYPH_VECTOR_ARRAY = new GlyphVector[0];
-
 	//{{{ paintChunkList() method
 	/**
 	 * Paints a chunk list.
@@ -80,17 +77,14 @@ public class Chunk extends Token
 						chunks.width,10));
 				}
 
-				if(chunks.isAccessible() && chunks.glyphData != null)
+				if(chunks.isAccessible() && chunks.glyphs != null)
 				{
 					gfx.setFont(chunks.style.getFont());
 					gfx.setColor(chunks.style.getForegroundColor());
 					if (glyphVector)
 						chunks.drawGlyphs(gfx, x + _x, y);
-					else if(chunks.chars != null)
+					else if(chunks.str != null)
 					{
-						if (chunks.str == null) // lazy init
-							chunks.str = new String(chunks.chars);
-
 						gfx.drawString(chunks.str, x + _x, y);
 					}
 				}
@@ -221,7 +215,6 @@ public class Chunk extends Token
 	public static void propertiesChanged(IPropertyManager props)
 	{
 		fontSubstList = null;
-		lastSubstFont = null;
 		if (props == null)
 		{
 			fontSubstEnabled = false;
@@ -235,7 +228,7 @@ public class Chunk extends Token
 		}
 
 
-		List<Font> userFonts = new ArrayList<>();
+		List<Font> userFonts = new ArrayList<Font>();
 
 		String family;
 		int i = 0;
@@ -249,13 +242,14 @@ public class Chunk extends Token
 				 * check skips fonts that don't exist.
 				 */
 				Font f = Font.decode(props.getProperty("view.fontSubstList." + i));
-				if (!"dialog".equalsIgnoreCase(f.getFamily()) || "dialog".equalsIgnoreCase(family))
+				if (f != null && (!"dialog".equalsIgnoreCase(f.getFamily()) ||
+									"dialog".equalsIgnoreCase(family)))
 					userFonts.add(f);
 				i++;
 			}
 		}
 
-		preferredFonts = userFonts.toArray(EMPTY_FONT_ARRAY);
+		preferredFonts = userFonts.toArray(new Font[userFonts.size()]);
 
 		// Clear cache, not to hold reference to old fonts which
 		// might become unused after properties changed.
@@ -277,14 +271,10 @@ public class Chunk extends Token
 		if (Character.isISOControl(codepoint))
 			return null;
 
-		if (lastSubstFont != null && lastSubstFont.canDisplay(codepoint))
-			return lastSubstFont;
-
 		for (Font candidate: getFontSubstList())
 		{
 			if (candidate.canDisplay(codepoint))
 			{
-				lastSubstFont = candidate;
 				return candidate;
 			}
 		}
@@ -323,9 +313,9 @@ public class Chunk extends Token
 	 */
 	public boolean usedFontSubstitution()
 	{
-		return (fontSubstEnabled && glyphData != null &&
-				(glyphData.getGlyphVectorData().length > 1 ||
-				(glyphData.getGlyphVectorData().length == 1 && glyphData.getGlyphVectorData()[0].getGlyphVector().getFont() != style.getFont())));
+		return (fontSubstEnabled && glyphs != null &&
+				(glyphs.length > 1 ||
+				(glyphs.length == 1 && glyphs[0].getFont() != style.getFont())));
 	}
 	//}}}
 
@@ -389,7 +379,7 @@ public class Chunk extends Token
 	final boolean isInitialized()
 	{
 		return !isAccessible()	// virtual indent
-			|| (glyphData != null)	// normal text
+			|| (glyphs != null)	// normal text
 			|| (width > 0);	// tab
 	} //}}}
 
@@ -432,25 +422,24 @@ public class Chunk extends Token
 	 */
 	final Chunk snippetBeforeLineOffset(int lineOffset)
 	{
-		return snippetBefore(lineOffset - offset);
+		return snippetBefore(lineOffset - this.offset);
 	} //}}}
 
 	//{{{ offsetToX() method
 	final float offsetToX(int offset)
 	{
-		if(glyphData == null)
+		if(glyphs == null)
 			return 0.0f;
 
 		float x = 0.0f;
-		for (GlyphVectorData glyphVectorData : glyphData.getGlyphVectorData())
+		for (GlyphVector gv : glyphs)
 		{
-			GlyphVector gv = glyphVectorData.getGlyphVector();
 			if (offset < gv.getNumGlyphs())
 			{
 				x += (float) gv.getGlyphPosition(offset).getX();
 				return x;
 			}
-			x += glyphVectorData.getWidth();
+			x += (float) gv.getLogicalBounds().getWidth();
 			offset -= gv.getNumGlyphs();
 		}
 
@@ -462,7 +451,7 @@ public class Chunk extends Token
 	//{{{ xToOffset() method
 	final int xToOffset(float x, boolean round)
 	{
-		if (glyphData == null)
+		if (glyphs == null)
 		{
 			if (round && width - x < x)
 				return offset + length;
@@ -472,10 +461,9 @@ public class Chunk extends Token
 
 		int off = offset;
 		float myx = 0.0f;
-		for (GlyphVectorData glyphVectorData : glyphData.getGlyphVectorData())
+		for (GlyphVector gv : glyphs)
 		{
-			GlyphVector gv = glyphVectorData.getGlyphVector();
-			float gwidth = glyphVectorData.getWidth();
+			float gwidth = (float) gv.getLogicalBounds().getWidth();
 			if (myx + gwidth >= x)
 			{
 				float[] pos = gv.getGlyphPositions(0, gv.getNumGlyphs(), null);
@@ -519,25 +507,30 @@ public class Chunk extends Token
 		}
 		else
 		{
-			// since Java 11, calling font.layoutGlyphVector() performances is directly linked with the
-			// char array length regardless the start and end offset.
-			// Since we usually have the entire buffer in that char array, a buffer of 100MB is about
-			// 100 time slower to display compared to a 1MB buffer.
-			// The problem is in sun.font.SunLayoutEngine class
-			// private static native boolean shape(Font2D font, FontStrike strike, float ptSize, float[] mat,
-			//              long pNativeFont, long pFace, boolean aat,
-			//              char[] chars, GVData data,
-			//              int script, int offset, int limit,
-			//              int baseIndex, Point2D.Float pt, int typo_flags, int slot);
-			// the reason for that is that Java is now processing the entire text to get a better bidi
-			// support. As we tokenize the text, and don't support bidi (yet), we don't care.
-			// So I copy the necessary chars to a temporary char array
-			chars = new char[length];
-			System.arraycopy(lineText.array, lineText.offset + offset, chars, 0, length);
-			GlyphKey cacheKey = new GlyphKey(chars, style.getFont(), fontRenderContext);
+			str = new String(lineText.array,lineText.offset + offset,length);
+			GlyphKey cacheKey = new GlyphKey(str,
+				style.getFont(), fontRenderContext);
 			GlyphCache cache = getGlyphCache();
-			glyphData = cache.computeIfAbsent(cacheKey, key -> buildGlyphInfo(chars, fontRenderContext));
-			width = glyphData.getWidth();
+			GlyphVector[] cachedGlyphs = cache.get(cacheKey);
+			if (cachedGlyphs != null)
+			{
+				glyphs = cachedGlyphs;
+			}
+			else
+			{
+				int textStart = lineText.offset + offset;
+				int textEnd = textStart + length;
+				glyphs = layoutGlyphs(style.getFont(),
+					fontRenderContext,
+					lineText.array, textStart, textEnd);
+				cache.put(cacheKey, glyphs);
+			}
+			float w = 0.0f;
+			for (GlyphVector gv: glyphs)
+			{
+				w += (float)gv.getLogicalBounds().getWidth();
+			}
+			width = w;
 		}
 		assert isInitialized();
 	} //}}}
@@ -547,18 +540,12 @@ public class Chunk extends Token
 	//{{{ Private members
 
 	//{{{ Static variables
+	private static final char[] EMPTY_TEXT = new char[0];
+
 	private static boolean fontSubstEnabled;
 	private static boolean fontSubstSystemFontsEnabled;
 	private static Font[] preferredFonts;
-	@Nullable
 	private static Font[] fontSubstList;
-	/**
-	 * lastSubstFont contains the last font that was used in Font substitution.
-	 * It is set there to make searching subst font faster as when one font was found
-	 * there are great chances that it matches the other chars of the same textarea.
-	 */
-	@Nullable
-	private static Font lastSubstFont;
 
 	// This cache is meant to reduce calls of layoutGlyphVector(),
 	// which was an outclassing CPU bottleneck (profiled on jProfiler,
@@ -578,23 +565,16 @@ public class Chunk extends Token
 	// Windows XP).
 	private static int glyphCacheCapacity = 256;
 	private static SoftReference<GlyphCache> glyphCache;
+
 	//}}}
 
 	//{{{ Instance variables
 	// this is either style.getBackgroundColor() or
 	// styles[defaultID].getBackgroundColor()
 	private Color background;
-	private char[] chars;
 	private String str;
-	private GlyphData glyphData;
+	private GlyphVector[] glyphs;
 	//}}}
-
-	//{{{ init() method
-	private GlyphData buildGlyphInfo(char[] chars, FontRenderContext fontRenderContext)
-	{
-		GlyphVector[] glyphs = layoutGlyphs(style.getFont(), fontRenderContext, chars, 0, chars.length);
-		return new GlyphData(glyphs);
-	} //}}}
 
 	//{{{ getFontSubstList() method
 	/**
@@ -647,55 +627,33 @@ public class Chunk extends Token
 				float x,
 				float y)
 	{
-		for (GlyphVectorData vectorData : glyphData.getGlyphVectorData())
+		for (GlyphVector gv : glyphs)
 		{
-			gfx.drawGlyphVector(vectorData.getGlyphVector(), x, y);
-			x += vectorData.getWidth();
+			gfx.drawGlyphVector(gv, x, y);
+			x += (float) gv.getLogicalBounds().getWidth();
 		}
 	} //}}}
 
-	//{{{ layoutGlyphVector() methods
+	//{{{ layoutGlyphVector() method
 	/**
 	 * A wrapper of Font.layoutGlyphVector() to simplify the calls.
 	 */
-	@Deprecated
 	private static GlyphVector layoutGlyphVector(Font font,
 		FontRenderContext frc,
 		char[] text, int start, int end)
-	{
-		int length = end - start;
-		char[] tmpChars;
-		if (text.length > length || start != 0)
-		{
-			tmpChars = new char[length];
-			System.arraycopy(text, start, tmpChars, 0, length);
-		}
-		else
-			tmpChars = text;
-
-		return layoutGlyphVector(font, frc, tmpChars);
-	}
-
-	private static GlyphVector layoutGlyphVector(Font font, FontRenderContext frc, char[] text)
 	{
 		// FIXME: Need BiDi support.
 		int flags = Font.LAYOUT_LEFT_TO_RIGHT
 			| Font.LAYOUT_NO_START_CONTEXT
 			| Font.LAYOUT_NO_LIMIT_CONTEXT;
 
-		GlyphVector result = font.layoutGlyphVector(frc, text, 0, text.length, flags);
+		GlyphVector result =
+			font.layoutGlyphVector(frc, text, start, end, flags);
 
 		// This is necessary to work around a memory leak in Sun Java 6 where
 		// the sun.font.GlyphLayout is cached and reused while holding an
 		// instance to the char array.
-		// Since we now give small char array, and it is replaced at every call, we don't
-		// need to reset it anymore but just in case it can be done by calling this
-		// font.layoutGlyphVector(frc, EMPTY_TEXT, 0, 0, flags);
-
-		if ((result.getLayoutFlags() & GlyphVector.FLAG_COMPLEX_GLYPHS) != 0)
-		{
-			result = font.createGlyphVector(frc, text);
-		}
+		font.layoutGlyphVector(frc, EMPTY_TEXT, 0, 0, flags);
 
 		return result;
 	} // }}}
@@ -784,7 +742,7 @@ public class Chunk extends Token
 	// logic find intermediate boundaries.
 	private static class FontSubstitution
 	{
-		FontSubstitution(Font mainFont, FontRenderContext frc,
+		public FontSubstitution(Font mainFont, FontRenderContext frc,
 			char[] text, int start)
 		{
 			this.mainFont = mainFont;
@@ -793,7 +751,7 @@ public class Chunk extends Token
 			rangeStart = start;
 			rangeFont = null;
 			rangeLength = 0;
-			glyphs = new ArrayList<>();
+			glyphs = new ArrayList<GlyphVector>();
 		}
 
 		public void addNonSubstRange(int length)
@@ -831,17 +789,16 @@ public class Chunk extends Token
 
 		public GlyphVector[] getGlyphs()
 		{
-			return glyphs.toArray(EMPTY_GLYPH_VECTOR_ARRAY);
+			return glyphs.toArray(new GlyphVector[glyphs.size()]);
 		}
 
 		private final Font mainFont;
 		private final FontRenderContext frc;
 		private final char[] text;
 		private int rangeStart;
-		@Nullable
 		private Font rangeFont;
 		private int rangeLength;
-		private final List<GlyphVector> glyphs;
+		private final ArrayList<GlyphVector> glyphs;
 
 		private void addGlyphVectorOfLastRange()
 		{
@@ -870,30 +827,33 @@ public class Chunk extends Token
 			}
 		}
 		GlyphCache newOne = new GlyphCache(glyphCacheCapacity);
-		glyphCache = new SoftReference<>(newOne);
+		glyphCache = new SoftReference<GlyphCache>(newOne);
 		return newOne;
 	} //}}}
 
 	//{{{ class GlyphKey
 	private static class GlyphKey
 	{
-		public final char[] chars;
+		public final String token;
 		public final Font font;
 		public final FontRenderContext context;
-		private final int hashCode;
 
-		GlyphKey(@Nonnull char[] chars, @Nonnull Font font, @Nonnull FontRenderContext context)
+		GlyphKey(String token, Font font, FontRenderContext context)
 		{
-			this.chars = chars;
+			assert token != null;
+			assert font != null;
+			assert context != null;
+			this.token = token;
 			this.font = font;
 			this.context = context;
-			hashCode =  31 * (31 * Arrays.hashCode(chars) + font.hashCode()) + context.hashCode();
 		}
 
 		@Override
 		public final int hashCode()
 		{
-			return hashCode;
+			return token.hashCode()
+				+ font.hashCode()
+				+ context.hashCode();
 		}
 
 		@Override
@@ -903,7 +863,7 @@ public class Chunk extends Token
 			// compare with other keys, then explicit type
 			// checking and null checking are not necessary.
 			GlyphKey other = (GlyphKey)otherObject;
-			return Arrays.equals(chars, other.chars)
+			return token.equals(other.token)
 				&& font.equals(other.font)
 				&& context.equals(other.context);
 		}
@@ -911,14 +871,14 @@ public class Chunk extends Token
 		@Override
 		public final String toString()
 		{
-			return new String(chars);
+			return token;
 		}
 	} //}}}
 
 	//{{{ class GlyphCache
-	private static class GlyphCache extends LinkedHashMap<GlyphKey, GlyphData>
+	private static class GlyphCache extends LinkedHashMap<GlyphKey, GlyphVector[]>
 	{
-		GlyphCache(int capacity)
+		public GlyphCache(int capacity)
 		{
 			// Avoid rehashing with known limit.
 			super(capacity + 1, 1.0f, true/*accessOrder*/);
@@ -926,65 +886,12 @@ public class Chunk extends Token
 		}
 
 		@Override
-		protected boolean removeEldestEntry(Map.Entry<GlyphKey, GlyphData> eldest)
+		protected boolean removeEldestEntry(Map.Entry<GlyphKey, GlyphVector[]> eldest)
 		{
 			return size() > capacity;
 		}
 
 		private final int capacity;
-	} //}}}
-
-	//{{{ class GlyphCache
-	private static class GlyphData
-	{
-		private final GlyphVectorData[] glyphVectorData;
-		private final float             width;
-
-		GlyphData(GlyphVector[] glyphs)
-		{
-			glyphVectorData = new GlyphVectorData[glyphs.length];
-			float w = 0.0f;
-			for (int i = 0; i < glyphs.length; i++)
-			{
-				GlyphVectorData glyphVectorData = new GlyphVectorData(glyphs[i]);
-				this.glyphVectorData[i] = glyphVectorData;
-				w += glyphVectorData.getWidth();
-			}
-			width = w;
-		}
-
-		public GlyphVectorData[] getGlyphVectorData()
-		{
-			return glyphVectorData;
-		}
-
-		public float getWidth()
-		{
-			return width;
-		}
-	} //}}}
-
-	//{{{ class GlyphVectorData
-	private static class GlyphVectorData
-	{
-		private final GlyphVector glyphVector;
-		private final float       width;
-
-		private GlyphVectorData(GlyphVector glyphVector)
-		{
-			this.glyphVector = glyphVector;
-			width = (float) glyphVector.getLogicalBounds().getWidth();
-		}
-
-		public GlyphVector getGlyphVector()
-		{
-			return glyphVector;
-		}
-
-		public float getWidth()
-		{
-			return width;
-		}
 	} //}}}
 
 	//}}}

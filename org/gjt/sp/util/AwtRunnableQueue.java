@@ -46,7 +46,7 @@ public enum AwtRunnableQueue
 	//{{{ Constructor method
 	private AwtRunnableQueue()
 	{
-		awtQueue = new LinkedList<>();
+		awtQueue = new LinkedList<Runnable>();
 	} //}}}
 
 	//{{{ start() method
@@ -76,7 +76,9 @@ public enum AwtRunnableQueue
 		//{{{ if there are no requests, execute AWT requests immediately
 		synchronized (this)
 		{
-			if(awtQueueStarted && TaskManager.instance.countIoTasks() == 0 && awtQueue.isEmpty())
+			if(awtQueueStarted &&
+			   TaskManager.instance.countIoTasks() == 0 &&
+			   awtQueue.isEmpty())
 				runDirectly = true;
 		}
 		if(runDirectly)
@@ -121,7 +123,6 @@ public enum AwtRunnableQueue
 	//{{{ RunRequestsInAWTThread class
 	private class RunRequestsInAWTThread implements Runnable
 	{
-		@Override
 		public void run()
 		{
 			Runnable nextRunnable;

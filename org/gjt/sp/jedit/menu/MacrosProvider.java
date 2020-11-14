@@ -25,8 +25,7 @@ package org.gjt.sp.jedit.menu;
 
 //{{{ Imports
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 import java.util.Vector;
 import org.gjt.sp.jedit.*;
 //}}}
@@ -34,21 +33,19 @@ import org.gjt.sp.jedit.*;
 public class MacrosProvider implements DynamicMenuProvider
 {
 	//{{{ updateEveryTime() method
-	@Override
 	public boolean updateEveryTime()
 	{
 		return false;
 	} //}}}
 
 	//{{{ update() method
-	@Override
 	public void update(JMenu menu)
 	{
-		List macroList = Macros.getMacroHierarchy();
+		Vector macroVector = Macros.getMacroHierarchy();
 
 		int count = menu.getMenuComponentCount();
 
-		createMacrosMenu(menu,macroList,0);
+		createMacrosMenu(menu,macroVector,0);
 
 		if(count == menu.getMenuComponentCount())
 		{
@@ -60,38 +57,38 @@ public class MacrosProvider implements DynamicMenuProvider
 	} //}}}
 
 	//{{{ createMacrosMenu() method
-	private void createMacrosMenu(JMenu menu, List list, int start)
+	private void createMacrosMenu(JMenu menu, Vector vector, int start)
 	{
-		List<JMenuItem> menuItems = new ArrayList<>();
+		Vector<JMenuItem> menuItems = new Vector<JMenuItem>();
 		int maxItems = jEdit.getIntegerProperty("menu.spillover", 20);
 		JMenu subMenu = null;
-		for(int i = start; i < list.size(); i++)
+		for(int i = start; i < vector.size(); i++)
 		{
 			if (i != start && i % maxItems == 0)
 			{
 				subMenu = new JMenu(jEdit.getProperty("common.more"));
-				createMacrosMenu(subMenu, list, i);
+				createMacrosMenu(subMenu, vector, i);
 				break;
 			}
-			Object obj = list.get(i);
+			Object obj = vector.elementAt(i);
 			if(obj instanceof String)
 			{
 				menuItems.add(new EnhancedMenuItem(
 					jEdit.getProperty(obj + ".label"),
 					(String)obj,jEdit.getActionContext()));
 			}
-			else if(obj instanceof List)
+			else if(obj instanceof Vector)
 			{
-				List subList = (List)obj;
-				String name = (String)subList.get(0);
+				Vector subvector = (Vector)obj;
+				String name = (String)subvector.elementAt(0);
 				JMenu submenu = new JMenu(jEdit.getProperty("macros.folder."+ name + ".label", name));
-				createMacrosMenu(submenu,subList,1);
+				createMacrosMenu(submenu,subvector,1);
 				if(submenu.getMenuComponentCount() != 0)
 					menuItems.add(submenu);
 			}
 		}
 
-		menuItems.sort(new MenuItemTextComparator());
+		Collections.sort(menuItems, new MenuItemTextComparator());
 
 		if (subMenu != null)
 			menuItems.add(subMenu);

@@ -31,13 +31,11 @@ import java.awt.datatransfer.*;
  */
 public class StringTransferableService implements JEditTransferableService
 {
-	@Override
 	public boolean accept(TextArea textArea, String text)
 	{
 		return true;
 	}
 
-	@Override
 	public Transferable getTransferable(TextArea textArea, String text)
 	{
 		return new StringSelection(text);
