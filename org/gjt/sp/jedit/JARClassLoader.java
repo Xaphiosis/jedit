@@ -43,7 +43,7 @@ import java.util.jar.Attributes.Name;
  * A class loader implementation that loads classes from JAR files. All
  * instances share the same set of classes.
  * @author Slava Pestov
- * @version $Id: JARClassLoader.java 24859 2018-04-10 23:06:33Z daleanson $
+ * @version $Id: JARClassLoader.java 24913 2019-07-28 18:32:11Z daleanson $
  */
 public class JARClassLoader extends ClassLoader
 {
@@ -456,9 +456,7 @@ public class JARClassLoader extends ClassLoader
 		if (idx != -1)
 		{
 			String name = clazz.substring(0, idx);
-			if (getPackage(name) == null) definePackage(name, new JarFile(jar.getFile()).getManifest());
-			// TODO: getPackage is deprecated as of Java 9, use next line when jEdit requires Java 9
-			//if (getDefinedPackage(name) == null) definePackage(name, new JarFile(jar.getFile()).getManifest());
+			if (getDefinedPackage(name) == null) definePackage(name, new JarFile(jar.getFile()).getManifest());
 		}
 	} //}}}
 

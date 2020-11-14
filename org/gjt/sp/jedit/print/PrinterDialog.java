@@ -158,7 +158,6 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             setContentPane( contents );
 
             // auto-select the default printer
-            /*
             PrintService defaultPrintService = PrintServiceLookup.lookupDefaultPrintService();
             if ( defaultPrintService != null )
             {
@@ -168,7 +167,6 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
             {
                 printers.setSelectedIndex( 0 );
             }
-            */
 
 
             // loads some default values if needed
@@ -311,7 +309,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
 
                     // show file chooser
                     String[] files = GUIUtilities.showVFSFileDialog( PrinterDialog.this, view, initialFile.getAbsolutePath(), VFSBrowser.SAVE_DIALOG, false );
-                    if ( files != null && files.length > 0 )
+                    if (files.length > 0)
                     {
                         File file = new File( files[0] );
                         selectedPrintService = getPostscriptPrintService( file );
@@ -873,7 +871,7 @@ public class PrinterDialog extends JDialog implements ListSelectionListener
                 printers.setSelectedValue(defaultPrintService, true);      
                 selectedPrintService = defaultPrintService;
             }
-            else 
+            if (selectedPrintService == null) 
             {
                 selectedPrintService = printers.getModel().getElementAt( 0 );
             }
