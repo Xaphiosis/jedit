@@ -57,7 +57,7 @@ public class SearchBar extends JToolBar
 		add(Box.createHorizontalStrut(12));
 		
 		add(find = new HistoryTextField("find"));
-		find.setSelectAllOnFocus(true);
+		find.setSelectAllOnFocus(false);
 
 		SyntaxStyle style = SyntaxUtilities.parseStyle(jEdit.getProperty("view.style.invalid"), "Dialog", 12, true);
 		errorBackground = style.getBackgroundColor();

@@ -289,7 +289,7 @@ public class ActionBar extends JToolBar
 		ActionTextField()
 		{
 			super("action");
-			setSelectAllOnFocus(true);
+			setSelectAllOnFocus(false);
 		}
 
 		@Override
