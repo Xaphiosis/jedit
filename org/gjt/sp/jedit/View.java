@@ -469,7 +469,7 @@ public class View extends JFrame implements InputHandlerProvider
 		}
 
 		searchBar.getField().requestFocus();
-		searchBar.getField().selectAll();
+		// searchBar.getField().selectAll();
 	} //}}}
 
 	//{{{ quickHyperSearch() method
