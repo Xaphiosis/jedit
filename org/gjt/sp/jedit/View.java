@@ -465,6 +465,8 @@ public class View extends JFrame implements InputHandlerProvider
 				text = SearchAndReplace.escapeRegexp(text,false);
 
 			searchBar.getField().setText(text);
+		} else {
+			searchBar.getField().setText(null);
 		}
 
 		searchBar.getField().requestFocus();
