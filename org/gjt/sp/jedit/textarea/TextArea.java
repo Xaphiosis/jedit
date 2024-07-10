@@ -6341,7 +6341,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		{
 			int following = charBreaker.following(offset -
 					index0Offset);
-			if (following == BreakIterator.DONE)
+			if (following == BreakIterator.DONE || (Runtime.version().feature() >= 20 && following == offset - index0Offset))
 			{
 				// This means a end of line. Then it is
 				// safe to assume 1 code unit is a character.
