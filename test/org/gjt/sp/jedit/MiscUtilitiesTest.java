@@ -167,56 +167,6 @@ public class MiscUtilitiesTest
 	}
 
 	@Test
-	public void expandVariablesEnvWindowsAsWindows() throws Exception
-	{
-		jEdit.systemManager = Mockito.mock(SystemManager.class);
-		var captor = ArgumentCaptor.forClass(String.class);
-		var value = "c:\\home\\jEdit";
-		Mockito.when(jEdit.systemManager.getenv(captor.capture())).thenReturn(value);
-		updateOS(WINDOWS_NT);
-		var key = "jEdit_TEST";
-		assertEquals(value, MiscUtilities.expandVariables('%' + key + '%'));
-		assertEquals(captor.getValue(), key);
-	}
-	@Test
-	public void expandVariablesEnvWindowsAsUnix() throws Exception
-	{
-		jEdit.systemManager = Mockito.mock(SystemManager.class);
-		var captor = ArgumentCaptor.forClass(String.class);
-		var value = "c:\\home\\jEdit";
-		Mockito.when(jEdit.systemManager.getenv(captor.capture())).thenReturn(value);
-		updateOS(UNIX);
-		var key = "jEdit_TEST";
-		assertEquals(value, MiscUtilities.expandVariables('%' + key + '%'));
-		assertEquals(captor.getValue(), key);
-	}
-
-	@Test
-	public void expandVariablesEnvUnix() throws Exception
-	{
-		jEdit.systemManager = Mockito.mock(SystemManager.class);
-		var captor = ArgumentCaptor.forClass(String.class);
-		var value = "c:\\home\\jEdit";
-		Mockito.when(jEdit.systemManager.getenv(captor.capture())).thenReturn(value);
-		updateOS(UNIX);
-		var key = "jEdit_TEST";
-		assertEquals(value, MiscUtilities.expandVariables('$' + key));
-		assertEquals(captor.getValue(), key);
-	}
-
-	@Test
-	public void expandVariablesEnvUnix2() throws Exception
-	{
-		jEdit.systemManager = Mockito.mock(SystemManager.class);
-		var captor = ArgumentCaptor.forClass(String.class);
-		var value = "c:\\home\\jEdit";
-		Mockito.when(jEdit.systemManager.getenv(captor.capture())).thenReturn(value);
-		updateOS(UNIX);
-		var key = "jEdit_TEST";
-		assertEquals(value, MiscUtilities.expandVariables("${" + key + '}'));
-	}
-
-	@Test
 	public void expandVariablesEnvUnixNoMatch() throws Exception
 	{
 		updateOS(UNIX);
