@@ -1,14 +1,19 @@
-jEdit 5.7 version history
-       (changes since jEdit 5.6.0)
+jEdit 5.8 version history
+       (changes since jEdit 5.7.0)
 :encoding=UTF-8:
 
-{{{ Version 5.7pre1
+{{{ Version 5.8pre1
 
-Thanks to Björn "Vampire" Kautler, Matthieu Casanova for contributing to this release.
+Thanks to Robert Schwenn, Björn Kautler and Eric Le Lay for contributing to this release.
 
 {{{ Bug Fixes
 
-- VFSManager.canReadFile() was returning true only for directories (#4102 - Matthieu Casanova)
+- allow '(re)' glob in edit mode to contain alternative without enclosing
+ brackets (Eric Le Lay)
+- fixes for GenericGUIUtilities in macros (patch #636, #637, #638, Robert
+  Schwenn)
+- fix for SyntaxUtilities in Color_Picker macro (patch #639, Robert Schwenn)
+- fix Run_Script macro beanshell under windows (patch #641, Robert Schwenn)
 
 }}}
 {{{ Miscellaneous

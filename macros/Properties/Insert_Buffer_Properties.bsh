@@ -24,7 +24,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * $Id: Insert_Buffer_Properties.bsh 24739 2017-09-17 11:23:42Z kerik-sf $
+ * $Id: Insert_Buffer_Properties.bsh 25763 2024-10-23 17:18:24Z kerik-sf $
  */
 
 import java.awt.BorderLayout;
@@ -97,7 +97,7 @@ BufferLocalPropertiesDialog(View view){
 	_entries.copyInto(entries);
 
 	checkBox = new JCheckBoxList(entries);
-	checkBox.setRowHeight(GUIUtilities.defaultRowHeight());
+	checkBox.setRowHeight(GenericGUIUtilities.defaultRowHeight());
 	checkBox.addKeyListener(this);
 	content.add(new JScrollPane(checkBox),
 		BorderLayout.CENTER);

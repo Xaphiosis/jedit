@@ -21,15 +21,17 @@
 
 package org.gjt.sp.jedit.options;
 
+//{{{ Imports
 import javax.swing.JCheckBox;
 
 import org.gjt.sp.jedit.gui.*;
 import org.gjt.sp.jedit.*;
+//}}}
 
 /**
  * Right-click context menu editor.
  * @author Slava Pestov
- * @version $Id: ContextOptionPane.java 21981 2012-08-06 19:19:16Z jarekczek $
+ * @version $Id: ContextOptionPane.java 25452 2021-03-27 19:33:22Z kpouer $
  */
 public class ContextOptionPane extends AbstractContextOptionPane
 {
@@ -40,6 +42,7 @@ public class ContextOptionPane extends AbstractContextOptionPane
 		super("context", jEdit.getProperty("options.context.caption"));
 	}
 	
+	@Override
 	protected void _init()
 	{
 		super._init();

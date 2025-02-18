@@ -50,7 +50,7 @@ import org.gjt.sp.util.Log;
  * @see TextArea
  *
  * @author Mike Dillon and Slava Pestov
- * @version $Id: Gutter.java 25033 2020-03-25 23:22:26Z kpouer $
+ * @version $Id: Gutter.java 25604 2022-09-13 11:01:01Z kpouer $
  */
 public class Gutter extends JComponent implements SwingConstants
 {
@@ -357,7 +357,7 @@ public class Gutter extends JComponent implements SwingConstants
 		int digits;
 		for (digits = 0; count > 0; digits++)
 			count /= 10;
-		return (digits < minDigits) ? minDigits : digits;
+		return Math.max(digits, minDigits);
 	} //}}}
 
 	//{{{ setBuffer() method

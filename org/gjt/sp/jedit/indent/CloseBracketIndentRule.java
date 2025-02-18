@@ -29,7 +29,7 @@ import org.gjt.sp.util.StandardUtilities;
 
 /**
  * @author Slava Pestov
- * @version $Id: CloseBracketIndentRule.java 25222 2020-04-12 16:07:38Z kpouer $
+ * @version $Id: CloseBracketIndentRule.java 25503 2021-04-21 21:45:28Z kpouer $
  */
 public class CloseBracketIndentRule extends BracketIndentRule
 {
@@ -107,7 +107,7 @@ public class CloseBracketIndentRule extends BracketIndentRule
 		private CharSequence openBracketLineText;
 		private int extraIndent;
 
-		public AlignBracket(JEditBuffer buffer, int line, int offset)
+		AlignBracket(JEditBuffer buffer, int line, int offset)
 		{
 
 			int openBracketIndex = TextUtilities.findMatchingBracket(buffer, line, offset);

@@ -33,7 +33,7 @@ import org.gjt.sp.util.GenericGUIUtilities;
 /**
  * Text area with a history.
  * @author Slava Pestov
- * @version $Id: HistoryTextArea.java 24859 2018-04-10 23:06:33Z daleanson $
+ * @version $Id: HistoryTextArea.java 25462 2021-03-29 21:17:46Z kpouer $
  */
 public class HistoryTextArea extends JTextArea
 {
@@ -107,6 +107,7 @@ public class HistoryTextArea extends JTextArea
 	/**
 	 * Sets the displayed text.
 	 */
+	@Override
 	public void setText(String text)
 	{
 		super.setText(text);
@@ -116,6 +117,7 @@ public class HistoryTextArea extends JTextArea
 	//{{{ Protected members
 
 	//{{{ processKeyEvent() method
+	@Override
 	protected void processKeyEvent(KeyEvent evt)
 	{
 		if(!isEnabled())
@@ -173,6 +175,7 @@ public class HistoryTextArea extends JTextArea
 	} //}}}
 
 	//{{{ processMouseEvent() method
+	@Override
 	protected void processMouseEvent(MouseEvent evt)
 	{
 		if(!isEnabled())
@@ -196,6 +199,6 @@ public class HistoryTextArea extends JTextArea
 	//}}}
 
 	//{{{ Private variables
-	private HistoryText controller;
+	private final HistoryText controller;
 	//}}}
 }

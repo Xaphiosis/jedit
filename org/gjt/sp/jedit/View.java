@@ -54,6 +54,7 @@ import javax.swing.MenuSelectionManager;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
+import org.gjt.sp.jedit.manager.BufferManagerImpl;
 import org.jedit.options.CombinedOptions;
 import org.gjt.sp.jedit.EditBus.EBHandler;
 import org.gjt.sp.jedit.bufferset.BufferSet;
@@ -132,7 +133,7 @@ import org.gjt.sp.util.StandardUtilities;
  *
  * @author Slava Pestov
  * @author John Gellene (API documentation)
- * @version $Id: View.java 25349 2020-06-10 12:07:06Z makarius $
+ * @version $Id: View.java 25446 2021-03-26 22:05:19Z kpouer $
  */
 public class View extends JFrame implements InputHandlerProvider
 {
@@ -983,9 +984,10 @@ public class View extends JFrame implements InputHandlerProvider
 			if (mgr.getScope() != BufferSet.Scope.editpane)
 				break;
 		}
-		Buffer[] bufs = new Buffer[retval.size()];
-		retval.toArray(bufs);
-		return bufs;
+		if (retval != null)
+			return retval.toArray(BufferManagerImpl.EMPTY_BUFFER_ARRAY);
+
+		return BufferManagerImpl.EMPTY_BUFFER_ARRAY;
 	}//}}}
 
 	//{{{ setBuffer() method
@@ -1741,7 +1743,7 @@ public class View extends JFrame implements InputHandlerProvider
 		{
 			return editPane = createEditPane(buffer);
 		}
-		else if(splitConfig == null || splitConfig.trim().length() == 0)
+		else if(splitConfig == null || splitConfig.trim().isEmpty())
 		{
 
 			Buffer buf = bufferManager.getFirst();
@@ -2175,7 +2177,7 @@ loop:		while (true)
 				if (editPane == ep ||
 					(scope == BufferSet.Scope.view && editPane.getView() == view))
 					return;
-				if (editPane.getBufferSet().indexOf(b) < 0)
+				if (!editPane.getBufferSet().contains(b))
 					return;
 				jEdit.getBufferSetManager().removeBuffer(editPane, b);
 			}

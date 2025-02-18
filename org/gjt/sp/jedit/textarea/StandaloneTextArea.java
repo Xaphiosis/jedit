@@ -94,7 +94,7 @@ import org.gjt.sp.util.SyntaxUtilities;
  * @author Slava Pestov
  * @author John Gellene (API documentation)
    @author Matthieu Casanova
- * @version $Id: StandaloneTextArea.java 25104 2020-03-31 22:25:46Z kpouer $
+ * @version $Id: StandaloneTextArea.java 25484 2021-04-05 20:59:01Z kpouer $
  */
 public class StandaloneTextArea extends TextArea
 {
@@ -507,7 +507,7 @@ public class StandaloneTextArea extends TextArea
 			"noTabs",
 			"defaultMode",
 			"undoCount",
-			"wrap",
+			JEditBuffer.WRAP,
 			"maxLineLen",
 			"wordBreakChars",
 			"noWordSep",

@@ -35,7 +35,7 @@ import org.gjt.sp.jedit.manager.BufferManager;
  * The Save and Backup option panel.
  *
  * @author Slava Pestov
- * @author $Id: SaveBackupOptionPane.java 25239 2020-04-14 20:00:17Z kpouer $
+ * @author $Id: SaveBackupOptionPane.java 25702 2023-11-17 20:21:41Z vampire0 $
  */
 public class SaveBackupOptionPane extends AbstractOptionPane
 {
@@ -210,7 +210,7 @@ public class SaveBackupOptionPane extends AbstractOptionPane
 
 		// if autosave dir changed, we should issue to perform an autosave for all dirty and all untitled buffers
 		// to have the autosaves at the new location
-		if (!autosaveDirectoryOriginal.equals(autosaveDirectory.getText()))
+		if (!autosaveDirectory.getText().equals(autosaveDirectoryOriginal))
 		{
 			bufferManager.getDirtyBuffers().forEach(buffer -> buffer.autosave(true));
 		}

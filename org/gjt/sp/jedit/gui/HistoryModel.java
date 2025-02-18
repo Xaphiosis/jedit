@@ -39,7 +39,7 @@ import java.util.*;
  *
  * @author Slava Pestov
  * @author Eric Le Lay
- * @version $Id: HistoryModel.java 24427 2016-06-22 22:29:03Z daleanson $
+ * @version $Id: HistoryModel.java 25462 2021-03-29 21:17:46Z kpouer $
  */
 public class HistoryModel extends DefaultListModel<String>
 	implements MutableListModel<String>
@@ -52,8 +52,8 @@ public class HistoryModel extends DefaultListModel<String>
 	public HistoryModel(String name)
 	{
 		this.name = name;
-		this.max = -1;
-		this.maxSize = -1;
+		max = -1;
+		maxSize = -1;
 	} //}}}
 
 	//{{{ addItem() method
@@ -64,7 +64,7 @@ public class HistoryModel extends DefaultListModel<String>
 	 */
 	public void addItem(String text)
 	{
-		if(text == null || text.length() == 0)
+		if(text == null || text.isEmpty())
 			return;
 
 		// Don't add duplicates
@@ -112,10 +112,11 @@ public class HistoryModel extends DefaultListModel<String>
 	 */
 	public String getItem(int index)
 	{
-		return (String)elementAt(index);
+		return elementAt(index);
 	} //}}}
 
 	//{{{ removeElement() method
+	@Override
 	public boolean removeElement(Object obj)
 	{
 		modified = true;

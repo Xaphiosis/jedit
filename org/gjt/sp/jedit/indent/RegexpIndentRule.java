@@ -35,7 +35,7 @@ import org.gjt.sp.jedit.syntax.TokenMarker;
 
 /**
  * @author Slava Pestov
- * @version $Id: RegexpIndentRule.java 25222 2020-04-12 16:07:38Z kpouer $
+ * @version $Id: RegexpIndentRule.java 25503 2021-04-21 21:45:28Z kpouer $
  */
 public class RegexpIndentRule implements IndentRule
 {
@@ -105,7 +105,7 @@ public class RegexpIndentRule implements IndentRule
 	{
 		StringBuilder result;
 
-		public TokenFilter(int originalLength)
+		TokenFilter(int originalLength)
 		{
 			result = new StringBuilder(originalLength);
 		}

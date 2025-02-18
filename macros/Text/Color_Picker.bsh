@@ -17,7 +17,7 @@
  * along with the jEdit application; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * $Id: Color_Picker.bsh 23971 2015-08-08 19:37:35Z daleanson $
+ * $Id: Color_Picker.bsh 25764 2024-10-23 17:18:36Z kerik-sf $
  */
 
 // Localization
@@ -27,7 +27,7 @@ final static String NotEditableMessage = jEdit.getProperty("macro.rs.general.Err
 // Process 
 selection = textArea.getSelectedText();
 if (selection != null)
-    color = GUIUtilities.parseColor(selection);
+    color = SyntaxUtilities.parseColor(selection);
 else
     color = null;
 

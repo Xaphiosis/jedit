@@ -44,7 +44,7 @@ import org.gjt.sp.util.StandardUtilities;
  * One instance of this class is created for each supported edit mode.
  *
  * @author Slava Pestov
- * @version $Id: Mode.java 24428 2016-06-23 02:49:29Z daleanson $
+ * @version $Id: Mode.java 25755 2024-08-31 10:52:26Z kerik-sf $
  */
 public class Mode
 {
@@ -59,7 +59,7 @@ public class Mode
 	public Mode(String name)
 	{
 		this.name = name;
-		this.ignoreWhitespace = true;
+		ignoreWhitespace = true;
 		props = new Hashtable<>();
 	} //}}}
 
@@ -89,8 +89,11 @@ public class Mode
 				else
 				{
 					// glob is for a filename without path, prepend the regex with
-					// an optional path prefix to be able to match against full paths
-					filepathRE = String.format("(?:.*[/\\\\])?%s", filepathRE);
+					// an optional path prefix to be able to match against full paths.
+					// Enclose regexp in non-capturing group to work with 'a|b'
+					// regexp, where the path prefix would otherwise only match with
+					// the eft part of the alternative.
+					filepathRE = String.format("(?:.*[/\\\\])?(?:%s)", filepathRE);
 				}
 				this.filepathMatcher = Pattern.compile(filepathRE, Pattern.CASE_INSENSITIVE).matcher("");
 			}
@@ -263,20 +266,6 @@ public class Mode
 				|| acceptFirstLine(firstLine);
 	} //}}}
 
-	//{{{ acceptFilename() method
-	/**
-	 * Returns true if the buffer name matches the file name glob.
-	 * @param fileName The buffer's name, can be {@code null}
-	 * @return true if the file name matches the file name glob.
-	 * @since jEdit 4.3pre18
-	 * @deprecated use {@link #acceptFile(String, String)} instead
-	 */
-	@Deprecated
-	public boolean acceptFilename(String fileName)
-	{
-		return acceptFile(null, fileName);
-	} //}}}
-
 	//{{{ acceptFile() method
 	/**
 	 * Returns true if the buffer's name or path matches the file name glob.
@@ -324,7 +313,7 @@ public class Mode
 		if(filenameGlob == null)
 			return false;
 
-		if(fileName != null && fileName.equalsIgnoreCase(filenameGlob))	
+		if(filenameGlob.equalsIgnoreCase(fileName))
 			return true;
 
 		if (filePath != null) 
@@ -421,7 +410,7 @@ public class Mode
 	//{{{ initIndentRules() method
 	private void initIndentRules()
 	{
-		List<IndentRule> rules = new LinkedList<IndentRule>();
+		List<IndentRule> rules = new LinkedList<>();
 
 		String[] regexpProps = {
 			"indentNextLine",

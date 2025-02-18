@@ -37,7 +37,7 @@ import org.gjt.sp.util.Log;
 /**
  * Operating system detection routines.
  * @author Slava Pestov
- * @version $Id: OperatingSystem.java 24918 2019-08-13 14:18:47Z vampire0 $
+ * @version $Id: OperatingSystem.java 25439 2021-03-25 21:56:16Z kpouer $
  * @since jEdit 4.0pre4
  */
 public class OperatingSystem
@@ -149,17 +149,6 @@ public class OperatingSystem
 		return new Rectangle(x,y,w,h);
 	} //}}}
 
-	//{{{ isDOSDerived() method
-	/**
-	 * Returns if we're running Windows 95/98/ME/NT/2000/XP/Vista/Win7, or OS/2.
-	 * @deprecated use {@link #isWindows()}
-	 */
-	@Deprecated
-	public static boolean isDOSDerived()
-	{
-		return isWindows() || isOS2();
-	} //}}}
-
 	//{{{ isWindows() method
 	/**
 	 * Returns if we're running Windows 95/98/ME/NT/2000/XP/Vista/Win7.
@@ -262,20 +251,6 @@ public class OperatingSystem
 
 		return hasScreenMenuBar == 1;
 	} //}}}
-
-	//{{{ hasJava17() method
-	/**
-	 * @deprecated - there is no point in checking for this
-	 *				 since we require Java 11.
-	 * Returns if Java 2 version 1.7 is in use.
-	 * @since jEdit 5.0pre1
-	 */
-	@Deprecated
-	public static boolean hasJava17()
-	{
-		return true;
-	} //}}}
-
 
 	//{{{ isCaseInsensitiveFS() method
 	/**

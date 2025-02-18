@@ -44,7 +44,7 @@ import org.gjt.sp.jedit.*;
 /**
  * Plugin list downloaded from server.
  * @since jEdit 3.2pre2
- * @version $Id: PluginList.java 25274 2020-04-19 16:30:10Z kpouer $
+ * @version $Id: PluginList.java 25687 2023-09-20 20:38:49Z kpouer $
  */
 class PluginList extends Task
 {
@@ -80,23 +80,22 @@ class PluginList extends Task
 		setStatus(jEdit.getProperty("plugin-manager.list-download-connect"));
 		try
 		{
-			String pluginListXml = cachePluginList.getPluginList();
-			if (pluginListXml != null)
+			Optional<String> pluginListXml = cachePluginList.getPluginList();
+			boolean loadedFromCache = false;
+			if (pluginListXml.isPresent())
 			{
 				try
 				{
-					loadPluginList(pluginListXml);
+					loadPluginList(pluginListXml.get());
+					loadedFromCache = true;
 				}
 				catch (SAXException | ParserConfigurationException | IOException e)
 				{
 					cachePluginList.deleteCache();
-					String newPluginList = remotePluginList.getPluginList();
-					loadPluginList(newPluginList);
-					cachePluginList.saveCache(newPluginList);
 				}
 			}
-			else
-			{
+
+			if (!loadedFromCache) {
 				String newPluginList = remotePluginList.getPluginList();
 				loadPluginList(newPluginList);
 				cachePluginList.saveCache(newPluginList);

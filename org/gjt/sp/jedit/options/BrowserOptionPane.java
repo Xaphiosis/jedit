@@ -25,14 +25,12 @@ package org.gjt.sp.jedit.options;
 //{{{ Imports
 import javax.swing.*;
 import org.gjt.sp.jedit.*;
-
-
 //}}}
 
 //{{{ BrowserOptionPane class
 /**
  * @author Slava Pestov
- * @version $Id: BrowserOptionPane.java 24425 2016-06-22 19:29:40Z daleanson $
+ * @version $Id: BrowserOptionPane.java 25452 2021-03-27 19:33:22Z kpouer $
  */
 public class BrowserOptionPane extends AbstractOptionPane
 {
@@ -43,6 +41,7 @@ public class BrowserOptionPane extends AbstractOptionPane
 	} //}}}
 
 	//{{{ _init() method
+	@Override
 	public void _init()
 	{
 		/* Default directory */
@@ -54,7 +53,7 @@ public class BrowserOptionPane extends AbstractOptionPane
 			jEdit.getProperty("options.browser.general.defaultPath.working")
 		};
 
-		defaultDirectory = new JComboBox<String>(dirs);
+		defaultDirectory = new JComboBox<>(dirs);
 		String defaultDir = jEdit.getProperty("vfs.browser.defaultPath");
 		if("favorites".equals(defaultDir))
 			defaultDirectory.setSelectedIndex(0);
@@ -132,6 +131,7 @@ public class BrowserOptionPane extends AbstractOptionPane
 	} //}}}
 
 	//{{{ _save() method
+	@Override
 	public void _save()
 	{
 		String[] dirs = { "favorites", "home", "last", "buffer", "working"};

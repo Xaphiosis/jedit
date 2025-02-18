@@ -28,6 +28,7 @@ import javax.swing.SwingUtilities;
 import java.awt.Component;
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.*;
@@ -42,7 +43,7 @@ import static org.gjt.sp.jedit.io.FileVFS.recursiveDelete;
 //}}}
 
 /**
- * @author $Id: Roster.java 25221 2020-04-12 16:00:17Z kpouer $
+ * @author $Id: Roster.java 25698 2023-11-17 01:31:50Z vampire0 $
  */
 class Roster
 {
@@ -51,6 +52,7 @@ class Roster
 	//{{{ Roster constructor
 	Roster()
 	{
+		abortWorkThreadOperations = new AtomicBoolean(false);
 		operations = new ArrayList<>();
 		toLoad = new ArrayList<>();
 	} //}}}
@@ -75,6 +77,12 @@ class Roster
 	void addLoad(String path)
 	{
 		toLoad.add(path);
+	} //}}}
+
+	//{{{ abortWorkThreadOperations() method
+	void abortWorkThreadOperations()
+	{
+		abortWorkThreadOperations.set(true);
 	} //}}}
 
 	//{{{ getOperation() method
@@ -103,7 +111,7 @@ class Roster
 			op.runInWorkThread(progress);
 			progress.done();
 
-			if (Thread.interrupted())
+			if (abortWorkThreadOperations.get())
 				return;
 		}
 	} //}}}
@@ -143,6 +151,7 @@ class Roster
 	//{{{ Private members
 	private static File downloadDir;
 
+	private final AtomicBoolean abortWorkThreadOperations;
 	private final List<Operation> operations;
 	private final List<String> toLoad;
 

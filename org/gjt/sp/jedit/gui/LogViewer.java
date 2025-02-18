@@ -38,7 +38,7 @@ import org.gjt.sp.util.swing.event.UniqueActionDocumentListener;
 //}}}
 
 /** Activity Log Viewer
- * @version $Id: LogViewer.java 25210 2020-04-12 14:49:37Z kpouer $
+ * @version $Id: LogViewer.java 25460 2021-03-29 21:07:24Z kpouer $
  */
 public class LogViewer extends JPanel implements DefaultFocusComponent
 {
@@ -333,7 +333,7 @@ public class LogViewer extends JPanel implements DefaultFocusComponent
 		private static Color errorColor;
 		
 		private String text;
-		private int borderWidth = 1;
+		private final int borderWidth = 1;
 		private int baseline;
 		private int width;
 		private int height;

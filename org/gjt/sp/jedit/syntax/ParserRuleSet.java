@@ -25,14 +25,17 @@ package org.gjt.sp.jedit.syntax;
 
 //{{{ Imports
 import javax.annotation.Nonnull;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import static org.gjt.sp.util.StandardUtilities.castUnchecked;
 //}}}
 
 /**
  * A set of parser rules.
  * @author mike dillon
- * @version $Id: ParserRuleSet.java 25293 2020-04-26 09:05:14Z kpouer $
+ * @version $Id: ParserRuleSet.java 25698 2023-11-17 01:31:50Z vampire0 $
  */
 public class ParserRuleSet
 {
@@ -54,7 +57,7 @@ public class ParserRuleSet
 		this.setName = setName;
 		allRules = new ArrayList<>();
 		rulesForNull = new ArrayList<>();
-		ruleArray = new List[BASE_CACHE];
+		ruleArray = castUnchecked(Array.newInstance(List.class, BASE_CACHE));
 		imports = new ArrayList<>();
 	} //}}}
 

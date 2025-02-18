@@ -32,7 +32,7 @@ import org.gjt.sp.util.Log;
 /**
  * URL VFS.
  * @author Slava Pestov
- * @version $Id: UrlVFS.java 25000 2020-03-21 19:40:09Z kpouer $
+ * @version $Id: UrlVFS.java 25654 2023-09-02 18:08:43Z vampire0 $
  */
 public class UrlVFS extends VFS
 {
@@ -86,6 +86,18 @@ public class UrlVFS extends VFS
 			VFSManager.error(comp,path,"ioerror.badurl",args);
 			return null;
 		}
+	} //}}}
+
+	//{{{ getFileName() method
+	@Override
+	public String getFileName(String path)
+	{
+		String result = super.getFileName(path);
+		int index = result.indexOf('?');
+		if (index == -1)
+			return result;
+		else
+			return result.substring(0, index);
 	} //}}}
 
 	//{{{ getFilePath() method

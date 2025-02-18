@@ -37,7 +37,7 @@ import org.gjt.sp.util.GenericGUIUtilities;
  * You can get and set the currently selected color using
  * {@link #getSelectedColor()} and {@link #setSelectedColor(Color)}.
  * @author Slava Pestov
- * @version $Id: ColorWellButton.java 24411 2016-06-19 11:02:53Z kerik-sf $
+ * @version $Id: ColorWellButton.java 25474 2021-04-02 21:35:53Z kpouer $
  */
 public class ColorWellButton extends JButton
 {
@@ -68,7 +68,7 @@ public class ColorWellButton extends JButton
 	} //}}}
 
 	//{{{ ColorWell class
-	static class ColorWell implements Icon
+	private static class ColorWell implements Icon
 	{
 		Color color;
 
@@ -77,20 +77,23 @@ public class ColorWellButton extends JButton
 			this.color = color;
 		}
 
-		private Rectangle2D bounds =
+		private final Rectangle2D bounds =
 				new JLabel("").getFont().createGlyphVector(
 						new FontRenderContext(null, true, false), "AAAA").getVisualBounds();
 
+		@Override
 		public int getIconWidth()
 		{
 			return (int)Math.ceil(bounds.getWidth());
 		}
 
+		@Override
 		public int getIconHeight()
 		{
 			return (int)Math.ceil(bounds.getHeight());
 		}
 
+		@Override
 		public void paintIcon(Component c, Graphics g, int x, int y)
 		{
 			if(color == null)
@@ -104,12 +107,13 @@ public class ColorWellButton extends JButton
 	} //}}}
 
 	//{{{ ActionHandler class
-	class ActionHandler implements ActionListener
+	private class ActionHandler implements ActionListener
 	{
+		@Override
 		public void actionPerformed(ActionEvent evt)
 		{
 			JDialog parent = GenericGUIUtilities.getParentDialog(ColorWellButton.this);
-			Color c = null;
+			Color c;
 			if (parent != null)
 			{
 				ColorChooserDialog dialog = new ColorChooserDialog(parent, getSelectedColor());

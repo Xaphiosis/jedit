@@ -30,12 +30,12 @@ import org.gjt.sp.jedit.syntax.TokenMarker;
 
 /**
  * @author Slava Pestov
- * @version $Id: BracketIndentRule.java 25222 2020-04-12 16:07:38Z kpouer $
+ * @version $Id: BracketIndentRule.java 25503 2021-04-21 21:45:28Z kpouer $
  */
 public abstract class BracketIndentRule implements IndentRule
 {
 	//{{{ BracketIndentRule constructor
-	public BracketIndentRule(char openBracket, char closeBracket)
+	BracketIndentRule(char openBracket, char closeBracket)
 	{
 		this.openBracket = openBracket;
 		this.closeBracket = closeBracket;
@@ -82,12 +82,12 @@ public abstract class BracketIndentRule implements IndentRule
 		private final int beginIndex;
 		private final int endIndex;
 
-		public LineScanner(int begin, int end)
+		LineScanner(int begin, int end)
 		{
-			this.result = new Brackets();
-			this.scannedIndex = 0;
-			this.beginIndex = begin;
-			this.endIndex = end;
+			result = new Brackets();
+			scannedIndex = 0;
+			beginIndex = begin;
+			endIndex = end;
 		}
 
 		private void scan(Segment seg, int offset, int length)

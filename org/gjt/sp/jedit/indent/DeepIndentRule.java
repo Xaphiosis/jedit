@@ -37,7 +37,7 @@ import javax.swing.text.Segment;
  * Deep indent rule.
  *
  * @author Matthieu Casanova
- * @version $Id: DeepIndentRule.java 25222 2020-04-12 16:07:38Z kpouer $
+ * @version $Id: DeepIndentRule.java 25503 2021-04-21 21:45:28Z kpouer $
  */
 public class DeepIndentRule implements IndentRule
 {
@@ -119,7 +119,7 @@ public class DeepIndentRule implements IndentRule
 	 * Returns the length of the string as if it were indented with
 	 * spaces instead of tabs.
 	 */
-	private int getIndent(CharSequence line, int tabSize)
+	private static int getIndent(CharSequence line, int tabSize)
 	{
 		int cnt = 0;
 		for (int i = 0;  i < line.length(); i++)

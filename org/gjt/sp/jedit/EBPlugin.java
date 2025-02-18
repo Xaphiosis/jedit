@@ -31,7 +31,7 @@ import org.gjt.sp.util.Log;
  * @see org.gjt.sp.jedit.EBMessage
  *
  * @author Slava Pestov
- * @version $Id: EBPlugin.java 12504 2008-04-22 23:12:43Z ezust $
+ * @version $Id: EBPlugin.java 25429 2021-03-13 16:13:35Z kpouer $
  */
 public abstract class EBPlugin extends EditPlugin implements EBComponent
 {
@@ -39,6 +39,7 @@ public abstract class EBPlugin extends EditPlugin implements EBComponent
 	 * Handles a message sent on the EditBus.
 	 */
 	// next version: remove this
+	@Override
 	public void handleMessage(EBMessage message)
 	{
 		EditBus.removeFromBus(this);

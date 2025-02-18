@@ -53,7 +53,7 @@ import org.gjt.sp.jedit.textarea.TextAreaMouseHandler;
 *
 * @author Slava Pestov
 * @author Eric Le Lay
-* @version $Id: GenericGUIUtilities.java 25107 2020-03-31 22:37:06Z kpouer $
+* @version $Id: GenericGUIUtilities.java 25677 2023-09-16 21:24:12Z kpouer $
 */
 public class GenericGUIUtilities
 {
@@ -69,12 +69,12 @@ public class GenericGUIUtilities
 	public static String prettifyMenuLabel(String label)
 	{
 		int index = label.indexOf('$');
+		var result = label;
 		if(index != -1)
 		{
-			label = label.substring(0,index)
-				.concat(label.substring(index + 1));
+			result = label.substring(0, index) + label.substring(index + 1);
 		}
-		return label;
+		return result;
 	} //}}}
 
 	//{{{ setAutoMnemonic() method
@@ -92,7 +92,7 @@ public class GenericGUIUtilities
 		if (index != -1 && label.length() - index > 1)
 		{
 			mnemonic = Character.toLowerCase(label.charAt(index + 1));
-			label = label.substring(0, index).concat(label.substring(++index));
+			label = label.substring(0, index) + label.substring(++index);
 		}
 		else
 		{
