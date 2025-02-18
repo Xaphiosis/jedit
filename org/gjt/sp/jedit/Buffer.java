@@ -1236,6 +1236,7 @@ public class Buffer extends JEditBuffer
 	 */
 	public void setLineSeparator(String lineSep)
 	{
+		lineSep = org.jedit.misc.LineSepType.fromSeparator(lineSep).getSeparator();
 		setProperty(LINESEP, lineSep);
 		setDirty(true);
 		propertiesChanged();
