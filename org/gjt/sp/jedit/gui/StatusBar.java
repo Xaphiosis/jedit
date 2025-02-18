@@ -225,8 +225,11 @@ public class StatusBar extends JPanel
 			else
 				this.message.setText(" ");
 		}
-		else
-			this.message.setText(message);
+		else {
+			Exception exn = new Exception();
+			if (!exn.getStackTrace()[1].getClassName().startsWith("sidekick."))
+				this.message.setText(message);
+		}
 	} //}}}
 
 	//{{{ setMessageComponent() method
