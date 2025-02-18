@@ -357,7 +357,7 @@ public abstract class BufferIORequest extends IoTask
 
 		Segment lineSegment = new Segment();
 		String newline = buffer.getStringProperty(JEditBuffer.LINESEP);
-		if(newline == null)
+		if(newline == null || newline.isEmpty())
 			newline = System.getProperty("line.separator");
 
 		final int bufferLineCount = buffer.getLineCount();
