@@ -45,15 +45,13 @@ import org.gjt.sp.util.GenericGUIUtilities;
  * @version $Id$
  * @since jEdit 4.0pre1
  */
-public class FloatingWindowContainer extends JDialog implements DockableWindowContainer, PropertyChangeListener {
+public class FloatingWindowContainer extends JFrame implements DockableWindowContainer, PropertyChangeListener {
 	private String dockableName;
 
 	//{{{ FloatingWindowContainer constructor
 	public FloatingWindowContainer(DockableWindowManagerImpl dockableWindowManager,
 		boolean clone)
 	{
-		super(dockableWindowManager.getView());
-
 		this.dockableWindowManager = dockableWindowManager;
 
 		dockableWindowManager.addPropertyChangeListener(this);
