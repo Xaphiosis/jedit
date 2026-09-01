@@ -26,6 +26,7 @@ package org.gjt.sp.jedit.browser;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
 import javax.swing.*;
+import javax.accessibility.AccessibleContext;
 
 import static java.awt.event.InputEvent.*;
 import java.awt.event.*;
@@ -61,6 +62,7 @@ class BrowserView extends JPanel
 		parentDirectories = new ParentDirectoryList();
 		parentDirectories.addKeyListener(keyListener);
 		parentDirectories.setName("parent");
+		parentDirectories.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY, "Directory hierarchy");
 
 		parentDirectories.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		parentDirectories.setCellRenderer(new ParentDirectoryRenderer());
@@ -74,6 +76,8 @@ class BrowserView extends JPanel
 		table.addMouseListener(new TableMouseHandler());
 		table.addKeyListener(new TableKeyListener());
 		table.setName("file");
+		table.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY, "Directory entries");
+
 		JScrollPane tableScroller = new JScrollPane(table);
 		tableScroller.setMinimumSize(new Dimension(0,0));
 		tableScroller.getViewport().setBackground(table.getBackground());

@@ -102,7 +102,7 @@ public class ErrorsWidgetFactory implements StatusWidgetFactory
 			String defaultFont = jEdit.getProperty("view.font");
 			int defaultFontSize = jEdit.getIntegerProperty("view.fontsize", 12);
 			SyntaxStyle invalid = SyntaxUtilities.parseStyle(
-				jEdit.getProperty("view.style.invalid"),
+				jEdit.getThemeProperty("view.style.invalid"),
 				defaultFont,defaultFontSize, true);
 			foregroundColor = invalid.getForegroundColor();
 			setForeground(foregroundColor);

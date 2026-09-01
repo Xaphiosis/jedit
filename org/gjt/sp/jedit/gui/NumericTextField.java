@@ -95,7 +95,7 @@ public class NumericTextField extends JTextField implements ComboBoxEditor
 		Font font = getFont();
 		String family = font.getFamily();
 		int size = font.getSize();
-		invalidStyle = SyntaxUtilities.parseStyle(jEdit.getProperty("view.style.invalid"), family, size, true);
+		invalidStyle = SyntaxUtilities.parseStyle(jEdit.getThemeProperty("view.style.invalid"), family, size, true);
 		defaultForeground = getForeground();
 		defaultBackground = getBackground();
 	}

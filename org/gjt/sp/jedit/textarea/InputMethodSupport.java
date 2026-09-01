@@ -141,6 +141,8 @@ class InputMethodSupport
 				if (selectionStartLine == caretLine)
 				{
 					Point selection_start = owner.offsetToXY(selection_on_caret.getStart());
+					if (selection_start == null)
+						return getCaretRectangle(0, 0);
 					return getCaretRectangle(selection_start.x, selection_start.y);
 				}
 				else

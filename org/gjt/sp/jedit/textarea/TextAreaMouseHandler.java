@@ -45,7 +45,7 @@ import java.awt.*;
 public class TextAreaMouseHandler extends MouseInputAdapter
 {
 	//{{{ MouseHandler constructor
-	TextAreaMouseHandler(TextArea textArea)
+	protected TextAreaMouseHandler(TextArea textArea)
 	{
 		this.textArea = textArea;
 	} //}}}
@@ -341,7 +341,7 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 	} //}}}
 
 	//{{{ doSingleDrag() method
-	private void doSingleDrag(MouseEvent evt)
+	protected void doSingleDrag(MouseEvent evt)
 	{
 		dragged = true;
 
@@ -413,7 +413,7 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 	} //}}}
 
 	//{{{ doDoubleDrag() method
-	private void doDoubleDrag(MouseEvent evt)
+	protected void doDoubleDrag(MouseEvent evt)
 	{
 		int markLineStart = textArea.getLineStartOffset(dragStartLine);
 		int markLineLength = textArea.getLineLength(dragStartLine);
@@ -480,7 +480,7 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 	} //}}}
 
 	//{{{ doTripleDrag() method
-	private void doTripleDrag(MouseEvent evt)
+	protected void doTripleDrag(MouseEvent evt)
 	{
 		TextAreaPainter painter = textArea.getPainter();
 
@@ -683,7 +683,7 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 	 * Dynamically get the "pivot" point associated with a current
 	 * selection.  See inline comments for details.
 	 */
-	private int getSelectionPivotCaret()
+	protected int getSelectionPivotCaret()
 	{
 		int caret = textArea.caret;
 
@@ -713,7 +713,7 @@ public class TextAreaMouseHandler extends MouseInputAdapter
 	/*
 	 * See getSelectionPivotCaret for an explanation of this function
 	 */
-	private int getSelectionPivotLine()
+	protected int getSelectionPivotLine()
 	{
 		int c  = textArea.caret;
 		int cl = textArea.caretLine;

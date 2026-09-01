@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
 import javax.swing.*;
+import javax.accessibility.AccessibleContext;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -222,7 +223,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		pathField.setInstantPopups(true);
 		pathField.setEnterAddsToHistory(false);
 		pathField.setSelectAllOnFocus(true);
-
+		label.setLabelFor(pathField);
 
 		// because its preferred size can be quite wide, we
 		// don't want it to make the browser way too big,
@@ -239,6 +240,7 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 		pathAndFilterPanel.add(pathField);
 
 		filterCheckbox = new JCheckBox(jEdit.getProperty("vfs.browser.filter"));
+		filterCheckbox.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY, "Filter enabled");
 		filterCheckbox.setMargin(new Insets(0,0,0,0));
 //		filterCheckbox.setRequestFocusEnabled(false);
 		filterCheckbox.setBorder(new EmptyBorder(0,0,0,12));
@@ -257,9 +259,11 @@ public class VFSBrowser extends JPanel implements DefaultFocusComponent,
 			pathAndFilterPanel.add(filterCheckbox);
 		}
 
+		String filterTooltip = jEdit.getProperty("vfs.browser.filter") + " " + jEdit.getProperty("glob.tooltip");
 		filterField = new JComboBox<>();
 		filterEditor = new HistoryComboBoxEditor("vfs.browser.filter");
-		filterEditor.setToolTipText(jEdit.getProperty("glob.tooltip"));
+		filterEditor.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY, filterTooltip);
+		filterEditor.setToolTipText(filterTooltip);
 		filterEditor.setInstantPopups(true);
 		filterEditor.setSelectAllOnFocus(true);
 		filterEditor.addActionListener(actionHandler);
@@ -1764,7 +1768,7 @@ check_selected:
 		//{{{ MenuButton constructor
 		MenuButton()
 		{
-			setIcon(GUIUtilities.loadIcon(jEdit.getProperty("dropdown-arrow.icon")));
+			setIcon(GUIUtilities.loadIcon(jEdit.getThemeProperty("dropdown-arrow.icon")));
 			setHorizontalTextPosition(SwingConstants.LEADING);
 
 	//		setRequestFocusEnabled(false);

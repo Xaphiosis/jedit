@@ -54,7 +54,7 @@ public class RegisterViewer extends JPanel
 		toolBar.add(Box.createGlue());
 
 		RolloverButton pasteRegister = new RolloverButton(
-			GUIUtilities.loadIcon("Paste.png"));
+			GUIUtilities.loadIcon(jEdit.getProperty("paste.icon")));
 		pasteRegister.setToolTipText(GenericGUIUtilities.prettifyMenuLabel(
 			jEdit.getProperty("paste-string-register.label")));
 		pasteRegister.addActionListener(e -> insertRegister());
@@ -62,7 +62,7 @@ public class RegisterViewer extends JPanel
 		toolBar.add(pasteRegister);
 
 		RolloverButton clearRegister = new RolloverButton(
-			GUIUtilities.loadIcon("Clear.png"));
+			GUIUtilities.loadIcon(jEdit.getProperty("common.clearAll.icon")));
 		clearRegister.setToolTipText(GenericGUIUtilities.prettifyMenuLabel(
 			jEdit.getProperty("clear-string-register.label")));
 		clearRegister.addActionListener(e -> clearSelectedIndex());

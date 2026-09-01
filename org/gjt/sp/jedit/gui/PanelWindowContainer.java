@@ -53,11 +53,13 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.metal.MetalLookAndFeel;
+import javax.accessibility.AccessibleContext;
 
 import org.gjt.sp.jedit.EditBus;
 import org.gjt.sp.jedit.GUIUtilities;
@@ -99,7 +101,7 @@ public class PanelWindowContainer implements DockableWindowContainer, DockingAre
 
 		closeBox.addActionListener(e -> show((DockableWindowManagerImpl.Entry)null));
 
-		menuBtn = new JButton(GUIUtilities.loadIcon(jEdit.getProperty("dropdown-arrow.icon")));
+		menuBtn = new JButton(GUIUtilities.loadIcon(jEdit.getThemeProperty("dropdown-arrow.icon")));
 		menuBtn.setRequestFocusEnabled(false);
 		menuBtn.setToolTipText(jEdit.getProperty("view.docking.menu-tooltip"));
 		if(OperatingSystem.isMacOSLF())
@@ -164,11 +166,13 @@ public class PanelWindowContainer implements DockableWindowContainer, DockingAre
 		{
 			button = new JToggleButton();	
 			button.setMargin(new Insets(1,1,1,1));
+            button.setFont(new JMenuItem().getFont());
 		}
 		GenericGUIUtilities.setButtonContentMargin(button, new Insets(6,6,6,6));
 		button.setRequestFocusEnabled(false);
-		button.setIcon(new RotatedTextIcon(rotation,button.getFont(),
-			entry.shortTitle()));
+		String shortTitle = entry.shortTitle();
+		button.setIcon(new RotatedTextIcon(rotation,button.getFont(), shortTitle));
+		button.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY, shortTitle);
 		button.setActionCommand(entry.factory.name);
 		button.addActionListener(new ActionHandler());
 		button.addMouseListener(new MenuMouseHandler());
@@ -683,8 +687,6 @@ public class PanelWindowContainer implements DockableWindowContainer, DockingAre
 			renderHints = new RenderingHints(
 				RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
-			renderHints.put(RenderingHints.KEY_FRACTIONALMETRICS,
-				RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 			renderHints.put(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
 		} //}}}

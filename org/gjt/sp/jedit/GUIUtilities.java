@@ -42,6 +42,8 @@ import org.gjt.sp.util.SyntaxUtilities;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.lang.ref.SoftReference;
 
 import javax.annotation.Nonnull;
@@ -72,6 +74,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 //}}}
 
 /** Various GUI utility functions related to icons, menus, toolbars, keyboard shortcuts, etc.
@@ -115,14 +119,14 @@ public class GUIUtilities
 	 * @return the icon
 	 * @since jEdit 2.6pre7
 	 */
-	public static Icon loadIcon(String iconName)
+	public static Icon loadIcon(String iconSpec)
 	{
-		if(iconName == null)
+		if(iconSpec == null)
 			return null;
 
 		// * Enable old icon naming scheme support
-		if(deprecatedIcons.containsKey(iconName))
-			iconName = deprecatedIcons.get(iconName);
+		if(deprecatedIcons.containsKey(iconSpec))
+			iconSpec = deprecatedIcons.get(iconSpec);
 
 		// check if there is a cached version first
 		Map<String, Icon> cache = null;
@@ -135,11 +139,24 @@ public class GUIUtilities
 			cache = new HashMap<>();
 			iconCache = new SoftReference<>(cache);
 		}
-		Icon icon = cache.get(iconName);
+		Icon icon = cache.get(iconSpec);
 		if(icon != null)
 			return icon;
 
 		URL url;
+
+		float iconScale = 1.0f;
+ 		String iconName = iconSpec;
+       {
+        	Matcher matcher = Pattern.compile("^([^?]+)\\?scale=(.+)$").matcher(iconSpec);
+        	if (matcher.matches()) {
+        		try {
+        			iconScale = Float.valueOf(matcher.group(2));
+        			iconName = matcher.group(1);
+        		}
+        		catch (NumberFormatException e) { }
+        	}
+        }
 
 		try
 		{
@@ -164,9 +181,11 @@ public class GUIUtilities
 			}
 		}
 
-		icon = new ImageIcon(url);
+		icon =
+			url.toString().endsWith(".svg") ?
+				new FlatSVGIcon(url).derive(iconScale) : new ImageIcon(url);
 
-		cache.put(iconName,icon);
+		cache.put(iconSpec,icon);
 		return icon;
 	} //}}}
 
@@ -1094,9 +1113,7 @@ public class GUIUtilities
 				return new Font("Monospaced", Font.PLAIN, 12);
 			}
 			else {
-				Font font2 =
-					new Font(OperatingSystem.isWindows() ? "Lucida Console" : "Monospaced",
-						Font.PLAIN, font1.getSize());
+				Font font2 = new Font("Isabelle DejaVu Sans Mono", Font.PLAIN, font1.getSize());
 				FontRenderContext frc = new FontRenderContext(null, true, false);
 				float scale =
 					font1.getLineMetrics("", frc).getHeight() / font2.getLineMetrics("", frc).getHeight();
@@ -1106,6 +1123,48 @@ public class GUIUtilities
 	} //}}}
 
 	//{{{ Colors and styles
+
+	public static Color menuAcceleratorForeground(boolean selection) {
+		Color color =
+			UIManager.getColor(selection ?
+				"MenuItem.acceleratorSelectionForeground" :
+				"MenuItem.acceleratorForeground");
+
+		if (color == null) color = defaultFgColor();
+
+		return color;
+	}
+
+	public static boolean isDarkLaf()
+	{
+		return com.formdev.flatlaf.FlatLaf.isLafDark();
+	}
+
+	public static Color defaultBgColor()
+	{
+		return isDarkLaf() ? Color.BLACK : Color.WHITE;
+	}
+
+	public static Color defaultFgColor()
+	{
+		return isDarkLaf() ? Color.WHITE : Color.BLACK;
+	}
+
+	public static String getTheme()
+	{
+		return isDarkLaf() ? "dark" : "";
+	}
+
+	public static String getThemeSuffix()
+	{
+		return getThemeSuffix(".");
+	}
+
+	public static String getThemeSuffix(String s)
+	{
+		String t = getTheme();
+		return t.isEmpty() ? t : s + t;
+	}
 
 	//{{{ getStyleString() method
 	/**
@@ -1407,8 +1466,8 @@ public class GUIUtilities
 	{
 		for (Component child: win.getComponents())
 		{
-			child.setBackground(jEdit.getColorProperty("view.bgColor", Color.WHITE));
-			child.setForeground(jEdit.getColorProperty("view.fgColor", Color.BLACK));
+			child.setBackground(jEdit.getColorProperty("view.bgColor", defaultBgColor()));
+			child.setForeground(jEdit.getColorProperty("view.fgColor"));
 			if (child instanceof JTextPane)
 				((JTextPane)child).setUI(new javax.swing.plaf.basic.BasicEditorPaneUI());
 			if (child instanceof Container)
@@ -1471,7 +1530,7 @@ public class GUIUtilities
 					comp = real;
 			}
 
-			if(comp.getClass().equals(clazz))
+			if(clazz.isInstance(comp))
 				return comp;
 			else if(comp instanceof JPopupMenu)
 				comp = ((JPopupMenu)comp).getInvoker();
@@ -1596,7 +1655,7 @@ public class GUIUtilities
 		deprecatedIcons.put("NextFile.png",    "22x22/go-last.png");
 		deprecatedIcons.put("PreviousFile.png","22x22/go-first.png");
 
-		deprecatedIcons.put("closebox.gif",   "10x10/actions/close.png");
+		deprecatedIcons.put("closebox.gif",   "32x32/actions/process-stop.svg?scale=0.33");
 		deprecatedIcons.put("normal.gif",   "10x10/status/document-unmodified.png");
 		deprecatedIcons.put("readonly.gif",   "10x10/emblem/emblem-readonly.png");
 		deprecatedIcons.put("dirty.gif",    "10x10/status/document-modified.png");
@@ -1618,6 +1677,21 @@ public class GUIUtilities
 
 	}
 	//}}}
+
+	//{{{ isPopupTrigger() method
+	/**
+	 * Returns if the specified event is the popup trigger event.
+	 * This implements precisely defined behavior, as opposed to
+	 * MouseEvent.isPopupTrigger().
+	 * @param evt The event
+	 * @since jEdit 3.2pre8
+	 * @deprecated use {@link GenericGUIUtilities#requestFocus(Window, Component)}
+	 */
+	@Deprecated
+	public static boolean isPopupTrigger(MouseEvent evt)
+	{
+		return GenericGUIUtilities.isPopupTrigger(evt);
+	} //}}}
 
 	//{{{ init() method
 	static void init()

@@ -1302,8 +1302,7 @@ public abstract class VFS
 					colors.add(new ColorEntry(
 						Pattern.compile(StandardUtilities.globToRE(glob)),
 						jEdit.getColorProperty(
-						"vfs.browser.colors." + i + ".color",
-						Color.black)));
+						"vfs.browser.colors." + i + ".color")));
 				}
 				catch(PatternSyntaxException e)
 				{

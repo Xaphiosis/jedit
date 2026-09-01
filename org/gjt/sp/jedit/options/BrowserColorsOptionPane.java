@@ -78,12 +78,12 @@ public class BrowserColorsOptionPane extends AbstractOptionPane
 		buttons.setBorder(new EmptyBorder(3,0,0,0));
 		buttons.setLayout(new BoxLayout(buttons,BoxLayout.X_AXIS));
 		ActionListener actionHandler = new ActionHandler();
-		JButton add = new RolloverButton(GUIUtilities.loadIcon("Plus.png"));
+		JButton add = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("common.add.icon")));
 		add.setToolTipText(jEdit.getProperty("common.add"));
 		add.addActionListener(e -> colorsModel.add());
 		buttons.add(add);
 		buttons.add(Box.createHorizontalStrut(6));
-		remove = new RolloverButton(GUIUtilities.loadIcon("Minus.png"));
+		remove = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("common.remove.icon")));
 		remove.setToolTipText(jEdit.getProperty("common.remove"));
 		remove.addActionListener(e ->
 		{
@@ -93,12 +93,12 @@ public class BrowserColorsOptionPane extends AbstractOptionPane
 		});
 		buttons.add(remove);
 		buttons.add(Box.createHorizontalStrut(6));
-		moveUp = new RolloverButton(GUIUtilities.loadIcon("ArrowU.png"));
+		moveUp = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("common.moveUp.icon")));
 		moveUp.setToolTipText(jEdit.getProperty("common.moveUp"));
 		moveUp.addActionListener(actionHandler);
 		buttons.add(moveUp);
 		buttons.add(Box.createHorizontalStrut(6));
-		moveDown = new RolloverButton(GUIUtilities.loadIcon("ArrowD.png"));
+		moveDown = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("common.moveDown.icon")));
 		moveDown.setToolTipText(jEdit.getProperty("common.moveDown"));
 		moveDown.addActionListener(actionHandler);
 		buttons.add(moveDown);
@@ -209,8 +209,7 @@ public class BrowserColorsOptionPane extends AbstractOptionPane
 			{
 				entries.add(new Entry(glob,
 					jEdit.getColorProperty(
-						"vfs.browser.colors." + i + ".color",
-						Color.black)));
+						"vfs.browser.colors." + i + ".color")));
 				i++;
 			}
 		} //}}}

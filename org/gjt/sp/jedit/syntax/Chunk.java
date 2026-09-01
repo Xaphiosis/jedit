@@ -328,9 +328,9 @@ public class Chunk extends Token
 	//{{{ Package private members
 
 	//{{{ Instance variables
-	SyntaxStyle style;
+	public SyntaxStyle style;
 	// set up after init()
-	float width;
+	public float width;
 	//}}}
 
 	//{{{ Chunk constructor
@@ -573,8 +573,8 @@ public class Chunk extends Token
 	// this is either style.getBackgroundColor() or
 	// styles[defaultID].getBackgroundColor()
 	private Color background;
-	private char[] chars;
-	private String str;
+	public char[] chars;
+	public String str;
 	private GlyphData glyphData;
 	//}}}
 
@@ -912,6 +912,11 @@ public class Chunk extends Token
 			// Avoid rehashing with known limit.
 			super(capacity + 1, 1.0f, true/*accessOrder*/);
 			this.capacity = capacity;
+		}
+
+		@Override
+		public GlyphData computeIfAbsent(GlyphKey key, java.util.function.Function<? super GlyphKey, ? extends GlyphData> f) {
+			synchronized (this) { return super.computeIfAbsent(key, f); }
 		}
 
 		@Override

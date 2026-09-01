@@ -90,12 +90,12 @@ public class StyleEditor extends EnhancedDialog
 		String property = "view.style." + typeName.toLowerCase();
 		Font font = new JLabel().getFont();
 		SyntaxStyle currentStyle = SyntaxUtilities.parseStyle(
-				jEdit.getProperty(property), font.getFamily(), font.getSize(), true);
+				jEdit.getThemeProperty(property), font.getFamily(), font.getSize(), true);
 		SyntaxStyle style = new StyleEditor(textArea.getView(),
 				currentStyle, typeName).getStyle();
 		if(style != null)
 		{
-			jEdit.setProperty(property, GUIUtilities.getStyleString(style));
+			jEdit.setProperty(property + GUIUtilities.getThemeSuffix(), GUIUtilities.getStyleString(style));
 			jEdit.propertiesChanged();
 		}
 	} //}}}

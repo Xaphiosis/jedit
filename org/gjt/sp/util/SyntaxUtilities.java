@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 import org.gjt.sp.jedit.syntax.SyntaxStyle;
 import org.gjt.sp.jedit.syntax.Token;
 import org.gjt.sp.jedit.IPropertyManager;
+import org.gjt.sp.jedit.GUIUtilities;
 
 import static java.util.stream.Collectors.joining;
 //}}}
@@ -49,6 +50,15 @@ import static java.util.stream.Collectors.joining;
 public class SyntaxUtilities
 {
 	public static IPropertyManager propertyManager;
+
+	public static String getThemeProperty(String name)
+	{
+		String s = GUIUtilities.getThemeSuffix();
+		String a = propertyManager.getProperty(name);
+		String b = propertyManager.getProperty(name + s);
+		return b == null ? a : b;
+	}
+
 	private static final Pattern COLOR_MATRIX_PATTERN = Pattern.compile("(?x)\n" +
 			"^\n" +
 			"\\s*+ # optionally preceded by whitespace\n" +
@@ -125,7 +135,7 @@ public class SyntaxUtilities
  	 */
 	public static Color parseColor(String name)
 	{
-		return parseColor(name, Color.black);	
+		return parseColor(name, GUIUtilities.defaultFgColor());	
 	} //}}}
 	
 	//{{{ parseColor() method
@@ -267,7 +277,7 @@ public class SyntaxUtilities
 			if(s.startsWith("color:"))
 			{
 				if(color)
-					fgColor = parseColor(s.substring(6), Color.black);
+					fgColor = parseColor(s.substring(6), GUIUtilities.defaultFgColor());
 			}
 			else if(s.startsWith("bgColor:"))
 			{
@@ -311,7 +321,7 @@ public class SyntaxUtilities
 		boolean color)
 		throws IllegalArgumentException
 	{
-		return parseStyle(str, family, size, color, Color.black);
+		return parseStyle(str, family, size, color, GUIUtilities.defaultFgColor());
 	} //}}}
 
 	//{{{ loadStyles() methods
@@ -347,9 +357,7 @@ public class SyntaxUtilities
 				String styleName = "view.style."
 					+ Token.tokenToString((byte)i)
 					.toLowerCase(Locale.ENGLISH);
-				styles[i] = parseStyle(
-					propertyManager.getProperty(styleName),
-					family,size,color);
+				styles[i] = parseStyle(getThemeProperty(styleName),family,size,color);
 			}
 			catch(Exception e)
 			{
@@ -357,8 +365,28 @@ public class SyntaxUtilities
 			}
 		}
 
-		return styles;
+		styles[0] =
+			new SyntaxStyle(org.gjt.sp.jedit.jEdit.getColorProperty("view.fgColor", GUIUtilities.defaultFgColor()),
+				null, new Font(family, 0, size));
+		return _styleExtender.extendStyles(styles);
 	} //}}}
+
+	/**
+	 * Extended styles derived from the user-specified style array.
+	 */
+
+	public static class StyleExtender
+	{
+		public SyntaxStyle[] extendStyles(SyntaxStyle[] styles)
+		{
+			return styles;
+		}
+	}
+	volatile private static StyleExtender _styleExtender = new StyleExtender();
+	public static void setStyleExtender(StyleExtender ext)
+	{
+		_styleExtender = ext;
+	}
 
 	private SyntaxUtilities(){}
 }

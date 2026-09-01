@@ -191,6 +191,7 @@ public abstract class OptionsDialog extends EnhancedDialog implements TreeSelect
 
 						if(optionPane != null)
 						{
+							deferredOptionPanes.clear();
 							deferredOptionPanes.put(
 								node,optionPane);
 						}

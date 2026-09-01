@@ -1357,7 +1357,7 @@ public class View extends JFrame implements InputHandlerProvider
 	View next;
 
 	//{{{ View constructor
-	View(Buffer buffer, ViewConfig config)
+	public View(Buffer buffer, ViewConfig config)
 	{
 		fullScreenMode = false;
 		menuBar = null;
@@ -2072,7 +2072,11 @@ loop:		while (true)
 
 	private EditPane createEditPane(@Nullable BufferSet bufferSetSource, @Nonnull Buffer buffer)
 	{
-		EditPane editPane = new EditPane(this, bufferSetSource, buffer);
+		EditPaneFactory editPaneFactory =
+			ServiceManager.getService(EditPaneFactory.class, "editpane-factory");
+		EditPane editPane =
+			editPaneFactory == null ? new EditPane(this, bufferSetSource, buffer) :
+			editPaneFactory.create(this, bufferSetSource, buffer);
 		JEditTextArea textArea = editPane.getTextArea();
 		textArea.addFocusListener(new FocusHandler());
 		textArea.addCaretListener(new CaretHandler());

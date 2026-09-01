@@ -51,6 +51,10 @@ public class SearchBar extends JToolBar
 		setFloatable(false);
 		add(Box.createHorizontalStrut(2));
 
+		if (!jEdit.getProperty("navigate-toolbar", "").isEmpty()) {
+			add(GUIUtilities.loadToolBar("navigate-toolbar"));
+		}
+
 		JLabel label = new JLabel(jEdit.getProperty("view.search.find"));
 		add(label);
 		
@@ -59,7 +63,7 @@ public class SearchBar extends JToolBar
 		add(find = new HistoryTextField("find"));
 		find.setSelectAllOnFocus(false);
 
-		SyntaxStyle style = SyntaxUtilities.parseStyle(jEdit.getProperty("view.style.invalid"), "Dialog", 12, true);
+		SyntaxStyle style = SyntaxUtilities.parseStyle(jEdit.getThemeProperty("view.style.invalid"), "Dialog", 12, true);
 		errorBackground = style.getBackgroundColor();
 		errorForeground = style.getForegroundColor();
 		defaultBackground = find.getBackground();

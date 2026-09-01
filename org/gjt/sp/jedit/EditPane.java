@@ -43,6 +43,7 @@ import org.gjt.sp.jedit.gui.StatusBar;
 import org.gjt.sp.jedit.msg.BufferChanging;
 import org.gjt.sp.jedit.msg.BufferUpdate;
 import org.gjt.sp.jedit.msg.EditPaneUpdate;
+import org.gjt.sp.jedit.msg.PositionChanging;
 import org.gjt.sp.jedit.msg.PropertiesChanged;
 import org.gjt.sp.jedit.options.GeneralOptionPane;
 import org.gjt.sp.jedit.options.GutterOptionPane;
@@ -50,11 +51,13 @@ import org.gjt.sp.jedit.syntax.SyntaxStyle;
 import org.gjt.sp.jedit.textarea.AntiAlias;
 import org.gjt.sp.jedit.textarea.Gutter;
 import org.gjt.sp.jedit.textarea.JEditTextArea;
+import org.gjt.sp.jedit.textarea.JEditTextAreaFactory;
 import org.gjt.sp.jedit.textarea.MouseHandler;
 import org.gjt.sp.jedit.textarea.Selection;
 import org.gjt.sp.jedit.textarea.StatusListener;
 import org.gjt.sp.jedit.textarea.TextArea;
 import org.gjt.sp.jedit.textarea.TextAreaExtension;
+import org.gjt.sp.jedit.textarea.TextAreaMouseHandler;
 import org.gjt.sp.jedit.textarea.TextAreaPainter;
 import org.gjt.sp.jedit.textarea.TextAreaTransferHandler;
 import org.gjt.sp.util.SyntaxUtilities;
@@ -380,9 +383,11 @@ public class EditPane extends JPanel implements BufferSetListener
 		buffer.unsetProperty(Buffer.CARET_POSITIONED);
 
 
-		if(caret != -1)
+		if(caret != -1) {
 			textArea.setCaretPosition(Math.min(caret,
 				buffer.getLength()));
+			EditBus.send(new PositionChanging(this));
+		}
 
 		// set any selections
 		Selection[] selection = caretInfo.selection;
@@ -756,7 +761,7 @@ public class EditPane extends JPanel implements BufferSetListener
 	//{{{ Package-private members
 
 	//{{{ EditPane constructor
-	EditPane(@Nonnull View view, @Nullable BufferSet bufferSetSource, @Nonnull Buffer buffer)
+	public EditPane(@Nonnull View view, @Nullable BufferSet bufferSetSource, @Nonnull Buffer buffer)
 	{
 		super(new BorderLayout());
 		BufferSet.Scope scope = jEdit.getBufferSetManager().getScope();
@@ -795,10 +800,17 @@ public class EditPane extends JPanel implements BufferSetListener
 		this.view = view;
 
 
-		textArea = new JEditTextArea(view);
+		JEditTextAreaFactory textAreaFactory =
+			ServiceManager.getService(JEditTextAreaFactory.class, "textarea-factory");
+		textArea =
+			textAreaFactory == null ? new JEditTextArea(view) : textAreaFactory.create(view);
 		bufferSet.addBufferSetListener(this);
 		textArea.getPainter().setAntiAlias(new AntiAlias(jEdit.getProperty("view.antiAlias")));
-		textArea.setMouseHandler(new MouseHandler(textArea));
+		EditPaneMouseHandlerFactory mouseHandlerFactory =
+			ServiceManager.getService(EditPaneMouseHandlerFactory.class, "mouse-handler-factory");
+        TextAreaMouseHandler mouseHandler =
+        	mouseHandlerFactory == null ? new MouseHandler(textArea) : mouseHandlerFactory.create(this);
+		textArea.setMouseHandler(mouseHandler);
 		textArea.setTransferHandler(new TextAreaTransferHandler());
 		markerHighlight = new MarkerHighlight();
 		Gutter gutter = textArea.getGutter();
@@ -1029,7 +1041,7 @@ public class EditPane extends JPanel implements BufferSetListener
 		for(int i = 0; i <= 3; i++)
 		{
 			foldLineStyle[i] = SyntaxUtilities.parseStyle(
-				jEdit.getProperty("view.style.foldLine." + i),
+				jEdit.getThemeProperty("view.style.foldLine." + i),
 				defaultFont,defaultFontSize, true);
 		}
 		painter.setFoldLineStyle(foldLineStyle);

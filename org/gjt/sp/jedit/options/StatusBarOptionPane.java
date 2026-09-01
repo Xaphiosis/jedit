@@ -160,12 +160,12 @@ public class StatusBarOptionPane extends AbstractOptionPane
 		buttons.setBorder(new EmptyBorder(3,0,0,0));
 		buttons.setLayout(new BoxLayout(buttons,BoxLayout.X_AXIS));
 		buttons.add(Box.createHorizontalStrut(6));
-		moveUp = new RolloverButton(GUIUtilities.loadIcon("ArrowU.png"));
+		moveUp = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("common.moveUp.icon")));
 		moveUp.setToolTipText(jEdit.getProperty("options.status.moveUp"));
 		moveUp.addActionListener(e -> moveUp());
 		buttons.add(moveUp);
 		buttons.add(Box.createHorizontalStrut(6));
-		moveDown = new RolloverButton(GUIUtilities.loadIcon("ArrowD.png"));
+		moveDown = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("common.moveDown.icon")));
 		moveDown.setToolTipText(jEdit.getProperty("options.status.moveDown"));
 		moveDown.addActionListener(e -> moveDown());
 		buttons.add(moveDown);

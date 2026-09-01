@@ -222,8 +222,7 @@ public class SyntaxHiliteOptionPane extends AbstractOptionPane
 		{
 			for (StyleChoice ch : styleChoices)
 			{
-				jEdit.setProperty(ch.property,
-					GUIUtilities.getStyleString(ch.style));
+				jEdit.setThemeProperty(ch.property,GUIUtilities.getStyleString(ch.style));
 			}
 		} //}}}
 
@@ -233,7 +232,7 @@ public class SyntaxHiliteOptionPane extends AbstractOptionPane
 			Font font = new JLabel().getFont();
 			styleChoices.add(new StyleChoice(label,
 			                                 property,
-			                                 SyntaxUtilities.parseStyle(jEdit.getProperty(property),
+			                                 SyntaxUtilities.parseStyle(jEdit.getThemeProperty(property),
 			                                                         font.getFamily(), font.getSize(), true)));
 		} //}}}
 
@@ -289,8 +288,8 @@ public class SyntaxHiliteOptionPane extends AbstractOptionPane
 					else
 					{
 						// this part sucks
-						setBackground(jEdit.getColorProperty(
-							"view.bgColor"));
+						setBackground(
+							jEdit.getColorProperty("view.bgColor", GUIUtilities.defaultBgColor()));
 					}
 					setFont(style.getFont());
 				}

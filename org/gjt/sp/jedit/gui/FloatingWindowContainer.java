@@ -45,14 +45,15 @@ import org.gjt.sp.util.GenericGUIUtilities;
  * @version $Id$
  * @since jEdit 4.0pre1
  */
-public class FloatingWindowContainer extends JFrame implements DockableWindowContainer, PropertyChangeListener
-{
+public class FloatingWindowContainer extends JDialog implements DockableWindowContainer, PropertyChangeListener {
 	private String dockableName;
 
 	//{{{ FloatingWindowContainer constructor
 	public FloatingWindowContainer(DockableWindowManagerImpl dockableWindowManager,
 		boolean clone)
 	{
+		super(dockableWindowManager.getView());
+
 		this.dockableWindowManager = dockableWindowManager;
 
 		dockableWindowManager.addPropertyChangeListener(this);
@@ -62,7 +63,7 @@ public class FloatingWindowContainer extends JFrame implements DockableWindowCon
 
 		Box caption = new Box(BoxLayout.X_AXIS);
 		caption.add(menu = new RolloverButton(GUIUtilities
-			.loadIcon(jEdit.getProperty("dropdown-arrow.icon"))));
+			.loadIcon(jEdit.getThemeProperty("dropdown-arrow.icon"))));
 		menu.addMouseListener(new MouseHandler());
 		menu.setToolTipText(jEdit.getProperty("docking.menu.label"));
 		Box separatorBox = new Box(BoxLayout.Y_AXIS);
@@ -87,7 +88,6 @@ public class FloatingWindowContainer extends JFrame implements DockableWindowCon
 		pack();
 		Container parent = dockableWindowManager.getView();
 		GUIUtilities.loadGeometry(this, parent, dockableName);
-		GUIUtilities.addSizeSaver(this, parent, dockableName);
 		KeyListener listener = dockableWindowManager.closeListener(dockableName);
 		addKeyListener(listener);
 		getContentPane().addKeyListener(listener);
@@ -154,8 +154,11 @@ public class FloatingWindowContainer extends JFrame implements DockableWindowCon
 	@Override
 	public void dispose()
 	{
-		entry.container = null;
-		entry.win = null;
+		GUIUtilities.saveGeometry(this, dockableWindowManager.getView(), dockableName);
+		if (entry != null) {
+			entry.container = null;
+			entry.win = null;
+		}
 		super.dispose();
 	} //}}}
 

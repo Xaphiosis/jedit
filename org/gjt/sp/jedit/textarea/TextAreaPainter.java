@@ -994,7 +994,7 @@ public class TextAreaPainter extends JComponent implements TabExpander
 	 * Creates a new painter. Do not create instances of this class
 	 * directly.
 	 */
-	TextAreaPainter(TextArea textArea)
+	public TextAreaPainter(TextArea textArea)
 	{
 		enableEvents(AWTEvent.FOCUS_EVENT_MASK
 			| AWTEvent.KEY_EVENT_MASK

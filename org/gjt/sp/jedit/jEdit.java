@@ -674,6 +674,12 @@ public class jEdit
 			return value;
 	} //}}}
 
+	public static String getThemeProperty(String name)
+	{
+		String s = GUIUtilities.getThemeSuffix();
+		return s.isEmpty() ? getProperty(name) : getProperty(name + s, getProperty(name));
+	}
+
 	//{{{ getProperty() method
 	/**
 	 * Returns the property with the specified name.<p>
@@ -859,7 +865,7 @@ public class jEdit
 	 */
 	public static Color getColorProperty(String name)
 	{
-		return getColorProperty(name,Color.black);
+		return getColorProperty(name, GUIUtilities.defaultFgColor());
 	}
 
 	/**
@@ -870,7 +876,7 @@ public class jEdit
 	 */
 	public static Color getColorProperty(String name, Color def)
 	{
-		String value = getProperty(name);
+		String value = getThemeProperty(name);
 		if(value == null)
 			return def;
 		else
@@ -886,7 +892,7 @@ public class jEdit
 	 */
 	public static void setColorProperty(String name, Color value)
 	{
-		setProperty(name, SyntaxUtilities.getColorHexString(value));
+		setThemeProperty(name, SyntaxUtilities.getColorHexString(value));
 	} //}}}
 
 	//{{{ getColorMatrixProperty() method
@@ -936,6 +942,11 @@ public class jEdit
 	public static void setProperty(String name, String value)
 	{
 		propMgr.setProperty(name,value);
+	}
+
+	public static void setThemeProperty(String name, String value)
+	{
+		setProperty(name + GUIUtilities.getThemeSuffix(), value);
 	} //}}}
 
 	//{{{ setTemporaryProperty() method
@@ -2615,7 +2626,9 @@ public class jEdit
 				view.getEditPane().saveCaretInfo();
 			}
 
-			View newView = new View(buffer,config);
+			ViewFactory viewFactory = ServiceManager.getService(ViewFactory.class, "view-factory");
+			View newView =
+				viewFactory == null ? new View(buffer,config) : viewFactory.create(buffer,config);
 			viewManager.addViewToList(newView);
 
 			EditBus.send(new ViewUpdate(newView,ViewUpdate.CREATED));

@@ -413,7 +413,7 @@ public class LogViewer extends JPanel implements DefaultFocusComponent
 		{
 			this.list = list;
 			debugColor = jEdit.getColorProperty("log-viewer.message.debug.color", Color.BLUE);
-			messageColor = jEdit.getColorProperty("log-viewer.message.message.color", Color.BLACK);
+			messageColor = jEdit.getColorProperty("log-viewer.message.message.color");
 			noticeColor = jEdit.getColorProperty("log-viewer.message.notice.color", Color.GREEN);
 			warningColor = jEdit.getColorProperty("log-viewer.message.warning.color", Color.ORANGE);
 			errorColor = jEdit.getColorProperty("log-viewer.message.error.color", Color.RED);

@@ -50,28 +50,28 @@ public class MarkerViewer extends JPanel implements ActionListener
 		toolBar.add(Box.createGlue());
 
 		RolloverButton addMarker = new RolloverButton(
-			GUIUtilities.loadIcon("Plus.png"));
+			GUIUtilities.loadIcon(jEdit.getProperty("add-marker.icon.small")));
 		addMarker.setToolTipText(GenericGUIUtilities.prettifyMenuLabel(
 			jEdit.getProperty("add-marker.label")));
 		addMarker.addActionListener(this);
 		addMarker.setActionCommand("add-marker");
 		toolBar.add(addMarker);
 
-		previous = new RolloverButton(GUIUtilities.loadIcon("ArrowL.png"));
+		previous = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("prev-marker.icon.small")));
 		previous.setToolTipText(GenericGUIUtilities.prettifyMenuLabel(
 			jEdit.getProperty("prev-marker.label")));
 		previous.addActionListener(this);
 		previous.setActionCommand("prev-marker");
 		toolBar.add(previous);
 
-		next = new RolloverButton(GUIUtilities.loadIcon("ArrowR.png"));
+		next = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("next-marker.icon.small")));
 		next.setToolTipText(GenericGUIUtilities.prettifyMenuLabel(
 			jEdit.getProperty("next-marker.label")));
 		next.addActionListener(this);
 		next.setActionCommand("next-marker");
 		toolBar.add(next);
 
-		clear = new RolloverButton(GUIUtilities.loadIcon("Clear.png"));
+		clear = new RolloverButton(GUIUtilities.loadIcon(jEdit.getProperty("remove-all-markers.icon.small")));
 		clear.setToolTipText(GenericGUIUtilities.prettifyMenuLabel(
 			jEdit.getProperty("remove-all-markers.label")));
 		clear.addActionListener(this);

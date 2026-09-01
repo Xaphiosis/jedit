@@ -87,7 +87,9 @@ public abstract class TextArea extends JPanel
 		//{{{ Initialize some misc. stuff
 		selectionManager = new SelectionManager(this);
 		chunkCache = new ChunkCache(this);
-		painter = new TextAreaPainter(this);
+		TextAreaPainterFactory painterFactory =
+			ServiceManager.getService(TextAreaPainterFactory.class, "painter-factory");
+		painter = painterFactory == null ? new TextAreaPainter(this) : painterFactory.create(this);
 		elasticTabstopsExpander = new ElasticTabstopsTabExpander(this);
 		gutter = new Gutter(this);
 		gutter.setMouseActionsProvider(new MouseActions(propertyManager, "gutter"));
@@ -919,6 +921,11 @@ public abstract class TextArea extends JPanel
 		return chunkCache.getLineInfo(screenLine).physicalLine;
 	} //}}}
 
+        public Chunk getChunksOfScreenLine(int screenLine)
+        {
+                return chunkCache.getLineInfo(screenLine).chunks;
+        }
+
 	//{{{ getScreenLineOfOffset() method
 	/**
 	 * Returns the screen (wrapped) line containing the specified offset.
@@ -1627,8 +1634,8 @@ public abstract class TextArea extends JPanel
 		}
 
 		// Scan backwards, trying to find a bracket
-		String openBrackets = "([{«‹⟨⌈⌊⦇⟦⦃⟪";
-		String closeBrackets = ")]}»›⟩⌉⌋⦈⟧⦄⟫";
+		String openBrackets = "([{«‹⟨⌈⌊⦇⟦⦃⟪⦉";
+		String closeBrackets = ")]}»›⟩⌉⌋⦈⟧⦄⟫⦊";
 		int count = 1;
 		char openBracket = '\0';
 		char closeBracket = '\0';
@@ -4983,6 +4990,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 	final Point offsetXY;
 
 	boolean lastLinePartial;
+	public boolean isLastLinePartial() { return lastLinePartial; }
 
 	boolean blink;
 	//}}}
@@ -6297,7 +6305,7 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		private final BreakIterator charBreaker;
 		private final int index0Offset;
 
-		LineCharacterBreaker(TextArea textArea, int offset)
+		public LineCharacterBreaker(TextArea textArea, int offset)
 		{
 			final int line = textArea.getLineOfOffset(offset);
 			charBreaker = BreakIterator.getCharacterInstance();
@@ -6348,12 +6356,12 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		// This class adapt CharSequence, which is used to avoid
 		// text copy, to CharacterIterator, which is used to pass
 		// a text to BreakIterator.
-		private static class CharIterator implements CharacterIterator
+		public static class CharIterator implements CharacterIterator
 		{
 			private final CharSequence sequence;
 			private int index;
 
-			CharIterator(CharSequence sequence)
+			public CharIterator(CharSequence sequence)
 			{
 				this.sequence = sequence;
 				index = 0;
@@ -6455,17 +6463,17 @@ loop:		for(int i = lineNo - 1; i >= 0; i--)
 		} //}}}
 	} //}}}
 
-	private int getPrevCharacterOffset(int offset)
+	public int getPrevCharacterOffset(int offset)
 	{
 		return new LineCharacterBreaker(this, offset).previousOf(offset);
 	}
 
-	private int getNextCharacterOffset(int offset)
+	public int getNextCharacterOffset(int offset)
 	{
 		return new LineCharacterBreaker(this, offset).nextOf(offset);
 	}
 
-	private int getCharacterBoundaryAt(int offset)
+	public int getCharacterBoundaryAt(int offset)
 	{
 		final LineCharacterBreaker charBreaker =
 			new LineCharacterBreaker(this, offset);

@@ -151,6 +151,7 @@ public class OptionGroupPane extends AbstractOptionPane implements TreeSelection
 
 						if (optionPane != null)
 						{
+							deferredOptionPanes.clear();
 							deferredOptionPanes.put(node, optionPane);
 						}
 						else

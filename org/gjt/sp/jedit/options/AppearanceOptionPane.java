@@ -93,7 +93,7 @@ public class AppearanceOptionPane extends AbstractOptionPane implements ItemList
 		/* Icon Theme */
 		String[] themes = IconTheme.builtInNames();
 		iconThemes = new JComboBox<String>(themes);
-		addComponent(jEdit.getProperty("options.appearance.iconTheme"), iconThemes);
+		//addComponent(jEdit.getProperty("options.appearance.iconTheme"), iconThemes);
 		String oldTheme = IconTheme.get();
 		for (int i=0; i<themes.length; ++i)
 		{
@@ -414,7 +414,9 @@ public class AppearanceOptionPane extends AbstractOptionPane implements ItemList
 
 		// adjust swing properties for button, menu, and label, and list and
 		// textfield fonts
-		setFonts();
+		if (!jEdit.getProperty("lookAndFeel").startsWith("com.formdev.flatlaf.")) {
+			setFonts();
+		}
 
 		// This is handled a little differently from other jEdit settings
 		// as this flag needs to be known very early in the
