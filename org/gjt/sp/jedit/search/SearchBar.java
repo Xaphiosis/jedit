@@ -51,10 +51,6 @@ public class SearchBar extends JToolBar
 		setFloatable(false);
 		add(Box.createHorizontalStrut(2));
 
-		if (!jEdit.getProperty("navigate-toolbar", "").isEmpty()) {
-			add(GUIUtilities.loadToolBar("navigate-toolbar"));
-		}
-
 		JLabel label = new JLabel(jEdit.getProperty("view.search.find"));
 		add(label);
 		
