@@ -682,7 +682,7 @@ public class Gutter extends JComponent implements SwingConstants
 	//{{{ Private members
 
 	//{{{ Instance variables
-	private static final int FOLD_MARKER_SIZE = 12;
+	public static final int FOLD_MARKER_SIZE = 12;
 	private static final int SELECTION_GUTTER_WIDTH = 12;
 		// The selection gutter exists only if the gutter is not expanded
 
